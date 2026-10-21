@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+returnloop.db
+static/uploads/*
+!static/uploads/.gitkeep
+.pytest_cache/
+screenshots/
