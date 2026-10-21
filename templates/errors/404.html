@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Not found{% endblock %}
+{% block page %}error{% endblock %}
+{% block content %}
+<section class="error-page">
+  <span class="error-page__code mono" aria-hidden="true">404</span>
+  <div>
+    <h1 class="page-head__title">No parcel on this shelf.</h1>
+    <p class="page-head__text">That return code doesn't exist, or it isn't yours to see. Check the code and try again.</p>
+    <div class="row">
+      <a class="btn btn--primary" href="{{ url_for('customer.returns') if role == 'customer' else url_for('main.landing') }}">{{ 'My returns' if role == 'customer' else 'Home' }}</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

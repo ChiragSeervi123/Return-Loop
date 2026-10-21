@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Wrong desk{% endblock %}
+{% block page %}error{% endblock %}
+{% block content %}
+<section class="error-page">
+  <span class="error-page__code mono" aria-hidden="true">403</span>
+  <div>
+    <p class="tape" aria-hidden="true">STAFF ONLY · STAFF ONLY · STAFF ONLY · STAFF ONLY</p>
+    <h1 class="page-head__title">Staff only past this tape.</h1>
+    <p class="page-head__text">
+      {% if needed %}This page is for the <b>{{ needed }}</b> desk{% if role %}, and you're signed in as <b>{{ role }}</b>{% endif %}.
+      {% else %}You need to pick a role first.{% endif %}
+    </p>
+    <div class="row">
+      {% if needed %}
+        <form method="post" action="{{ url_for('main.switch') }}">
+          <button class="btn btn--primary" name="who" value="{{ needed }}:{{ people[needed][0][0] }}">Switch to {{ people[needed][0][1] }} ({{ needed }})</button>
+        </form>
+      {% endif %}
+      <a class="btn btn--ghost" href="{{ url_for('main.switch') }}">Choose another desk</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

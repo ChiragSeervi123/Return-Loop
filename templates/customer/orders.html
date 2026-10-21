@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Your orders{% endblock %}
+{% block page %}orders{% endblock %}
+{% block content %}
+{{ m.page_head("01", "CUSTOMER / ORDERS", "Your orders", "Changed your mind? You have " ~ window ~ " days from delivery.") }}
+
+{% if cards %}
+<section class="slips" aria-label="Delivered items">
+  {% for c in cards %}
+  {% set item = c.item %}
+  <article class="slip" data-tilt>
+    <div class="slip__head">
+      <span class="mono">ORDER RL-OD-{{ '%04d' % c.order.id }}</span>
+      <span class="mono">DELIVERED {{ c.order.delivered_at.strftime('%d %b')|upper }}</span>
+    </div>
+    <div class="slip__body">
+      <span class="slip__art">{{ m.product_art(item.product) }}</span>
+      <div>
+        <p class="mono slip__cat">{{ item.product.category|upper }}</p>
+        <h2 class="slip__name">{{ item.product.name }}</h2>
+        <p class="slip__price mono">{{ item.unit_price|inr }}{% if item.quantity > 1 %} × {{ item.quantity }}{% endif %}</p>
+      </div>
+    </div>
+    <div class="slip__cut" aria-hidden="true"></div>
+    <div class="slip__foot">
+      <div class="slip__code">
+        {{ m.barcode('RL' ~ item.id) }}
+        <span class="mono">ITEM {{ '%06d' % (item.id * 7919 % 1000000) }}</span>
+      </div>
+      {% if c.ok %}
+        <div class="slip__action">
+          <span class="mono slip__left">{{ c.days_left }} day{{ '' if c.days_left == 1 else 's' }} left</span>
+          <a class="btn btn--primary" data-magnetic href="{{ url_for('customer.new_return', item=item.id) }}">Return item {{ m.icon('arrow', 18) }}</a>
+        </div>
+      {% else %}
+        <div class="slip__action">
+          <span class="badge badge--muted" title="Return not available">{{ m.icon('x', 14) }} {{ c.why }}</span>
+          {% for r in item.returns if r.status != 'Cancelled' %}
+            {% if loop.first %}<a class="link mono" href="{{ url_for('customer.track', code=r.return_code) }}">{{ r.return_code }} →</a>{% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</section>
+{% else %}
+  {{ m.empty_state("Nothing delivered yet", "Orders show up here once they reach your door.") }}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Too large{% endblock %}
+{% block page %}error{% endblock %}
+{% block content %}
+<section class="error-page">
+  <span class="error-page__code mono" aria-hidden="true">413</span>
+  <div>
+    <h1 class="page-head__title">That parcel's overweight.</h1>
+    <p class="page-head__text">Photos can be up to 3 MB. Go back and pick a smaller one.</p>
+    <div class="row"><a class="btn btn--primary" href="javascript:history.back()">Go back</a></div>
+  </div>
+</section>
+{% endblock %}

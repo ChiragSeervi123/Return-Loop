@@ -3,6 +3,7 @@
 If a number changes (return window, fee, refund percentage), change it here only.
 """
 import os
+import tempfile
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -23,7 +24,7 @@ class Config:
 class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     TESTING = True
-    WTF_CSRF_ENABLED = False
+    UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), "returnloop-test-uploads")
 
 
 # ---------------------------------------------------------------------------
@@ -60,7 +61,7 @@ RETURN_REASONS = {
     "Damaged": "Arrived broken, cracked or dented.",
     "Wrong item": "Not what you ordered.",
     "Not as described": "Size, colour or spec doesn't match the listing.",
-    "Changed my mind": "No fault. A Rs 50 pickup fee applies.",
+    "Changed my mind": "No fault needed. A ₹50 pickup fee comes off the refund.",
 }
 
 COMMENT_MAX_CHARS = 300

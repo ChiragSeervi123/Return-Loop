@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}My returns{% endblock %}
+{% block page %}returns{% endblock %}
+{% block content %}
+{{ m.page_head("04", "CUSTOMER / RETURNS", "My returns", "Every parcel you've sent back, and where it is now.") }}
+
+{% if returns %}
+<ol class="ledger">
+  {% for r in returns %}
+  <li class="ledger__row">
+    <a class="ledger__link" href="{{ url_for('customer.track', code=r.return_code) }}">
+      <span class="mono ledger__code">{{ r.return_code }}</span>
+      <span class="ledger__name">{{ r.product.name }}<small class="muted">{{ r.reason }} · {{ r.created_at.strftime('%d %b') }}</small></span>
+      {{ m.badge(r.status) }}
+      <span class="ledger__amt mono">{% if r.refund %}{{ r.refund.final_amount|inr }}{% else %}–{% endif %}</span>
+      {{ m.icon('arrow', 18) }}
+    </a>
+  </li>
+  {% endfor %}
+</ol>
+{% else %}
+  {{ m.empty_state("No returns. Nice.", "Everything you bought stayed bought.", url_for('customer.orders'), "See your orders") }}
+{% endif %}
+{% endblock %}

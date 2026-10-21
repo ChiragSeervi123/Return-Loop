@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Switch role{% endblock %}
+{% block page %}switch{% endblock %}
+{% block content %}
+{{ m.page_head("00", "ACCESS / NO PASSWORDS IN THIS DEMO", "Who's working today?", "Pick a desk. You can switch any time from the top bar.") }}
+
+<form class="desks" method="post" action="{{ url_for('main.switch') }}">
+  {% set desk_icon = {'customer': 'box', 'agent': 'truck', 'qc': 'scan', 'refurbisher': 'wrench', 'warehouse': 'shelf', 'admin': 'chart'} %}
+  {% set desk_name = {'customer': 'Customer', 'agent': 'Pickup agent', 'qc': 'QC inspector', 'refurbisher': 'Refurbisher', 'warehouse': 'Warehouse manager', 'admin': 'Admin'} %}
+  {% set desk_text = {
+    'customer': 'Return something you bought.',
+    'agent': "Today's pickups, one tap each.",
+    'qc': 'Check, grade, stamp.',
+    'refurbisher': 'Fix grade B items.',
+    'warehouse': 'Check parcels in. Watch the stock.',
+    'admin': 'Numbers, reasons, red flags.'
+  } %}
+  {% for r in roles %}
+    <fieldset class="desk desk--{{ r }}">
+      <legend class="desk__title">{{ m.icon(desk_icon[r], 22) }} {{ desk_name[r] }}</legend>
+      <p class="muted">{{ desk_text[r] }}</p>
+      <div class="desk__people">
+        {% for pid, pname in people[r] %}
+          <button class="btn btn--ghost" name="who" value="{{ r }}:{{ pid }}">{{ pname }}</button>
+        {% endfor %}
+      </div>
+    </fieldset>
+  {% endfor %}
+</form>
+{% endblock %}

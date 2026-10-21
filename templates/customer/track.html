@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Track {{ ret.return_code }}{% endblock %}
+{% block page %}track{% endblock %}
+{% block content %}
+<a class="back link" href="{{ url_for('customer.returns') }}">{{ m.icon('back', 16) }} My returns</a>
+
+<header class="track-head">
+  <p class="mono page-head__label">TRACK / {{ ret.reason|upper }}</p>
+  <h1 class="track-head__code mono">{{ ret.return_code }}</h1>
+  <p class="track-head__item">{{ ret.product.name }} <span class="muted">· {{ (ret.order_item.unit_price * ret.order_item.quantity)|inr }}</span></p>
+  <div class="track-head__status">{{ m.badge(ret.status) }} <span class="mono muted" data-updated>Updated {{ ret.updated_at|when }}</span></div>
+</header>
+
+<section class="track-stage" data-track
+  data-step="{{ step }}" data-status="{{ ret.status }}" data-terminal="{{ 'true' if terminal else 'false' }}"
+  data-api="{{ url_for('api.return_status', code=ret.return_code) }}" aria-label="Return progress">
+  <div class="track-stage__canvas" data-canvas-host></div>
+  <ol class="stepper" data-stepper>
+    {% for s in steps %}
+      <li class="stepper__step {% if loop.index0 < step %}is-done{% elif loop.index0 == step %}is-now{% endif %}">
+        <span class="stepper__dot" aria-hidden="true"></span>
+        <span class="mono">{{ '%02d' % loop.index }} {{ s|upper }}</span>
+        {% if loop.index0 == step %}<span class="sr-only">(current step)</span>{% endif %}
+      </li>
+    {% endfor %}
+  </ol>
+  <p class="track-stage__hint mono" aria-hidden="true">DRAG THE PARCEL</p>
+</section>
+
+<div class="track-grid">
+  <section class="panel" aria-labelledby="next-h">
+    <h2 id="next-h" class="panel__title">What happens next</h2>
+    {% if ret.status == 'Requested' %}
+      <p>Book a pickup slot and we'll send an agent.</p>
+      <a class="btn btn--primary" data-magnetic href="{{ url_for('customer.schedule', code=ret.return_code) }}">Book pickup {{ m.icon('arrow', 18) }}</a>
+    {% elif ret.status == 'Pickup Scheduled' %}
+      {% set p = ret.current_pickup %}
+      <p class="big-line">{{ m.icon('calendar') }} {{ p.slot_date.strftime('%A %d %b') }}, {{ p.slot_window }}</p>
+      {% if p.attempt_no > 1 %}<p class="notice notice--b">{{ m.icon('alert') }} <span>We missed you last time. This is attempt {{ p.attempt_no }} of {{ max_attempts }}; if nobody's home again, the return is cancelled.</span></p>{% endif %}
+      <a class="btn btn--ghost" href="{{ url_for('customer.schedule', code=ret.return_code) }}">Reschedule</a>
+    {% elif ret.status in ['Picked Up', 'Received'] %}
+      <p>It's on its way to our QC bench. Grading usually takes a day.</p>
+    {% elif ret.status in ['Inspected', 'Refurbishing', 'Re-inspection'] %}
+      <p>Graded {{ ret.first_report.grade }}. We're giving it a quick repair, then a second check. Your refund follows.</p>
+    {% elif ret.status == 'Refunded' %}
+      <p>Your refund is on its way back to the original payment method.</p>
+      <form method="post" action="{{ url_for('customer.close', code=ret.return_code) }}" data-once>
+        <button class="btn btn--primary" type="submit">Got it, close this return</button>
+      </form>
+    {% elif ret.status == 'Closed' %}
+      <p>Done and dusted. Thanks for sending it back in one piece.</p>
+    {% elif ret.status in ['Cancelled', 'Rejected'] %}
+      <div class="notice notice--c">{{ m.icon('alert') }} <span>{{ ret.history[-1].note }}</span></div>
+    {% endif %}
+  </section>
+
+  <section class="panel panel--receipt" id="refund" aria-labelledby="refund-h">
+    <h2 id="refund-h" class="panel__title">Refund</h2>
+    {% if ret.refund %}
+      {% set rf = ret.refund %}
+      <dl class="receipt">
+        <div><dt>Item value</dt><dd class="mono" data-count="{{ rf.base_amount }}" data-prefix="₹">{{ rf.base_amount|inr }}</dd></div>
+        <div><dt>Grade {{ ret.latest_report.grade }} refund</dt><dd class="mono"><span data-count="{{ rf.grade_percent }}">{{ rf.grade_percent }}</span>%</dd></div>
+        <div><dt>Pickup fee</dt><dd class="mono">− <span data-count="{{ rf.pickup_fee }}" data-prefix="₹">{{ rf.pickup_fee|inr }}</span></dd></div>
+        <div class="receipt__total"><dt>You get</dt><dd class="mono" data-count="{{ rf.final_amount }}" data-prefix="₹">{{ rf.final_amount|inr }}</dd></div>
+      </dl>
+      <p class="mono muted receipt__foot">{{ rf.status|upper }} · {{ rf.created_at|when }}</p>
+    {% else %}
+      <p class="muted">Worked out once QC grades the item.</p>
+      <ul class="rules">
+        <li>{{ m.grade_stamp('A', 'stamp--xs') }} 100%</li>
+        <li>{{ m.grade_stamp('B', 'stamp--xs') }} 70% after repair</li>
+        <li>{{ m.grade_stamp('C', 'stamp--xs') }} 0%</li>
+      </ul>
+      {% if ret.reason in ['Damaged', 'Wrong item'] %}<p class="small">If QC confirms it was {{ 'damaged' if ret.reason == 'Damaged' else 'the wrong item' }}, you get 100% whatever the grade.</p>{% endif %}
+      {% if ret.reason == 'Changed my mind' %}<p class="small">A ₹50 pickup fee comes off.</p>{% endif %}
+    {% endif %}
+  </section>
+
+  <section class="panel panel--wide" id="timeline" aria-labelledby="tl-h">
+    <h2 id="tl-h" class="panel__title">History</h2>
+    <ol class="timeline">
+      {% for h in ret.history|reverse %}
+        <li class="timeline__row">
+          <span class="mono timeline__when">{{ h.created_at|when }}</span>
+          <span class="timeline__what">{{ m.badge(h.to_status) }}<span>{{ h.note }}</span></span>
+          <span class="mono muted timeline__who">{{ h.actor_name }} · {{ h.actor_role }}</span>
+        </li>
+      {% endfor %}
+    </ol>
+  </section>
+</div>
+{% endblock %}

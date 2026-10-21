@@ -1,0 +1,106 @@
+{% import "_macros.html" as m %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}ReturnLoop{% endblock %} · ReturnLoop</title>
+  <meta name="description" content="ReturnLoop: returns and reverse-logistics centre.">
+  <meta name="theme-color" content="#14110F">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2314110F'/%3E%3Cpath d='M9 16a7 7 0 1 1 7 7' fill='none' stroke='%23FF5B1F' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M12 23H16v-4' fill='none' stroke='%23FF5B1F' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/motion.css') }}">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script>document.documentElement.classList.add('js');</script>
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}" data-page="{% block page %}{% endblock %}">
+  <a class="skip" href="#main">Skip to content</a>
+
+  {# Rough-edge filter for rubber stamps, used anywhere via filter:url(#rough) #}
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <filter id="rough" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
+
+  <header class="nav {% block nav_class %}{% endblock %}">
+    <a class="nav__brand" href="{{ url_for('main.landing') }}" aria-label="ReturnLoop home">
+      {{ m.icon('loop', 26) }}<span>Return<b>Loop</b></span>
+    </a>
+
+    <nav class="nav__links" aria-label="Main">
+      {% for endpoint, label in nav.get(role, []) %}
+        <a href="{{ url_for(endpoint) }}" {% if request.endpoint == endpoint %}aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
+    </nav>
+
+    <form class="switcher" method="post" action="{{ url_for('main.switch') }}" data-switcher>
+      <span class="role-chip" data-role-chip data-role="{{ role or 'guest' }}">
+        <span class="role-chip__face">{{ (role or 'guest')|upper }}</span>
+      </span>
+      <label class="sr-only" for="who">Switch role or user</label>
+      <select id="who" name="who" class="switcher__select">
+        {% if not role %}<option value="" selected disabled>Switch role / user</option>{% endif %}
+        {% for r in roles %}
+          <optgroup label="{{ r|capitalize }}">
+            {% for pid, pname in people[r] %}
+              <option value="{{ r }}:{{ pid }}" {% if role == r and user_id == pid %}selected{% endif %}>{{ pname }}</option>
+            {% endfor %}
+          </optgroup>
+        {% endfor %}
+      </select>
+      <button class="btn btn--small switcher__go" type="submit">Switch</button>
+    </form>
+  </header>
+
+  <div class="toasts" role="status" aria-live="polite">
+    {% for kind, message in get_flashed_messages(with_categories=true) %}
+      <div class="toast toast--{{ kind }}">
+        <span class="toast__tag">{{ {'success': 'DONE', 'error': 'HOLD', 'info': 'NOTE'}.get(kind, 'NOTE') }}</span>
+        <p>{{ message }}</p>
+        <button type="button" class="toast__x" aria-label="Dismiss">{{ m.icon('x', 16) }}</button>
+      </div>
+    {% endfor %}
+  </div>
+
+  <main id="main" class="{% block main_class %}page{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block footer %}
+  <footer class="foot">
+    <span class="mono">RETURNLOOP / REVERSE LOGISTICS CENTRE</span>
+    <span class="foot__cut" aria-hidden="true"></span>
+    <span class="mono">Signed in as {{ user_name }}{% if role %} · {{ role }}{% endif %}</span>
+  </footer>
+  {% endblock %}
+
+  <dialog class="modal" id="confirm-modal" aria-labelledby="confirm-title">
+    <form method="dialog" class="modal__inner">
+      <span class="mono modal__tag">CONFIRM</span>
+      <h2 id="confirm-title" data-confirm-title>Are you sure?</h2>
+      <p data-confirm-text></p>
+      <div class="modal__actions">
+        <button class="btn btn--ghost" value="cancel">Go back</button>
+        <button class="btn btn--primary" value="ok" data-confirm-ok>Yes, do it</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="flap" aria-hidden="true"></div>
+  {% block scripts %}{% endblock %}
+  <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

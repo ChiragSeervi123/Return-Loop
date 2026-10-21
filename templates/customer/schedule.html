@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Book a pickup{% endblock %}
+{% block page %}schedule{% endblock %}
+{% block content %}
+<a class="back link" href="{{ url_for('customer.track', code=ret.return_code) }}">{{ m.icon('back', 16) }} {{ ret.return_code }}</a>
+{% set rebook = ret.status == 'Pickup Scheduled' %}
+{{ m.page_head("03", "CUSTOMER / PICKUP", "Reschedule pickup" if rebook else "When should we come by?", "Pack it in any box. Our agent brings the label.") }}
+
+{% if ret.status not in ['Requested', 'Pickup Scheduled'] %}
+  <div class="notice">
+    {{ m.icon('truck') }}
+    <div><h2>Pickup is done</h2><p>This return is {{ ret.status|lower }}. <a class="link" href="{{ url_for('customer.track', code=ret.return_code) }}">Track it</a></p></div>
+  </div>
+{% else %}
+<form class="form" method="post" data-once>
+  <fieldset class="dates">
+    <legend class="label">Day</legend>
+    <div class="chips">
+      {% for d in dates %}
+        <label class="chip chip--date">
+          <input type="radio" name="slot_date" value="{{ d.isoformat() }}" required
+            {% if rebook and ret.current_pickup.slot_date == d %}checked{% endif %}>
+          <span><b class="mono">{{ d.strftime('%a')|upper }}</b><strong>{{ d.day }}</strong><small class="mono">{{ d.strftime('%b')|upper }}</small></span>
+        </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend class="label">Slot</legend>
+    <div class="chips">
+      {% for s in slots %}
+        <label class="chip">
+          <input type="radio" name="slot_window" value="{{ s }}" required
+            {% if rebook and ret.current_pickup.slot_window == s %}checked{% endif %}>
+          <span>{{ s }} <small class="mono">{{ slot_hours[s] }}</small></span>
+        </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+
+  <div class="address">
+    <span class="label">Pickup address</span>
+    <address class="address__card">
+      {{ m.icon('pin') }}
+      <span><b>{{ ret.customer.name }}</b><br>{{ ret.customer.address }}<br><span class="mono">{{ ret.customer.phone }}</span></span>
+    </address>
+    <label class="check">
+      <input type="checkbox" required>
+      <span>That's right, someone will be home.</span>
+    </label>
+  </div>
+
+  <div class="form__end">
+    <button class="btn btn--primary btn--big" data-magnetic type="submit">{{ 'Move pickup' if rebook else 'Book pickup' }} {{ m.icon('arrow', 18) }}</button>
+  </div>
+</form>
+{% endif %}
+{% endblock %}

@@ -8,6 +8,17 @@ from config import ROLES, STAFF, Config
 from models import Customer, db
 
 
+# Navbar links for each role: (endpoint, label)
+NAV = {
+    "customer": [("customer.orders", "Orders"), ("customer.returns", "My returns")],
+    "agent": [("agent.pickups", "Pickups")],
+    "qc": [("qc.queue", "QC queue")],
+    "refurbisher": [("refurbisher.jobs", "Repair jobs")],
+    "warehouse": [("warehouse.receive", "Receive"), ("warehouse.inventory", "Inventory")],
+    "admin": [("admin.dashboard", "Dashboard")],
+}
+
+
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
@@ -26,6 +37,24 @@ def create_app(config_class=Config):
     for bp in (main_bp, customer_bp, agent_bp, qc_bp, refurb_bp, warehouse_bp, admin_bp, api_bp):
         app.register_blueprint(bp)
 
+    @app.template_filter("inr")
+    def inr(amount):
+        """₹ with Indian digit grouping: 123456 -> ₹1,23,456."""
+        whole, paise = divmod(round(float(amount or 0) * 100), 100)
+        digits = str(int(whole))
+        if len(digits) > 3:
+            head, tail = digits[:-3], digits[-3:]
+            groups = []
+            while len(head) > 2:
+                groups.insert(0, head[-2:])
+                head = head[:-2]
+            digits = ",".join(([head] if head else []) + groups) + "," + tail
+        return f"₹{digits}" + (f".{paise:02d}" if paise else "")
+
+    @app.template_filter("when")
+    def when(value):
+        return value.strftime("%d %b, %H:%M") if value else ""
+
     @app.context_processor
     def inject_user():
         """Makes the current role and the switcher list available in every template."""
@@ -37,6 +66,7 @@ def create_app(config_class=Config):
             "user_name": current_user_name(),
             "roles": ROLES,
             "people": people,
+            "nav": NAV,
         }
 
     @app.errorhandler(403)

@@ -68,7 +68,7 @@ def issue_refund(ret, actor_role, actor_name, inventory_action):
         db.session.add(InventoryLog(product_id=item.product_id, return_id=ret.id,
                                     action=inventory_action, quantity=item.quantity))
         ret.refund_status = "Credited"
-        note = f"Refund of Rs {parts['final_amount']:.2f} credited."
+        note = f"Refund of ₹{parts['final_amount']:.2f} credited."
         change_status(ret, REFUNDED, actor_role, actor_name, note, commit=False)
         db.session.commit()
     except Exception:

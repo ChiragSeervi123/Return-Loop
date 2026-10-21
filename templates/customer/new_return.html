@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Return an item{% endblock %}
+{% block page %}new-return{% endblock %}
+{% block content %}
+<a class="back link" href="{{ url_for('customer.orders') }}">{{ m.icon('back', 16) }} Orders</a>
+{{ m.page_head("02", "CUSTOMER / NEW RETURN", "What went wrong?", "Pick a reason. It decides the refund rules, so be honest.") }}
+
+<div class="split">
+  <aside class="slip slip--mini" aria-label="Item being returned">
+    <div class="slip__body">
+      <span class="slip__art">{{ m.product_art(item.product) }}</span>
+      <div>
+        <p class="mono slip__cat">{{ item.product.category|upper }}</p>
+        <h2 class="slip__name">{{ item.product.name }}</h2>
+        <p class="slip__price mono">{{ (item.unit_price * item.quantity)|inr }}</p>
+      </div>
+    </div>
+    <div class="slip__cut" aria-hidden="true"></div>
+    <p class="mono slip__note">Delivered {{ item.order.delivered_at.strftime('%d %b %Y') }}</p>
+  </aside>
+
+  {% if not ok %}
+    <div class="notice notice--c">
+      {{ m.icon('alert') }}
+      <div><h2>Can't return this one</h2><p>{{ why }}. <a class="link" href="{{ url_for('customer.orders') }}">Back to your orders</a></p></div>
+    </div>
+  {% else %}
+  <form class="form" method="post" enctype="multipart/form-data" data-once>
+    <fieldset class="tiles">
+      <legend class="label">Reason</legend>
+      {% for reason, hint in reasons.items() %}
+        <label class="tile">
+          <input type="radio" name="reason" value="{{ reason }}" required {% if form.get('reason') == reason %}checked{% endif %}>
+          <span class="tile__face">
+            <span class="mono tile__num">0{{ loop.index }}</span>
+            <span class="tile__title">{{ reason }}</span>
+            <span class="tile__hint">{{ hint }}</span>
+          </span>
+        </label>
+      {% endfor %}
+    </fieldset>
+
+    <div class="field">
+      <label class="label" for="comment">Anything we should know? <span class="muted">(optional)</span></label>
+      <textarea id="comment" name="comment" rows="4" maxlength="{{ max_chars }}" data-counter
+        placeholder="The left hinge was cracked when I opened the box.">{{ form.get('comment', '') }}</textarea>
+      <span class="mono counter" aria-live="polite"><span data-count-now>0</span> / {{ max_chars }}</span>
+    </div>
+
+    <div class="field">
+      <span class="label" id="photo-label">Photo <span class="muted">(optional, PNG / JPG / WEBP, up to 3 MB)</span></span>
+      <label class="drop" data-drop>
+        <input type="file" name="photo" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" aria-labelledby="photo-label">
+        <span class="drop__idle">{{ m.icon('camera', 28) }}<span>Drop a photo here or <u>browse</u></span></span>
+        <img class="drop__preview" alt="Preview of the chosen photo" hidden>
+        <span class="drop__error mono" role="alert" hidden></span>
+      </label>
+    </div>
+
+    <div class="form__end">
+      <button class="btn btn--primary btn--big" data-magnetic type="submit">Request return {{ m.icon('arrow', 18) }}</button>
+      <p class="muted">Next: pick a pickup slot.</p>
+    </div>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

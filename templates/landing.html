@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Returns, sorted{% endblock %}
+{% block page %}landing{% endblock %}
+{% block content %}
+<h1>ReturnLoop</h1>
+<p><a href="{{ url_for('main.enter_customer') }}">Start a return</a> · <a href="{{ url_for('main.switch') }}">Staff entry</a></p>
+<p>{{ stats.returns }} returns logged.</p>
+{% endblock %}
