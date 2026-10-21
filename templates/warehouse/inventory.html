@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Inventory{% endblock %}
+{% block page %}inventory{% endblock %}
+{% block content %}
+{{ m.page_head("%02d" % (counts.values()|sum), "WAREHOUSE / WHERE IT ALL ENDED UP", "Inventory", "Units that came back, by fate. Hover a stack for the exact count.") }}
+
+{% set tone = {'Restocked': 'a', 'Refurbished': 'b', 'Scrapped': 'c'} %}
+<section class="crates" data-crates
+  data-counts='{{ {"Restocked": counts["Restocked"], "Refurbished": counts["Refurbished"], "Scrapped": counts["Scrapped"]}|tojson }}'
+  aria-label="Units per outcome">
+  <div class="crates__canvas" data-canvas-host></div>
+  <div class="crates__tip mono" data-crate-tip hidden></div>
+  {# Static version: also the fallback when WebGL is not available #}
+  <ul class="crates__bars">
+    {% set top = [counts.values()|max, 1]|max %}
+    {% for a in actions %}
+      <li class="crates__bar crates__bar--{{ tone[a] }}" style="--h: {{ (counts[a] / top * 100)|round(0) }}%">
+        <span class="crates__col" aria-hidden="true"></span>
+        <span class="crates__num mono">{{ counts[a] }}</span>
+        <span class="crates__label mono">{{ a|upper }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="panel panel--flush">
+  <div class="filters" role="group" aria-label="Filter by action">
+    <a class="chip-link {% if not current %}is-on{% endif %}" href="{{ url_for('warehouse.inventory') }}" {% if not current %}aria-current="true"{% endif %}>All</a>
+    {% for a in actions %}
+      <a class="chip-link {% if current == a %}is-on{% endif %}" href="{{ url_for('warehouse.inventory', action=a) }}" {% if current == a %}aria-current="true"{% endif %}>{{ a }}</a>
+    {% endfor %}
+  </div>
+  {% if logs %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>When</th><th>Return</th><th>Product</th><th>Action</th><th class="num">Qty</th></tr></thead>
+      <tbody>
+        {% for l in logs %}
+        <tr>
+          <td class="mono">{{ l.created_at|when }}</td>
+          <td class="mono">{{ l.return_request.return_code }}</td>
+          <td>{{ l.product.name }}</td>
+          <td><span class="badge badge--{{ tone[l.action] }}">{{ l.action }}</span></td>
+          <td class="num mono">{{ l.quantity }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    {{ m.empty_state("Nothing logged" ~ (" as " ~ current if current else ""), "Items appear here when their refund is issued.") }}
+  {% endif %}
+</section>
+{% endblock %}

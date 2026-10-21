@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Pickup {{ p.return_request.return_code }}{% endblock %}
+{% block page %}agent{% endblock %}
+{% block body_class %}ops{% endblock %}
+{% block content %}
+{% set r = p.return_request %}
+<a class="back link" href="{{ url_for('agent.pickups') }}">{{ m.icon('back', 16) }} All pickups</a>
+
+<article class="slip slip--wide">
+  <div class="slip__head">
+    <span class="mono">{{ r.return_code }}</span>
+    <span class="mono">ATTEMPT {{ p.attempt_no }} OF 2</span>
+  </div>
+  <div class="slip__body slip__body--stack">
+    <p class="mono slip__cat">{{ p.slot_date.strftime('%a %d %b')|upper }} · {{ p.slot_window|upper }} {{ slot_hours[p.slot_window] }}</p>
+    <h1 class="slip__name slip__name--big">{{ r.customer.name }}</h1>
+    <p class="job__line">{{ m.icon('pin', 18) }} {{ r.customer.address }}</p>
+    <p class="job__line">{{ m.icon('phone', 18) }} <a class="link mono" href="tel:{{ r.customer.phone|replace(' ', '') }}">{{ r.customer.phone }}</a></p>
+    <p class="job__line">{{ m.icon('box', 18) }} {{ r.product.name }}{% if r.order_item.quantity > 1 %} × {{ r.order_item.quantity }}{% endif %} <span class="muted">· {{ r.reason }}</span></p>
+  </div>
+  <div class="slip__cut" aria-hidden="true"></div>
+  <div class="slip__foot">{{ m.barcode(r.return_code) }}<span class="mono">{{ r.return_code }}</span></div>
+</article>
+
+{% if p.outcome == 'Pending' and r.status == 'Pickup Scheduled' %}
+<form class="form pickup-actions" method="post" data-once>
+  <label class="field">
+    <span class="label">Note <span class="muted">(optional)</span></span>
+    <input type="text" name="notes" maxlength="255" placeholder="Left with security, box sealed">
+  </label>
+  <div class="pickup-actions__buttons">
+    <button class="btn btn--primary btn--big btn--block" type="submit" name="action" value="picked"
+      data-confirm="Mark {{ r.return_code }} as picked up?" data-confirm-text="Only once the parcel is in your hands.">
+      {{ m.icon('check', 20) }} Mark picked up
+    </button>
+    <button class="btn btn--ghost btn--big btn--block" type="submit" name="action" value="absent"
+      data-confirm="Customer not home?"
+      data-confirm-text="{% if p.attempt_no >= 2 %}This is the second miss. The return will be cancelled and the customer told why.{% else %}We'll rebook for the next day, same slot.{% endif %}">
+      {{ m.icon('x', 20) }} Customer absent
+    </button>
+  </div>
+</form>
+{% else %}
+  <p class="notice">{{ m.icon('check') }} <span>Already handled: {{ p.outcome|lower }}.</span></p>
+{% endif %}
+{% endblock %}

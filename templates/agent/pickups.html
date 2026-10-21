@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Pickups{% endblock %}
+{% block page %}agent{% endblock %}
+{% block body_class %}ops{% endblock %}
+{% macro pickup_card(p) %}
+{% set r = p.return_request %}
+<a class="job" href="{{ url_for('agent.pickup', pickup_id=p.id) }}">
+  <span class="job__slot mono">{{ p.slot_window|upper }}<small>{{ slot_hours[p.slot_window] }}</small></span>
+  <span class="job__main">
+    <b>{{ r.customer.name }}</b>
+    <span class="job__line">{{ m.icon('pin', 16) }} {{ r.customer.address }}</span>
+    <span class="job__line">{{ m.icon('box', 16) }} {{ r.product.name }}{% if r.order_item.quantity > 1 %} × {{ r.order_item.quantity }}{% endif %}</span>
+  </span>
+  <span class="job__meta mono">{{ r.return_code }}{% if p.attempt_no > 1 %}<em>ATTEMPT {{ p.attempt_no }}</em>{% endif %}</span>
+</a>
+{% endmacro %}
+
+{% block content %}
+{{ m.page_head(today.strftime('%d'), "AGENT / " ~ user_name|upper, "Today's pickups", today_list|length ~ " stop" ~ ('' if today_list|length == 1 else 's') ~ ". Morning first.") }}
+
+{% if today_list %}
+  <div class="jobs">{% for p in today_list %}{{ pickup_card(p) }}{% endfor %}</div>
+{% else %}
+  {{ m.empty_state("Nothing today", "No pickups booked for today. Kettle on.") }}
+{% endif %}
+
+{% if upcoming %}
+  <h2 class="section-label mono">COMING UP</h2>
+  <div class="jobs jobs--later">
+    {% for p in upcoming %}
+      <div class="jobs__day mono">{{ p.slot_date.strftime('%a %d %b')|upper }}</div>
+      {{ pickup_card(p) }}
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

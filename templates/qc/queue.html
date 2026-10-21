@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}QC queue{% endblock %}
+{% block page %}qc{% endblock %}
+{% block body_class %}ops{% endblock %}
+{% block content %}
+{{ m.page_head("%02d" % items|length, "QC / INSPECTION BENCH", "Waiting for a grade", "Oldest first. Re-inspections are marked.") }}
+
+<form class="search" method="get" role="search">
+  <label class="sr-only" for="q">Search by return code</label>
+  {{ m.icon('search', 18) }}
+  <input id="q" name="q" value="{{ search }}" placeholder="RL-2026-0005" class="mono" autocomplete="off">
+  <button class="btn btn--small" type="submit">Find</button>
+  {% if search %}<a class="link mono" href="{{ url_for('qc.queue') }}">clear</a>{% endif %}
+</form>
+
+{% if items %}
+<div class="jobs">
+  {% for r in items %}
+  <a class="job" href="{{ url_for('qc.inspect', code=r.return_code) }}">
+    <span class="job__slot mono">{{ r.return_code }}<small>{{ r.updated_at.strftime('%d %b %H:%M')|upper }}</small></span>
+    <span class="job__main">
+      <b>{{ r.product.name }}{% if r.order_item.quantity > 1 %} × {{ r.order_item.quantity }}{% endif %}</b>
+      <span class="job__line">Customer says: {{ r.reason }}{% if r.comment %}, “{{ r.comment|truncate(60) }}”{% endif %}</span>
+    </span>
+    <span class="job__meta">{{ m.badge(r.status) }}</span>
+  </a>
+  {% endfor %}
+</div>
+{% elif search %}
+  {{ m.empty_state("No match for " ~ search, "Only returns waiting for QC show here.", url_for('qc.queue'), "Show all") }}
+{% else %}
+  {{ m.empty_state("Queue's empty", "Nothing to grade. The warehouse will send more.") }}
+{% endif %}
+{% endblock %}

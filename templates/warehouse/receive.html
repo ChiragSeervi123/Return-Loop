@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Receive{% endblock %}
+{% block page %}warehouse{% endblock %}
+{% block body_class %}ops{% endblock %}
+{% block content %}
+{{ m.page_head("%02d" % incoming|length, "WAREHOUSE / INBOUND DOCK", "On the truck", "Parcels agents have collected. Check each one in as it lands.") }}
+
+{% if incoming %}
+<div class="jobs">
+  {% for r in incoming %}
+  <div class="job job--row">
+    <span class="job__slot mono">{{ r.return_code }}<small>PICKED {{ r.updated_at.strftime('%d %b')|upper }}</small></span>
+    <span class="job__main">
+      <b>{{ r.product.name }}{% if r.order_item.quantity > 1 %} × {{ r.order_item.quantity }}{% endif %}</b>
+      <span class="job__line">{{ r.customer.name }} · {{ r.reason }}</span>
+    </span>
+    <form method="post" action="{{ url_for('warehouse.receive_one', code=r.return_code) }}" data-once>
+      <button class="btn btn--primary" type="submit">{{ m.icon('check', 18) }} Mark received at centre</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+  {{ m.empty_state("Dock's clear", "Nothing in transit right now.") }}
+{% endif %}
+{% endblock %}

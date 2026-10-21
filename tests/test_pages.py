@@ -95,3 +95,76 @@ def test_ineligible_item_has_no_return_button(client, seeded):
     assert "Not returnable" in page      # earbuds
     res = client.post(f"/customer/return/new?item={items[3][0].id}", data={"reason": "Damaged"})
     assert res.status_code == 400
+
+
+def test_staff_pages_render(client, seeded):
+    pages = {
+        "agent": ["/agent/pickups"],
+        "qc": ["/qc/queue", "/qc/queue?q=0005", "/qc/inspect/RL-2026-0005", "/qc/inspect/RL-2026-0009"],
+        "refurbisher": ["/refurb/jobs"],
+        "warehouse": ["/warehouse/receive", "/warehouse/inventory", "/warehouse/inventory?action=Scrapped"],
+    }
+    for role, urls in pages.items():
+        login(client, role, 1)
+        for url in urls:
+            assert client.get(url).status_code == 200, url
+
+
+def test_staff_flow_over_http(client, seeded):
+    """Agent -> warehouse -> QC grade B -> refurbisher -> QC recheck -> refund."""
+    ret = ReturnRequest.query.filter_by(return_code="RL-2026-0002").one()  # pickup booked today
+    pickup = ret.current_pickup
+
+    login(client, "agent", pickup.agent_id)
+    assert client.get(f"/agent/pickup/{pickup.id}").status_code == 200
+    client.post(f"/agent/pickup/{pickup.id}", data={"action": "picked"})
+    assert ret.status == "Picked Up"
+
+    login(client, "warehouse", 1)
+    client.post(f"/warehouse/receive/{ret.return_code}")
+    assert ret.status == "Received"
+    # double click: second post is refused, status unchanged
+    client.post(f"/warehouse/receive/{ret.return_code}")
+    assert ret.status == "Received"
+
+    login(client, "qc", 1)
+    client.post(f"/qc/inspect/{ret.return_code}", data={
+        "packaging_intact": "on", "tags_attached": "on", "item_matches_order": "on", "grade": "B"})
+    assert ret.status == "Refurbishing"
+
+    login(client, "refurbisher", 1)
+    job = ret.refurbish_jobs[0]
+    client.post(f"/refurb/jobs/{job.id}/repaired", data={"notes": "New hinge"})
+    assert ret.status == "Re-inspection"
+
+    login(client, "qc", 1)
+    client.post(f"/qc/inspect/{ret.return_code}", data={
+        "packaging_intact": "on", "tags_attached": "on", "item_matches_order": "on", "grade": "B"})
+    assert ret.status == "Refunded"
+    assert ret.refund.grade_percent == 70
+    # double submit does not create a second refund
+    client.post(f"/qc/inspect/{ret.return_code}", data={"item_matches_order": "on", "grade": "B"})
+    assert len(ret.history) == 9
+
+
+def test_qc_fraud_rejection_over_http(client, seeded):
+    login(client, "qc", 1)
+    client.post("/qc/inspect/RL-2026-0005", data={"packaging_intact": "on", "grade": "A"})
+    ret = ReturnRequest.query.filter_by(return_code="RL-2026-0005").one()
+    assert ret.status == "Rejected" and ret.flagged_fraud
+
+
+def test_agent_absent_twice_over_http(client, seeded):
+    ret = ReturnRequest.query.filter_by(return_code="RL-2026-0002").one()
+    login(client, "agent", ret.current_pickup.agent_id)
+    client.post(f"/agent/pickup/{ret.current_pickup.id}", data={"action": "absent"})
+    assert ret.status == "Pickup Scheduled"
+    client.post(f"/agent/pickup/{ret.current_pickup.id}", data={"action": "absent"})
+    assert ret.status == "Cancelled"
+
+
+def test_agent_cannot_open_other_agents_pickup(client, seeded):
+    ret = ReturnRequest.query.filter_by(return_code="RL-2026-0002").one()
+    other = 2 if ret.current_pickup.agent_id == 1 else 1
+    login(client, "agent", other)
+    assert client.get(f"/agent/pickup/{ret.current_pickup.id}").status_code == 404

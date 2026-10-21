@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Inspect {{ ret.return_code }}{% endblock %}
+{% block page %}inspect{% endblock %}
+{% block body_class %}ops{% endblock %}
+{% block content %}
+<a class="back link" href="{{ url_for('qc.queue') }}">{{ m.icon('back', 16) }} Queue</a>
+{{ m.page_head("RE" if recheck else "QC", "QC / " ~ ret.return_code, "Second look" if recheck else "Inspect & grade",
+   "It came back from the bench. Did the repair hold?" if recheck else "Tick what you see. We'll suggest a grade; you have the final say.") }}
+
+<div class="inspect">
+  <aside class="slip slip--mini inspect__item" aria-label="Item details">
+    <div class="slip__head"><span class="mono">{{ ret.return_code }}</span><span class="mono">{{ ret.reason|upper }}</span></div>
+    <div class="slip__body">
+      <span class="slip__art">{{ m.product_art(ret.product) }}</span>
+      <div>
+        <p class="mono slip__cat">{{ ret.product.category|upper }}</p>
+        <h2 class="slip__name">{{ ret.product.name }}</h2>
+        <p class="slip__price mono">{{ (ret.order_item.unit_price * ret.order_item.quantity)|inr }}</p>
+      </div>
+    </div>
+    {% if ret.comment %}<blockquote class="quote">“{{ ret.comment }}”<cite class="mono">{{ ret.customer.name }}</cite></blockquote>{% endif %}
+    {% if ret.photo_path %}<img class="inspect__photo" src="{{ url_for('static', filename=ret.photo_path) }}" alt="Customer's photo of the item">{% endif %}
+    {% if recheck %}
+      <div class="slip__cut" aria-hidden="true"></div>
+      <p class="small"><b>First grade:</b> {{ ret.first_report.grade }} · {{ ret.first_report.remarks }}</p>
+      {% for job in ret.refurbish_jobs %}<p class="small"><b>Bench:</b> {{ job.notes or 'Repaired.' }}</p>{% endfor %}
+    {% endif %}
+  </aside>
+
+  <form class="form inspect__form" method="post" data-once data-stamp-form
+    data-wrong-item="{{ 'true' if wrong_item_claim else 'false' }}" data-recheck="{{ 'true' if recheck else 'false' }}">
+    <fieldset class="toggles">
+      <legend class="label">Checklist</legend>
+      {% for key, label in checks %}
+        <label class="toggle">
+          <input type="checkbox" role="switch" name="{{ key }}" {% if defaults[key] %}checked{% endif %} data-check="{{ key }}">
+          <span class="toggle__track" aria-hidden="true"></span>
+          <span>{{ label }}</span>
+        </label>
+      {% endfor %}
+    </fieldset>
+
+    <p class="notice notice--c" data-fraud-note hidden>
+      {{ m.icon('alert') }}
+      <span>Item doesn't match the order. Submitting will <b>reject this return as suspected fraud</b>.</span>
+    </p>
+    {% if wrong_item_claim and not recheck %}
+    <p class="small muted">Customer reported the wrong item, so a mismatch confirms their claim (full refund), not fraud.</p>
+    {% endif %}
+
+    <fieldset class="grades" data-grades>
+      <legend class="label">Grade <span class="mono suggest">Suggested: <b data-suggested>{{ suggested if not recheck else 'B' }}</b></span></legend>
+      <div class="grades__row">
+        {% for g in (['B', 'C'] if recheck else ['A', 'B', 'C']) %}
+          <label class="grade-pick grade-pick--{{ g|lower }}">
+            <input type="radio" name="grade" value="{{ g }}" required
+              {% if (recheck and g == 'B') or (not recheck and g == suggested) %}checked{% endif %}>
+            <span class="stamp stamp--{{ g|lower }}"><span class="stamp__letter">{{ g }}</span></span>
+            <span class="grade-pick__text">
+              {% if recheck %}
+                <b>{{ 'Repair passed' if g == 'B' else 'Repair failed' }}</b>
+                <small class="mono">{{ 'RESTOCK · 70%' if g == 'B' else 'SCRAP · 0%' }}</small>
+              {% else %}
+                <b>{{ route[g] }}</b>
+                <small class="mono">{{ percent[g] }}% REFUND{% if g == 'B' %} AFTER RECHECK{% endif %}</small>
+              {% endif %}
+            </span>
+          </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <div class="field">
+      <label class="label" for="remarks">Remarks</label>
+      <textarea id="remarks" name="remarks" rows="3" maxlength="300" placeholder="Scuff on the left side, works fine."></textarea>
+    </div>
+
+    <div class="form__end">
+      <button class="btn btn--primary btn--big" type="submit" data-magnetic>Stamp it {{ m.icon('arrow', 18) }}</button>
+    </div>
+  </form>
+</div>
+
+<div class="stamp-overlay" data-stamp-overlay aria-hidden="true">
+  <canvas class="stamp-overlay__ink"></canvas>
+  <span class="stamp stamp--giant"><span class="stamp__letter" data-stamp-letter>A</span><span class="stamp__sub mono" data-stamp-sub>GRADE</span></span>
+</div>
+{% endblock %}

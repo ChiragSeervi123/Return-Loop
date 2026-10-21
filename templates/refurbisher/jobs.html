@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Repair jobs{% endblock %}
+{% block page %}refurb{% endblock %}
+{% block body_class %}ops{% endblock %}
+{% block content %}
+{{ m.page_head("%02d" % jobs|length, "REFURBISHER / BENCH", "On the bench", "Grade B items. Fix them, then send them back to QC for a second look.") }}
+
+{% if jobs %}
+<div class="jobs">
+  {% for job in jobs %}
+  {% set r = job.return_request %}
+  <form class="job job--bench" method="post" action="{{ url_for('refurbisher.repaired', job_id=job.id) }}" data-once>
+    <span class="job__slot mono">{{ r.return_code }}<small>IN {{ job.created_at.strftime('%d %b')|upper }}</small></span>
+    <span class="job__main">
+      <b>{{ r.product.name }}</b>
+      <span class="job__line">{{ m.icon('scan', 16) }} QC: {{ r.latest_report.remarks or 'No remarks.' }}</span>
+      <label class="sr-only" for="notes-{{ job.id }}">Repair notes for {{ r.return_code }}</label>
+      <input id="notes-{{ job.id }}" type="text" name="notes" maxlength="300" placeholder="What did you fix?">
+    </span>
+    <button class="btn btn--primary" type="submit">{{ m.icon('wrench', 18) }} Mark repaired</button>
+  </form>
+  {% endfor %}
+</div>
+{% else %}
+  {{ m.empty_state("Bench is empty", "No grade B items waiting. Sharpen something.") }}
+{% endif %}
+
+{% if done %}
+<h2 class="section-label mono">RECENTLY FIXED</h2>
+<ul class="ledger ledger--plain">
+  {% for job in done %}
+  <li class="ledger__row"><span class="ledger__link">
+    <span class="mono ledger__code">{{ job.return_request.return_code }}</span>
+    <span class="ledger__name">{{ job.return_request.product.name }}<small class="muted">{{ job.notes or 'Repaired' }}</small></span>
+    {{ m.badge(job.return_request.status) }}
+  </span></li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}
