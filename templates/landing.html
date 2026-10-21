@@ -1,8 +1,162 @@
 {% extends "base.html" %}
 {% block title %}Returns, sorted{% endblock %}
 {% block page %}landing{% endblock %}
+{% block body_class %}landing{% endblock %}
+{% block nav_class %}nav--dark{% endblock %}
+{% block main_class %}landing-main{% endblock %}
+{% block head %}
+<script>
+  // Hide the headline until its reveal is ready; never for more than 2.5s.
+  document.documentElement.classList.add('hero-wait');
+  setTimeout(function () { document.documentElement.classList.remove('hero-wait'); }, 2500);
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+{% endblock %}
 {% block content %}
-<h1>ReturnLoop</h1>
-<p><a href="{{ url_for('main.enter_customer') }}">Start a return</a> · <a href="{{ url_for('main.switch') }}">Staff entry</a></p>
-<p>{{ stats.returns }} returns logged.</p>
+{# ---------- 1 + 2: hero and the scroll-driven flow share one sticky WebGL canvas ---------- #}
+<div class="loop-stage on-dark" data-loop-stage>
+  <div class="loop-stage__sticky" aria-hidden="true">
+    <div class="loop-stage__canvas" data-canvas-host></div>
+    <svg class="loop-fallback" viewBox="0 0 800 420" fill="none">
+      <defs>
+        <radialGradient id="lf-glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FF5B1F" stop-opacity=".35"/><stop offset="1" stop-color="#FF5B1F" stop-opacity="0"/></radialGradient>
+      </defs>
+      <ellipse cx="420" cy="220" rx="340" ry="170" fill="url(#lf-glow)"/>
+      <path d="M140 230c0-90 120-140 280-140s260 50 260 130-110 130-270 130S140 320 140 230z" stroke="#FF5B1F" stroke-width="3"/>
+      <path d="M140 230c0-90 120-140 280-140s260 50 260 130-110 130-270 130S140 320 140 230z" stroke="#FF5B1F" stroke-width="14" opacity=".15"/>
+      <path d="M560 300v-50a30 30 0 0 1 60 0v50" stroke="#FF5B1F" stroke-width="5" transform="rotate(-20 590 280)"/>
+      <g stroke="#14110F" stroke-width="2">
+        <rect x="190" y="120" width="54" height="40" fill="#D8C7A6" transform="rotate(-18 217 140)"/>
+        <rect x="330" y="72" width="54" height="40" fill="#E9DFCB" transform="rotate(-4 357 92)"/>
+        <rect x="490" y="84" width="54" height="40" fill="#D8C7A6" transform="rotate(10 517 104)"/>
+        <rect x="640" y="190" width="54" height="40" fill="#E9DFCB" transform="rotate(24 667 210)"/>
+        <rect x="420" y="330" width="54" height="40" fill="#D8C7A6" transform="rotate(-6 447 350)"/>
+        <rect x="230" y="300" width="54" height="40" fill="#E9DFCB" transform="rotate(14 257 320)"/>
+      </g>
+    </svg>
+  </div>
+
+  <section class="hero" aria-labelledby="hero-h">
+    <p class="hero__tag mono"><span class="dot" aria-hidden="true"></span> LIVE · RETURNS CENTRE, BAY 04</p>
+    <h1 id="hero-h" class="hero__title" data-split>Sent back. <em>Sorted out.</em></h1>
+    <div class="hero__foot">
+      <p class="hero__text">ReturnLoop takes a return from a customer's doorstep to a graded, refunded, back-on-the-shelf item. Every scan, stamp and rupee on record.</p>
+      <div class="hero__cta row">
+        <a class="btn btn--primary btn--big" data-magnetic href="{{ url_for('main.enter_customer') }}">Start a return {{ m.icon('arrow', 18) }}</a>
+        <a class="btn btn--ghost btn--big" href="{{ url_for('main.switch') }}">Staff entry</a>
+      </div>
+    </div>
+    <div class="hero__meta mono" aria-hidden="true">
+      <span>19.29°N 73.06°E</span>
+      <span>14 PARCELS ON THE LOOP</span>
+    </div>
+    <a class="scroll-cue mono" href="#flows"><span>Scroll</span><i aria-hidden="true"></i></a>
+  </section>
+
+  <section class="flows" id="flows" aria-labelledby="flows-h" data-flows>
+    <div class="flows__sticky">
+      <div class="flows__panel">
+        <p class="mono flows__kicker">HOW A RETURN FLOWS</p>
+        <h2 id="flows-h" class="sr-only">How a return flows</h2>
+        <div class="flows__steps" data-flow-steps>
+          {% set flow = [
+            ('Request', 'Customer picks the item and a reason. We check the 7-day window before anything moves.'),
+            ('Pickup', 'An agent collects it at a slot the customer chose. Miss us twice and the return is cancelled.'),
+            ('Check-in', 'The parcel lands at the centre and joins the QC queue, oldest first.'),
+            ('Grade', 'An inspector ticks the checklist and stamps A, B or C. The stamp decides where it goes.'),
+            ('Refund', 'Money goes back the moment the item reaches its shelf, workbench or skip, worked out to the rupee.')
+          ] %}
+          {% for title, text in flow %}
+          <article class="flow-step {% if loop.first %}is-active{% endif %}" data-flow-step>
+            <span class="flow-step__num" aria-hidden="true">0{{ loop.index }}</span>
+            <h3>{{ title }}</h3>
+            <p>{{ text }}</p>
+          </article>
+          {% endfor %}
+        </div>
+        <ol class="flows__rail mono" aria-hidden="true">
+          {% for title, _ in flow %}<li data-flow-dot {% if loop.first %}class="is-active"{% endif %}>{{ title }}</li>{% endfor %}
+        </ol>
+      </div>
+    </div>
+  </section>
+</div>
+
+{# ---------- 3: three grades ---------- #}
+<section class="fates" aria-labelledby="fates-h" data-fates>
+  <canvas class="fates__burst" aria-hidden="true"></canvas>
+  <header class="fates__head">
+    <p class="mono page-head__label">QC / THE STAMP DECIDES</p>
+    <h2 id="fates-h">Three grades,<br>three fates.</h2>
+  </header>
+  <div class="fate fate--a" data-fate="a">
+    <span class="stamp stamp--a fate__stamp" data-fate-stamp><span class="stamp__letter">A</span></span>
+    <div class="fate__text">
+      <span class="fate__pct" aria-hidden="true">100%</span>
+      <h3>Back on the shelf.</h3>
+      <p>Sealed, tagged, spotless. It's restocked the same day and the customer gets every rupee back.</p>
+    </div>
+  </div>
+  <div class="fate fate--b" data-fate="b">
+    <span class="stamp stamp--b fate__stamp" data-fate-stamp><span class="stamp__letter">B</span></span>
+    <div class="fate__text">
+      <span class="fate__pct" aria-hidden="true">70%</span>
+      <h3>Off to the bench.</h3>
+      <p>Scuffed or missing a tag. A technician fixes it, QC checks it again, and 70% goes back once it passes.</p>
+    </div>
+  </div>
+  <div class="fate fate--c" data-fate="c">
+    <span class="stamp stamp--c fate__stamp" data-fate-stamp><span class="stamp__letter">C</span></span>
+    <div class="fate__text">
+      <span class="fate__pct" aria-hidden="true">0%</span>
+      <h3>End of the line.</h3>
+      <p>Beyond repair, so it's scrapped. If it arrived damaged or was the wrong item, that's on us: full refund anyway.</p>
+    </div>
+  </div>
+</section>
+
+{# ---------- 4: numbers from the database ---------- #}
+<section class="numbers on-dark" aria-label="ReturnLoop in numbers">
+  <div class="numbers__big">
+    <span class="numbers__val" data-count="{{ stats.refunded }}" data-prefix="₹">{{ stats.refunded|inr }}</span>
+    <span class="mono numbers__label">REFUNDED, TO THE RUPEE</span>
+  </div>
+  <div class="numbers__cell">
+    <span class="numbers__val" data-count="{{ stats.returns }}">{{ stats.returns }}</span>
+    <span class="mono numbers__label">RETURNS LOGGED</span>
+  </div>
+  <div class="numbers__cell">
+    <span class="numbers__val" data-count="{{ stats.rescued }}">{{ stats.rescued }}</span>
+    <span class="mono numbers__label">ITEMS BACK ON SHELVES</span>
+  </div>
+  <div class="numbers__cell">
+    <span class="numbers__val" data-count="{{ stats.closed }}">{{ stats.closed }}</span>
+    <span class="mono numbers__label">REFUNDS SETTLED</span>
+  </div>
+</section>
+
+{# ---------- 5: closing call to action, as a shipping label ---------- #}
+<section class="cta" aria-labelledby="cta-h">
+  <div class="label-big">
+    <span class="label-big__tape label-big__tape--l" aria-hidden="true"></span>
+    <span class="label-big__tape label-big__tape--r" aria-hidden="true"></span>
+    <div class="label-big__row label-big__row--head mono">
+      <span>RETURN LABEL</span><span>RL-{{ '%04d' % (stats.returns + 1) }}</span><span>PRIORITY</span>
+    </div>
+    <div class="label-big__grid">
+      <div class="label-big__field"><span class="mono">FROM</span><b>You</b><small>Anywhere we deliver</small></div>
+      <div class="label-big__field"><span class="mono">TO</span><b>ReturnLoop Centre</b><small>Bay 04, Bhiwandi, MH 421302</small></div>
+      <div class="label-big__field label-big__field--wide"><span class="mono">CONTENTS</span><h2 id="cta-h">Something that didn't work out.</h2></div>
+    </div>
+    <div class="label-big__foot">
+      <span class="barcode label-big__barcode" aria-hidden="true"></span>
+      <div class="row">
+        <a class="btn btn--primary btn--big" data-magnetic href="{{ url_for('main.enter_customer') }}">Start a return {{ m.icon('arrow', 18) }}</a>
+        <a class="btn btn--ghost btn--big" href="{{ url_for('main.switch') }}">Staff entry</a>
+      </div>
+    </div>
+    <span class="stamp stamp--c label-big__stamp" aria-hidden="true"><span class="stamp__letter">7 DAYS</span></span>
+  </div>
+</section>
 {% endblock %}

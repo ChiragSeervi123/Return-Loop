@@ -21,7 +21,15 @@
     }
   }
   </script>
-  <script>document.documentElement.classList.add('js');</script>
+  <script>
+    // Runs before first paint: mark JS as on, and finish the page-flap wipe if we arrived through one.
+    (function (d) {
+      d.classList.add('js');
+      try {
+        if (sessionStorage.getItem('rl-flap') && !matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('flap-in');
+      } catch (e) {}
+    })(document.documentElement);
+  </script>
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}" data-page="{% block page %}{% endblock %}">
@@ -52,7 +60,7 @@
       </span>
       <label class="sr-only" for="who">Switch role or user</label>
       <select id="who" name="who" class="switcher__select">
-        {% if not role %}<option value="" selected disabled>Switch role / user</option>{% endif %}
+        {% if not role %}<option value="" selected disabled>Switch role</option>{% endif %}
         {% for r in roles %}
           <optgroup label="{{ r|capitalize }}">
             {% for pid, pname in people[r] %}
