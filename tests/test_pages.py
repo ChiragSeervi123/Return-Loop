@@ -103,6 +103,7 @@ def test_staff_pages_render(client, seeded):
         "qc": ["/qc/queue", "/qc/queue?q=0005", "/qc/inspect/RL-2026-0005", "/qc/inspect/RL-2026-0009"],
         "refurbisher": ["/refurb/jobs"],
         "warehouse": ["/warehouse/receive", "/warehouse/inventory", "/warehouse/inventory?action=Scrapped"],
+        "admin": ["/admin/dashboard"],
     }
     for role, urls in pages.items():
         login(client, role, 1)
@@ -168,3 +169,9 @@ def test_agent_cannot_open_other_agents_pickup(client, seeded):
     other = 2 if ret.current_pickup.agent_id == 1 else 1
     login(client, "agent", other)
     assert client.get(f"/agent/pickup/{ret.current_pickup.id}").status_code == 404
+
+
+def test_admin_dashboard_shows_flagged_customer(client, seeded):
+    login(client, "admin", 1)
+    page = client.get("/admin/dashboard").data.decode()
+    assert "Rohan Verma" in page and "Frequent returner" in page

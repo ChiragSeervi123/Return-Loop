@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page %}admin{% endblock %}
+{% block head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
+{% endblock %}
+{% block content %}
+{{ m.page_head("Σ", "ADMIN / CONTROL TOWER", "The whole loop, at a glance.", "Live from the database. Refresh for the latest.") }}
+
+<section class="kpis" aria-label="Key numbers">
+  <div class="kpi kpi--hero">
+    <span class="mono kpi__label">REFUNDED SO FAR</span>
+    <span class="kpi__num" data-count="{{ stats.refunded_amount }}" data-prefix="₹">{{ stats.refunded_amount|inr }}</span>
+    {{ m.barcode('kpi') }}
+  </div>
+  <div class="kpi">
+    <span class="mono kpi__label">RETURNS LOGGED</span>
+    <span class="kpi__num" data-count="{{ stats.total }}">{{ stats.total }}</span>
+  </div>
+  <div class="kpi">
+    <span class="mono kpi__label">IN THE LOOP NOW</span>
+    <span class="kpi__num" data-count="{{ stats.in_progress }}">{{ stats.in_progress }}</span>
+  </div>
+  <div class="kpi kpi--warn">
+    <span class="mono kpi__label">FRAUD REJECTIONS</span>
+    <span class="kpi__num" data-count="{{ stats.fraud }}">{{ stats.fraud }}</span>
+  </div>
+</section>
+
+<div class="charts">
+  <section class="panel chart-panel chart-panel--bar">
+    <h2 class="panel__title">Why things come back</h2>
+    <div class="chart-box">
+      <div class="skeleton" data-skeleton aria-hidden="true"></div>
+      <canvas id="reasons-chart" role="img" aria-label="Bar chart of return reasons: {% for k, v in stats.reasons.items() %}{{ k }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}"
+        data-chart="bar" data-labels='{{ stats.reasons.keys()|list|tojson }}' data-values='{{ stats.reasons.values()|list|tojson }}'></canvas>
+    </div>
+  </section>
+  <section class="panel chart-panel chart-panel--donut">
+    <h2 class="panel__title">First grades</h2>
+    <div class="chart-box chart-box--square">
+      <div class="skeleton skeleton--round" data-skeleton aria-hidden="true"></div>
+      <canvas id="grades-chart" role="img" aria-label="Doughnut chart of grades: A {{ stats.grades.A }}, B {{ stats.grades.B }}, C {{ stats.grades.C }}"
+        data-chart="doughnut" data-labels='["A", "B", "C"]' data-values='{{ [stats.grades.A, stats.grades.B, stats.grades.C]|tojson }}'></canvas>
+    </div>
+    <ul class="legend mono">
+      <li>{{ m.grade_stamp('A', 'stamp--xs') }} {{ stats.grades.A }} restocked</li>
+      <li>{{ m.grade_stamp('B', 'stamp--xs') }} {{ stats.grades.B }} to the bench</li>
+      <li>{{ m.grade_stamp('C', 'stamp--xs') }} {{ stats.grades.C }} scrapped</li>
+    </ul>
+  </section>
+</div>
+
+<section class="panel panel--flush flagged" aria-labelledby="flag-h">
+  <div class="flagged__head">
+    <h2 id="flag-h" class="panel__title">{{ m.icon('flag') }} Frequent returners</h2>
+    <p class="small muted">More than 3 returns in 30 days. Flagged for a look, never blocked.</p>
+  </div>
+  {% if flagged %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Customer</th><th>Email</th><th class="num">Returns, 30 days</th><th>Flag</th></tr></thead>
+      <tbody>
+        {% for c, n in flagged %}
+        <tr>
+          <td><b>{{ c.name }}</b></td>
+          <td class="mono">{{ c.email }}</td>
+          <td class="num mono">{{ n }}</td>
+          <td><span class="badge badge--c">Frequent returner</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    {{ m.empty_state("Nobody flagged", "No customer is over the limit right now.") }}
+  {% endif %}
+</section>
+{% endblock %}
