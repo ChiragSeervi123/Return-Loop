@@ -6,7 +6,7 @@ from flask import (Blueprint, abort, flash, redirect, render_template, request,
 
 from blueprints import current_customer, guard
 from config import (COMMENT_MAX_CHARS, MAX_PICKUP_ATTEMPTS, PICKUP_SLOTS,
-                    RETURN_REASONS, RETURN_WINDOW_DAYS, SLOT_HOURS)
+                    RETURN_REASONS, RETURN_WINDOW_DAYS, SLOT_HOURS, STAFF)
 from models import Order, OrderItem, ReturnRequest, db
 from services.eligibility import check_eligibility, days_left
 from services.returns import (WorkflowError, close_return, create_return,
@@ -98,7 +98,7 @@ def track(code):
     ret = _own_return(code)
     return render_template("customer/track.html", ret=ret, steps=TRACK_STEPS,
                            step=step_index(ret), terminal=ret.status in TERMINAL,
-                           max_attempts=MAX_PICKUP_ATTEMPTS)
+                           max_attempts=MAX_PICKUP_ATTEMPTS, agents=dict(STAFF["agent"]))
 
 
 @bp.post("/return/<code>/close")

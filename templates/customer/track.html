@@ -36,6 +36,7 @@
     {% elif ret.status == 'Pickup Scheduled' %}
       {% set p = ret.current_pickup %}
       <p class="big-line">{{ m.icon('calendar') }} {{ p.slot_date.strftime('%A %d %b') }}, {{ p.slot_window }}</p>
+      <p class="mono small muted">Agent: {{ agents.get(p.agent_id, 'Unassigned') }}</p>
       {% if p.attempt_no > 1 %}<p class="notice notice--b">{{ m.icon('alert') }} <span>We missed you last time. This is attempt {{ p.attempt_no }} of {{ max_attempts }}; if nobody's home again, the return is cancelled.</span></p>{% endif %}
       <a class="btn btn--ghost" href="{{ url_for('customer.schedule', code=ret.return_code) }}">Reschedule</a>
     {% elif ret.status in ['Picked Up', 'Received'] %}
