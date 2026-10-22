@@ -7,6 +7,8 @@ import pytest
 import seed
 from conftest import login
 from models import ReturnRequest
+from services.returns import (create_return, mark_picked_up, mark_received,
+                              mark_repaired, schedule_pickup, submit_inspection)
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 64
 
@@ -16,6 +18,34 @@ def seeded(app):
     customers, items = seed.build_catalogue()
     seed.seed_returns(customers, items)
     return customers, items
+
+
+TOMORROW = (datetime.now() + timedelta(days=1)).date()
+GOOD = dict(packaging_intact=True, tags_attached=True, item_matches_order=True, visible_damage=False)
+
+
+def kettle_return(seeded, until="schedule"):
+    """The seed has no returns in progress, so tests start one (the kettle) and move it along."""
+    customers, items = seeded
+    asha, kettle = customers[0], items[4][0]
+    ret = create_return(asha, kettle, "Damaged", "Lid hinge snapped.")
+    steps = ["schedule", "pickup", "receive", "grade_b", "repair"]
+    for step in steps[: steps.index(until) + 1]:
+        if step == "schedule":
+            schedule_pickup(ret, TOMORROW, "Morning", asha.name)
+        elif step == "pickup":
+            mark_picked_up(ret.current_pickup, "Ravi Kumar")
+        elif step == "receive":
+            mark_received(ret, "Kiran Patil")
+        elif step == "grade_b":
+            submit_inspection(ret, 1, GOOD, "B")
+        elif step == "repair":
+            mark_repaired(ret.refurbish_jobs[0], "Farhan Sheikh")
+    return ret
+
+
+def test_seed_leaves_staff_queues_empty(seeded):
+    assert {r.status for r in ReturnRequest.query} <= {"Closed", "Refunded"}
 
 
 def test_landing_and_switch(client, seeded):
@@ -39,8 +69,9 @@ def test_wrong_role_gets_friendly_403(client, seeded):
 
 def test_customer_pages_render(client, seeded):
     login(client, "customer", 1)
+    ret = kettle_return(seeded)
     for url in ["/customer/orders", "/customer/returns", "/customer/return/RL-2026-0001",
-                "/customer/return/RL-2026-0002", "/customer/return/RL-2026-0002/schedule"]:
+                f"/customer/return/{ret.return_code}", f"/customer/return/{ret.return_code}/schedule"]:
         assert client.get(url).status_code == 200, url
 
 
@@ -102,7 +133,7 @@ def test_ineligible_item_has_no_return_button(client, seeded):
 def test_staff_pages_render(client, seeded):
     pages = {
         "agent": ["/agent/pickups"],
-        "qc": ["/qc/queue", "/qc/queue?q=0005", "/qc/inspect/RL-2026-0005", "/qc/inspect/RL-2026-0009"],
+        "qc": ["/qc/queue", "/qc/queue?q=0001"],
         "refurbisher": ["/refurb/jobs"],
         "warehouse": ["/warehouse/receive", "/warehouse/inventory", "/warehouse/inventory?action=Scrapped"],
         "admin": ["/admin/dashboard"],
@@ -111,11 +142,40 @@ def test_staff_pages_render(client, seeded):
         login(client, role, 1)
         for url in urls:
             assert client.get(url).status_code == 200, url
+    ret = kettle_return(seeded, "receive")
+    login(client, "qc", 1)
+    assert client.get(f"/qc/inspect/{ret.return_code}").status_code == 200
+    submit_inspection(ret, 1, GOOD, "B")
+    mark_repaired(ret.refurbish_jobs[0], "Farhan Sheikh")
+    assert client.get(f"/qc/inspect/{ret.return_code}").status_code == 200  # re-inspection view
+
+
+def test_customer_return_shows_up_on_each_staff_screen(client, seeded):
+    """A return made by the customer appears for each role exactly when it's their turn."""
+    ret = kettle_return(seeded)
+    code = ret.return_code
+
+    def page(role, url):
+        login(client, role, 1)
+        return client.get(url).data.decode()
+
+    assert code in page("agent", "/agent/pickups")
+    assert code not in page("warehouse", "/warehouse/receive")
+    mark_picked_up(ret.current_pickup, "Ravi Kumar")
+    assert code in page("warehouse", "/warehouse/receive")
+    assert code not in page("qc", "/qc/queue")
+    mark_received(ret, "Kiran Patil")
+    assert code in page("qc", "/qc/queue")
+    submit_inspection(ret, 1, GOOD, "B")
+    assert code in page("refurbisher", "/refurb/jobs")
+    assert code not in page("qc", "/qc/queue")
+    mark_repaired(ret.refurbish_jobs[0], "Farhan Sheikh")
+    assert code in page("qc", "/qc/queue")
 
 
 def test_staff_flow_over_http(client, seeded):
     """Agent -> warehouse -> QC grade B -> refurbisher -> QC recheck -> refund."""
-    ret = ReturnRequest.query.filter_by(return_code="RL-2026-0002").one()  # pickup booked today
+    ret = kettle_return(seeded)
     pickup = ret.current_pickup
 
     login(client, "agent", pickup.agent_id)
@@ -151,14 +211,14 @@ def test_staff_flow_over_http(client, seeded):
 
 
 def test_qc_fraud_rejection_over_http(client, seeded):
+    ret = kettle_return(seeded, "receive")
     login(client, "qc", 1)
-    client.post("/qc/inspect/RL-2026-0005", data={"packaging_intact": "on", "grade": "A"})
-    ret = ReturnRequest.query.filter_by(return_code="RL-2026-0005").one()
+    client.post(f"/qc/inspect/{ret.return_code}", data={"packaging_intact": "on", "grade": "A"})
     assert ret.status == "Rejected" and ret.flagged_fraud
 
 
 def test_agent_absent_twice_over_http(client, seeded):
-    ret = ReturnRequest.query.filter_by(return_code="RL-2026-0002").one()
+    ret = kettle_return(seeded)
     login(client, "agent", ret.current_pickup.agent_id)
     client.post(f"/agent/pickup/{ret.current_pickup.id}", data={"action": "absent"})
     assert ret.status == "Pickup Scheduled"
@@ -167,12 +227,15 @@ def test_agent_absent_twice_over_http(client, seeded):
 
 
 def test_agent_cannot_open_pickup_assigned_elsewhere(client, seeded):
-    ret = ReturnRequest.query.filter_by(return_code="RL-2026-0002").one()
+    ret = kettle_return(seeded)
     login(client, "agent", ret.current_pickup.agent_id + 1)
     assert client.get(f"/agent/pickup/{ret.current_pickup.id}").status_code == 404
 
 
 def test_admin_dashboard_shows_flagged_customer(client, seeded):
+    # 3 seeded returns don't flag; the customer's 4th return does
     login(client, "admin", 1)
+    assert "Nobody flagged" in client.get("/admin/dashboard").data.decode()
+    kettle_return(seeded)
     page = client.get("/admin/dashboard").data.decode()
-    assert "Asha Menon" in page and "Frequent returner" in page
+    assert "Asha Menon" in page and "Nobody flagged" not in page

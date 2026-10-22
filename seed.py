@@ -125,9 +125,15 @@ def make_return(customer, item, reason, comment, created, until):
 
 
 def seed_returns(customers, items):
+    """Only finished returns, so the staff queues start empty.
+
+    They show up in the customer's "My returns" history and give the admin
+    charts and warehouse inventory something to draw. Every new return the
+    customer makes then travels Agent -> Warehouse -> QC -> Refurbisher.
+    """
     asha = customers[0]
 
-    # 1. Backpack, grade B, repaired, passed recheck, refunded and closed.
+    # 1. Backpack: grade B, repaired, passed recheck, refunded and closed.
     r = make_return(asha, items[2][0], "Not as described", "Zip pull is a different colour from the photos.",
                     day(8), "receive")
     submit_inspection(r, 1, dict(GOOD, tags_attached=False), "B", "Zip pull swapped, tags missing.")
@@ -136,45 +142,17 @@ def seed_returns(customers, items):
     close_return(r, asha.name)
     backdate(r, day(8, 11))
 
-    # 2. Headphones, pickup booked for today (shows on the agent's list).
-    r = create_return(asha, items[1][0], "Damaged", "Left ear cup rattles. Hinge cracked out of the box.",
-                      today=day(1, 18))
-    schedule_pickup(r, NOW.date(), "Morning", asha.name, today=day(1, 18))
-    backdate(r, day(1, 18), gap_hours=1)
-
-    # 3-6. More returns in the last 30 days (with all nine, Asha is a flagged frequent returner).
-    r = make_return(asha, items[4][0], "Changed my mind", "Bought a bigger one.", day(1, 9), None)
-    backdate(r, day(1, 9))
-
-    r = make_return(asha, items[5][0], "Not as described", "Not waterproof. Soaked through in light rain.",
-                    day(4), "pickup")
-    backdate(r, day(4, 12), gap_hours=26)
-
-    r = make_return(asha, items[6][0], "Damaged", "Speaker grille dented on arrival.", day(7), "receive")
-    backdate(r, day(7, 16), gap_hours=30)
-
-    r = make_return(asha, items[7][0], "Changed my mind", "Prefer the black ones.", day(10), "receive")
-    submit_inspection(r, 1, dict(GOOD, packaging_intact=False), "B", "Box crushed, earcup scuffed.")
-    backdate(r, day(10, 10), gap_hours=30)
-
-    # 7. Mugs, wrong item sent, grade A, full refund.
+    # 2. Mugs: wrong item sent, grade A, full refund.
     r = make_return(asha, items[10][0], "Wrong item", "Got the blue glaze set, ordered the sand one.",
                     day(6), "receive")
     submit_inspection(r, 1, dict(GOOD, item_matches_order=False), "A", "Blue set received. Unused, restock.")
     backdate(r, day(6, 9), gap_hours=22)
 
-    # 8. Speakers, damage confirmed, grade C, still a full refund (damaged exception).
+    # 3. Speakers: damage confirmed, grade C, still a full refund (damaged exception).
     r = make_return(asha, items[11][0], "Damaged", "One unit doesn't power on at all.", day(12), "receive")
     submit_inspection(r, 1, dict(GOOD, visible_damage=True, packaging_intact=False), "C",
                       "Board burnt. Not worth repairing.")
     backdate(r, day(12, 13), gap_hours=30)
-
-    # 9. Sneakers, repaired and now waiting for re-inspection.
-    r = make_return(asha, items[9][0], "Not as described", "Sole is stitched, listing said glued.",
-                    day(3), "receive")
-    submit_inspection(r, 1, dict(GOOD, visible_damage=True), "B", "Toe scuffed. Send for cleaning.")
-    mark_repaired(r.refurbish_jobs[0], "Farhan Sheikh", "Cleaned and re-laced.")
-    backdate(r, day(3, 8), gap_hours=10)
 
 
 def main():
