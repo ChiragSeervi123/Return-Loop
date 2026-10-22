@@ -14,8 +14,7 @@ for %%f in (static\uploads\*) do if /i not "%%~nxf"==".gitkeep" del /q "%%f"
 
 rem 3. Rebuild the database with fresh demo data.
 echo Reseeding database...
-if exist .venv\Scripts\python.exe (.venv\Scripts\python.exe seed.py) else (python seed.py)
-if errorlevel 1 goto :fail
+python seed.py || goto :fail
 
 rem 4. Start it again.
 if exist start.bat (
