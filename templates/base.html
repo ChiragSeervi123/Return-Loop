@@ -22,9 +22,14 @@
   }
   </script>
   <script>
-    // Runs before first paint: mark JS as on, and finish the page-flap wipe if we arrived through one.
+    // Runs before first paint: mark JS as on, apply the saved theme (so there is
+    // no light flash in dark mode), and finish the page-flap wipe if we arrived through one.
     (function (d) {
       d.classList.add('js');
+      var saved = null;
+      try { saved = localStorage.getItem('rl-theme'); } catch (e) {}
+      if (saved === 'light' || saved === 'dark') d.setAttribute('data-theme', saved);
+      d.setAttribute('data-theme-now', saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
       try {
         if (sessionStorage.getItem('rl-flap') && !matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('flap-in');
       } catch (e) {}
@@ -73,6 +78,11 @@
       </select>
       <button class="btn btn--small switcher__go" type="submit">Switch</button>
     </form>
+
+    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark mode">
+      <span class="theme-toggle__sun">{{ m.icon('sun', 18) }}</span>
+      <span class="theme-toggle__moon">{{ m.icon('moon', 18) }}</span>
+    </button>
   </header>
 
   <div class="toasts" role="status" aria-live="polite">

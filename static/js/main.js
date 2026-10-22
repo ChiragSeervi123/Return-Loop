@@ -46,6 +46,40 @@ export function toast(message, kind = 'info') {
 }
 
 // Role switcher: flip the chip, then submit.
+// Light / dark toggle. The <head> script already applied the saved choice before
+// the page was drawn; this button flips it and remembers it.
+function initThemeToggle() {
+  const root = document.documentElement;
+  const btn = $('[data-theme-toggle]');
+  const dark = matchMedia('(prefers-color-scheme: dark)');
+  const current = () => root.getAttribute('data-theme') || (dark.matches ? 'dark' : 'light');
+  const label = () => {
+    const now = current();
+    root.setAttribute('data-theme-now', now);
+    if (btn) {
+      btn.setAttribute('aria-label', now === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+      btn.setAttribute('aria-pressed', String(now === 'dark'));
+    }
+  };
+  label();
+  // following the system: react if it changes while the page is open
+  dark.addEventListener('change', () => {
+    if (!root.hasAttribute('data-theme')) { label(); document.dispatchEvent(new Event('rl:theme')); }
+  });
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const next = current() === 'dark' ? 'light' : 'dark';
+    if (!reducedMotion) {
+      root.classList.add('theme-fading');
+      setTimeout(() => root.classList.remove('theme-fading'), 400);
+    }
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('rl-theme', next); } catch (e) { /* private mode: works until reload */ }
+    label();
+    document.dispatchEvent(new Event('rl:theme'));
+  });
+}
+
 function initSwitcher() {
   const form = $('[data-switcher]');
   if (!form) return;
@@ -446,35 +480,57 @@ function initCharts() {
   }
   Chart.defaults.font.family = '"DM Mono", ui-monospace, monospace';
   Chart.defaults.font.size = 12;
-  Chart.defaults.color = '#57554F';
+
+  // Chart colours come from the theme tokens, so they work in light and dark.
+  const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const charts = [];
+  function paint(chart) {
+    const ink = token('--ink');
+    Chart.defaults.color = token('--muted');
+    if (chart.config.type === 'bar') {
+      const ds = chart.data.datasets[0];
+      ds.backgroundColor = ['#FF5B1F', ink, token('--kraft-dk'), token('--steel')];
+      ds.borderColor = ink;
+      chart.options.scales.x.border.color = ink;
+      chart.options.scales.y.grid.color = token('--line');
+      chart.options.scales.x.ticks.color = chart.options.scales.y.ticks.color = token('--muted');
+    } else {
+      chart.data.datasets[0].borderColor = token('--paper-hi');
+    }
+  }
+  document.addEventListener('rl:theme', () => charts.forEach((ch) => { paint(ch); ch.update('none'); }));
 
   const build = (c) => {
     const labels = JSON.parse(c.dataset.labels);
     const values = JSON.parse(c.dataset.values);
     const anim = reducedMotion ? false : { duration: 1100, easing: 'easeOutQuart' };
+    let chart;
     if (c.dataset.chart === 'bar') {
-      new Chart(c, {
+      chart = new Chart(c, {
         type: 'bar',
-        data: { labels, datasets: [{ data: values, backgroundColor: ['#FF5B1F', '#14110F', '#D8C7A6', '#6B6A66'], borderColor: '#14110F', borderWidth: 1.5, borderSkipped: false, maxBarThickness: 64 }] },
+        data: { labels, datasets: [{ data: values, borderWidth: 1.5, borderSkipped: false, maxBarThickness: 64 }] },
         options: {
           maintainAspectRatio: false, animation: anim, indexAxis: 'x',
           plugins: { legend: { display: false }, tooltip: { backgroundColor: '#14110F', titleFont: { family: 'Instrument Sans' } } },
           scales: {
-            x: { grid: { display: false }, border: { color: '#14110F', width: 1.5 } },
-            y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#E4DBC8' }, border: { display: false } },
+            x: { grid: { display: false }, border: { width: 1.5 }, ticks: {} },
+            y: { beginAtZero: true, ticks: { precision: 0 }, grid: {}, border: { display: false } },
           },
         },
       });
     } else {
-      new Chart(c, {
+      chart = new Chart(c, {
         type: 'doughnut',
-        data: { labels: labels.map((l) => `Grade ${l}`), datasets: [{ data: values, backgroundColor: ['#2F7D4F', '#D99A1E', '#B3392B'], borderColor: '#FFFCF5', borderWidth: 3 }] },
+        data: { labels: labels.map((l) => `Grade ${l}`), datasets: [{ data: values, backgroundColor: ['#2F7D4F', '#D99A1E', '#B3392B'], borderWidth: 3 }] },
         options: {
           maintainAspectRatio: false, cutout: '62%', animation: reducedMotion ? false : { animateRotate: true, duration: 1200 },
           plugins: { legend: { display: false }, tooltip: { backgroundColor: '#14110F' } },
         },
       });
     }
+    paint(chart);
+    chart.update();
+    charts.push(chart);
     const sk = c.parentElement.querySelector('[data-skeleton]');
     if (sk) { sk.classList.add('is-gone'); setTimeout(() => sk.remove(), 400); }
   };
@@ -766,6 +822,7 @@ async function initDeck() {
 initTransitions();
 initStagger();
 initToasts();
+initThemeToggle();
 initSwitcher();
 initConfirm();
 initOnce();
