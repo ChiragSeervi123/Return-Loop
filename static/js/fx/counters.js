@@ -4,6 +4,7 @@
 import { reducedMotion } from '../lib/webgl.js';
 
 const fmt = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 });
+const fmtPaise = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); // 1,259.30 not 1,259.3
 
 function run(el) {
   const target = parseFloat(el.dataset.count) || 0;
@@ -14,7 +15,7 @@ function run(el) {
     const p = Math.min(1, (now - start) / dur);
     const eased = 1 - Math.pow(2, -10 * p); // ease-out expo
     const val = p < 1 ? target * eased : target;
-    el.textContent = prefix + fmt.format(Number.isInteger(target) ? Math.round(val) : Math.round(val * 100) / 100);
+    el.textContent = prefix + (Number.isInteger(target) ? fmt.format(Math.round(val)) : fmtPaise.format(val));
     if (p < 1) requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

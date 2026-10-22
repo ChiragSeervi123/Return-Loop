@@ -133,4 +133,5 @@ docs/                ER diagram and UML mapping
 - `prefers-reduced-motion` turns off particles, parallax, tilt, page transitions, shakes and the stamp animation. The 3D scenes then draw single still frames.
 - Every scene goes through `lib/webgl.js`. It checks WebGL support, caps the pixel ratio (1.75 desktop, 1.25 mobile), pauses when the canvas is off-screen or the tab is hidden, halves the particles if the frame rate stays under 40 fps for 2 seconds, and disposes everything on page exit.
 - Agent, QC queue, refurbisher and warehouse-receive pages load no 3D.
+- **Light / dark mode:** the sun/moon button at the right of the top bar switches theme. It follows the system setting until you pick one, then remembers your choice (applied before the page draws, so there's no flash). The landing and team pages are dark in both themes; the presentation slides and the big shipping labels stay paper-white so they print properly.
 - Status badges always carry their text. Focus rings are visible. Every control works from the keyboard, and tap targets are at least 44 px.
