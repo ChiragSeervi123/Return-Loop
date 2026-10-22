@@ -126,7 +126,7 @@ docs/                ER diagram and UML mapping
 
 ## Team page
 
-`/team` (the **Team** link in the top bar, for every role) introduces Chirag Seervi, Suman Singh and Riya Singh. Up to 9,000 particles (3,600 on phones, fewer on low-power machines) start as a knotted loop. As you scroll they burst apart and re-form into each member's first name, and end as three interlocked rings. Your cursor (or finger) parts and swirls the particles around it, and clicking (or tapping) the page or a member's stamp shakes them loose. The morphing runs in a vertex shader on the GPU. Each member has a "crew manifest" card with a departure-board name scramble. Names and roles live in `config.TEAM`; edit them there.
+`/team` (the **Team** link in the top bar, for every role) introduces Chirag Seervi, Anshuman Singh and Aryan Singh. Up to 9,000 particles (3,600 on phones, fewer on low-power machines) start as a knotted loop. As you scroll they burst apart and re-form into each member's first name, and end as three interlocked rings. Your cursor (or finger) parts and swirls the particles around it, and clicking (or tapping) the page or a member's stamp shakes them loose. The morphing runs in a vertex shader on the GPU. Each member has a "crew manifest" card with a departure-board name scramble. Names and roles live in `config.TEAM`; edit them there.
 
 ## Accessibility and performance notes
 
