@@ -1233,6 +1233,7 @@ table.mini td:first-child { font-weight: 600; padding-right: 10px; white-space: 
 .agenda a { display: flex; gap: 18px; padding: 13px 0; text-decoration: none; }
 .agenda a:hover { color: var(--orange-dk); }
 .agenda b { color: var(--orange-dk); font-weight: 500; }
+.agenda__slide { margin-left: auto; align-self: center; font-size: 12px; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
 
 /* process chevrons */
 .chevrons { list-style: none; padding: 0; margin: 18px 0 0; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }

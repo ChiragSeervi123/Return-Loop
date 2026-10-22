@@ -56,7 +56,7 @@
             (7, "Non-functional requirements"), (8, "Use case diagram"), (9, "Class diagram"),
             (10, "Data flow diagram, level 0"), (11, "Data flow diagram, level 1"), (12, "Activity diagram"),
             (13, "Sequence diagram"), (14, "Layered architecture"), (15, "Architecture: from UI to data")] %}
-          {% for no, item in agenda %}<li><a href="#" data-goto="{{ no }}"><b>{{ '%02d' % no }}</b> {{ item }}</a></li>{% endfor %}
+          {% for no, item in agenda %}<li><a href="#" data-goto="{{ no }}"><b>{{ '%02d' % loop.index }}</b> {{ item }}<small class="agenda__slide">slide {{ '%02d' % no }}</small></a></li>{% endfor %}
         </ol>
         {{ foot() }}
       </section>

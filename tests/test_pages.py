@@ -261,6 +261,6 @@ def test_presentation_agenda_points_at_the_right_slides(client, seeded):
     import re
     page = client.get("/ppt").data.decode()
     slides = re.findall(r'<section class="slide[^"]*" data-slide aria-label="([^"]+)"', page)
-    for no, topic in re.findall(r'data-goto="(\d+)"><b>\d+</b> ([^<]+)</a>', page):
+    for no, topic in re.findall(r'data-goto="(\d+)"><b>\d+</b> ([^<]+)<small', page):
         first_word = topic.split()[0].strip(":,").lower()
         assert first_word in slides[int(no) - 1].lower(), (no, topic, slides[int(no) - 1])
