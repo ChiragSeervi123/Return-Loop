@@ -51,10 +51,12 @@
       <section class="slide" data-slide aria-label="Agenda">
         {{ head(2, "AGENDA", "What we'll cover") }}
         <ol class="agenda mono">
-          {% set agenda = ["Project planning & management", "Functional requirements", "Non-functional requirements",
-            "Use case diagram", "Class diagram", "Data flow diagram, level 0", "Data flow diagram, level 1",
-            "Activity diagram", "Sequence diagram", "Layered architecture", "Architecture: from UI to data"] %}
-          {% for item in agenda %}<li><a href="#" data-goto="{{ loop.index + 2 }}"><b>{{ '%02d' % (loop.index + 2) }}</b> {{ item }}</a></li>{% endfor %}
+          {# (slide number, topic): planning & management spans slides 3-5 #}
+          {% set agenda = [(3, "Project planning & management"), (6, "Functional requirements"),
+            (7, "Non-functional requirements"), (8, "Use case diagram"), (9, "Class diagram"),
+            (10, "Data flow diagram, level 0"), (11, "Data flow diagram, level 1"), (12, "Activity diagram"),
+            (13, "Sequence diagram"), (14, "Layered architecture"), (15, "Architecture: from UI to data")] %}
+          {% for no, item in agenda %}<li><a href="#" data-goto="{{ no }}"><b>{{ '%02d' % no }}</b> {{ item }}</a></li>{% endfor %}
         </ol>
         {{ foot() }}
       </section>
