@@ -24,9 +24,9 @@ The "Switch role" menu in the top bar stores a role and a user id in the session
 |---|---|---|
 | Customer | Asha Menon | `/customer/orders`, `/customer/return/new?item=ID`, `/customer/return/<code>/schedule`, `/customer/returns`, `/customer/return/<code>` (tracking) |
 | Pickup agent | Ravi Kumar | `/agent/pickups`, `/agent/pickup/<id>` |
+| Warehouse manager | Kiran Patil | `/warehouse/receive`, `/warehouse/inventory` |
 | QC inspector | Anjali Rao | `/qc/queue`, `/qc/inspect/<code>` |
 | Refurbisher | Farhan Sheikh | `/refurb/jobs` |
-| Warehouse manager | Kiran Patil | `/warehouse/receive`, `/warehouse/inventory` |
 | Admin | Deepa Nair | `/admin/dashboard` |
 | Anyone | | `/` (landing page), `/switch` |
 | API (customer only) | | `/api/return/<code>/status` |

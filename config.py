@@ -85,7 +85,17 @@ STAFF = {
     "admin": [(1, "Deepa Nair")],
 }
 
-ROLES = ("customer", "agent", "qc", "refurbisher", "warehouse", "admin")
+# In the order a return travels, so the role menu follows the process.
+ROLES = ("customer", "agent", "warehouse", "qc", "refurbisher", "admin")
+
+ROLE_LABELS = {
+    "customer": "Customer",
+    "agent": "Pickup agent",
+    "warehouse": "Warehouse",
+    "qc": "QC inspector",
+    "refurbisher": "Refurbisher",
+    "admin": "Admin",
+}
 
 # Page each role lands on after switching.
 ROLE_HOME = {

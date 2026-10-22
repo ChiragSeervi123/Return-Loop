@@ -17,7 +17,7 @@
   } %}
   {% for r in roles %}
     <fieldset class="desk desk--{{ r }}">
-      <legend class="desk__title">{{ m.icon(desk_icon[r], 22) }} {{ desk_name[r] }}</legend>
+      <legend class="desk__title"><span class="mono muted">{{ '%02d' % loop.index }}</span> {{ m.icon(desk_icon[r], 22) }} {{ desk_name[r] }}</legend>
       <p class="muted">{{ desk_text[r] }}</p>
       <div class="desk__people">
         {% for pid, pname in people[r] %}

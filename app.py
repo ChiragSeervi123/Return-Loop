@@ -4,7 +4,7 @@ import os
 from flask import Flask, render_template, request
 
 from blueprints import current_role, current_user_id, current_user_name
-from config import ROLES, STAFF, Config
+from config import ROLE_LABELS, ROLES, STAFF, Config
 from models import Customer, db
 
 
@@ -65,6 +65,7 @@ def create_app(config_class=Config):
             "user_id": current_user_id(),
             "user_name": current_user_name(),
             "roles": ROLES,
+            "role_labels": ROLE_LABELS,
             "people": people,
             "nav": NAV,
         }

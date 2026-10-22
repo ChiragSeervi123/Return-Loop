@@ -62,7 +62,7 @@
       <select id="who" name="who" class="switcher__select">
         {% if not role %}<option value="" selected disabled>Switch role</option>{% endif %}
         {% for r in roles %}
-          <optgroup label="{{ r|capitalize }}">
+          <optgroup label="{{ loop.index }}. {{ role_labels[r] }}">
             {% for pid, pname in people[r] %}
               <option value="{{ r }}:{{ pid }}" {% if role == r and user_id == pid %}selected{% endif %}>{{ pname }}</option>
             {% endfor %}
