@@ -5,3 +5,4 @@ static/uploads/*
 !static/uploads/.gitkeep
 .pytest_cache/
 screenshots/
+.venv/
