@@ -22,8 +22,8 @@ The "Switch role" menu in the top bar stores a role and a user id in the session
 
 | Role | Seeded people | Pages |
 |---|---|---|
-| Customer | Asha Menon, Rohan Verma, Priya Shah | `/customer/orders`, `/customer/return/new?item=ID`, `/customer/return/<code>/schedule`, `/customer/returns`, `/customer/return/<code>` (tracking) |
-| Pickup agent | Ravi Kumar, Meena Iyer | `/agent/pickups`, `/agent/pickup/<id>` |
+| Customer | Asha Menon | `/customer/orders`, `/customer/return/new?item=ID`, `/customer/return/<code>/schedule`, `/customer/returns`, `/customer/return/<code>` (tracking) |
+| Pickup agent | Ravi Kumar | `/agent/pickups`, `/agent/pickup/<id>` |
 | QC inspector | Anjali Rao | `/qc/queue`, `/qc/inspect/<code>` |
 | Refurbisher | Farhan Sheikh | `/refurb/jobs` |
 | Warehouse manager | Kiran Patil | `/warehouse/receive`, `/warehouse/inventory` |
@@ -57,21 +57,21 @@ Run `python seed.py` first so the codes below match.
 
 1. **Landing.** Open `/`. Scroll through the 3D loop, the five-step "How a return flows" section, the three stamps and the numbers.
 2. **Customer returns an item.** Click **Start a return** (you become Asha Menon). On the *Brass Desk Lamp* slip, click **Return item**. Pick **Damaged**, write a comment, and drag a PNG or JPG photo onto the drop zone. Click **Request return**. The return gets code **RL-2026-0010**.
-3. **Book the pickup.** Pick any day and the **Evening** slot, tick the address box, and click **Book pickup**. The tracking page shows the parcel at "Scheduled" and names the agent: **Meena Iyer** on a fresh seed, because pickups go to the agent with fewer pending jobs. Keep this tab open if you want to watch it update live.
-4. **Agent picks it up.** Use the top-bar menu to switch to **Meena Iyer**. RL-2026-0010 is under "Coming up". Open it, click **Mark picked up**, and confirm in the modal. Within 5 seconds the customer's tracking tab moves the parcel to "Picked up".
+3. **Book the pickup.** Pick any day and the **Evening** slot, tick the address box, and click **Book pickup**. The tracking page shows the parcel at "Scheduled" and names the agent, **Ravi Kumar**. Keep this tab open if you want to watch it update live.
+4. **Agent picks it up.** Use the top-bar menu to switch to **Ravi Kumar**. RL-2026-0010 is under "Coming up", because it's booked for a later day. Open it, click **Mark picked up**, and confirm in the modal. Within 5 seconds the customer's tracking tab moves the parcel to "Picked up".
 5. **Warehouse receives it.** Switch to **Kiran Patil**. On `/warehouse/receive`, click **Mark received at centre** for RL-2026-0010.
 6. **QC grades it B.** Switch to **Anjali Rao**. In the queue, search `0010` and open it. Leave the checklist ticked, choose the **B** stamp, and click **Stamp it**. You get the full-screen stamp moment: the stamp slams down, the screen shakes, and ink sparks fly. The return moves to *Refurbishing*.
 7. **Refurbisher repairs it.** Switch to **Farhan Sheikh**. On `/refurb/jobs`, add a note and click **Mark repaired**. The return goes to *Re-inspection*.
 8. **QC rechecks.** Switch back to **Anjali Rao**. RL-2026-0010 is in the queue, marked *Re-inspection*. Open it, keep **B (repair passed)**, and click **Stamp it**.
 9. **Refund appears.** Switch to **Asha Menon** and open *My returns* → RL-2026-0010. The parcel sits at "Refunded" and the breakdown counts up: ₹2,499 × 70% − ₹0 = ₹1,749.30. Damage wasn't confirmed by QC, so the grade decides the refund. Click **Got it, close this return** to finish.
-10. **Admin dashboard updates.** Switch to **Deepa Nair**. "Returns logged" is now 10, the refunded total has grown, the reasons bar chart and the grades doughnut include the new return, and Rohan Verma is listed as a frequent returner.
+10. **Admin dashboard updates.** Switch to **Deepa Nair**. "Returns logged" is now 10, the refunded total has grown, the reasons bar chart and the grades doughnut include the new return, and Asha Menon is listed as a frequent returner.
 
 Other things to try:
 
 - Click **Customer absent** twice on Asha's headphones pickup (RL-2026-0002, Ravi Kumar's list). The return is cancelled and the tracking page says why.
 - As QC, untick **Item matches order** on RL-2026-0005 and submit. After the confirmation modal, it is rejected as suspected fraud.
-- As Priya Shah, open RL-2026-0009. As QC, recheck it with **C**: the failed repair scraps the item.
-- Open `/customer/return/RL-2026-0003` as Asha. It is Rohan's return, so you get a 404.
+- As QC, recheck RL-2026-0009 with **C**: the failed repair scraps the item. Asha's tracking page then shows it scrapped.
+- Open `/customer/return/RL-2026-9999`. That code doesn't exist, so you get the 404 page. (Another customer's return gives the same 404; the tests check this.)
 
 ## Assumptions
 
@@ -79,7 +79,8 @@ Decisions I made where the spec was open:
 
 - **Project layout.** The spec's `returnloop/` folder is the repository root itself.
 - **Staff accounts.** The schema has no staff table, so staff are defined in `config.STAFF`. `pickups.agent_id`, `qc_reports.inspector_id` and `refurbish_jobs.technician_id` hold those ids.
-- **Frequent-returner seed.** The spec seeds "1 customer with 3 recent returns so the flag shows", but its own rule and tests say 3 does not flag and 4 does. Rohan Verma therefore gets 4 returns.
+- **One person per role.** The spec asks for three seeded customers; on request this was cut to one customer (Asha Menon) and one pickup agent (Ravi Kumar), so a whole return can be followed without hunting for the right person. All 12 orders and 9 demo returns belong to Asha. Adding people back only needs `CUSTOMERS` in `seed.py` and `STAFF` in `config.py`.
+- **Frequent-returner seed.** The spec's rule is "more than 3 returns in 30 days", and its tests say 3 does not flag and 4 does. Asha has all 9 demo returns, so she is the flagged customer.
 - **Requested → Rejected.** Ineligible items are stopped before a return is created: the button is disabled, and the server refuses the request if someone posts it anyway. So this transition exists in the state machine and is tested, but no screen uses it.
 - **When is a return "open".** An item can't be returned again while it has any return that isn't *Cancelled*. A finished return shows "Already returned"; a cancelled one (customer absent twice) can be requested again while the window is still open.
 - **First absent attempt.** The agent's "Customer absent" rebooks automatically for the next day, same slot, same agent, and records it as Pickup Scheduled → Pickup Scheduled. The customer can still reschedule.

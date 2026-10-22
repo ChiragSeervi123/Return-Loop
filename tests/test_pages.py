@@ -44,9 +44,11 @@ def test_customer_pages_render(client, seeded):
         assert client.get(url).status_code == 200, url
 
 
-def test_other_customers_return_is_404(client, seeded):
+def test_other_customers_return_is_404(client, seeded, make):
+    stranger = make.customer("Bilal")
+    theirs = make.ret(stranger)
     login(client, "customer", 1)
-    assert client.get("/customer/return/RL-2026-0003").status_code == 404
+    assert client.get(f"/customer/return/{theirs.return_code}").status_code == 404
     assert client.get("/customer/return/RL-9999-0001").status_code == 404
 
 
@@ -164,14 +166,13 @@ def test_agent_absent_twice_over_http(client, seeded):
     assert ret.status == "Cancelled"
 
 
-def test_agent_cannot_open_other_agents_pickup(client, seeded):
+def test_agent_cannot_open_pickup_assigned_elsewhere(client, seeded):
     ret = ReturnRequest.query.filter_by(return_code="RL-2026-0002").one()
-    other = 2 if ret.current_pickup.agent_id == 1 else 1
-    login(client, "agent", other)
+    login(client, "agent", ret.current_pickup.agent_id + 1)
     assert client.get(f"/agent/pickup/{ret.current_pickup.id}").status_code == 404
 
 
 def test_admin_dashboard_shows_flagged_customer(client, seeded):
     login(client, "admin", 1)
     page = client.get("/admin/dashboard").data.decode()
-    assert "Rohan Verma" in page and "Frequent returner" in page
+    assert "Asha Menon" in page and "Frequent returner" in page

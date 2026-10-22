@@ -14,10 +14,9 @@ from services.returns import (close_return, create_return, mark_picked_up, mark_
 
 NOW = datetime.now().replace(second=0, microsecond=0)
 
+# One demo customer, so every return in the demo belongs to the same person.
 CUSTOMERS = [
     ("Asha Menon", "asha@example.com", "98201 44120", "Flat 4B, Sea Breeze, Bandra West, Mumbai 400050"),
-    ("Rohan Verma", "rohan@example.com", "99100 23871", "221 Sector 15, Rohini, Delhi 110089"),
-    ("Priya Shah", "priya@example.com", "97234 66510", "17 Lake View Road, Koramangala, Bengaluru 560034"),
 ]
 
 # name, category, price, returnable
@@ -34,20 +33,20 @@ PRODUCTS = [
     ("Vitamin C Face Serum", "Beauty", 649, False),  # hygiene: not returnable
 ]
 
-# customer index, days since delivery, [(product index, quantity)]
+# days since delivery, [(product index, quantity)]
 ORDERS = [
-    (0, 2, [(0, 1), (1, 1)]),
-    (0, 5, [(2, 1)]),
-    (0, 10, [(3, 1)]),
-    (0, 13, [(4, 1)]),
-    (1, 3, [(5, 1)]),
-    (1, 6, [(6, 1), (7, 1)]),
-    (1, 9, [(8, 1)]),
-    (1, 12, [(2, 1)]),
-    (2, 1, [(9, 1), (1, 1)]),
-    (2, 4, [(7, 1)]),
-    (2, 8, [(1, 3)]),
-    (2, 14, [(8, 2)]),
+    (2, [(0, 1), (1, 1)]),
+    (5, [(2, 1)]),
+    (10, [(3, 1)]),
+    (13, [(4, 1)]),
+    (3, [(5, 1)]),
+    (6, [(6, 1), (7, 1)]),
+    (9, [(8, 1)]),
+    (12, [(2, 1)]),
+    (1, [(9, 1), (1, 1)]),
+    (4, [(7, 1)]),
+    (8, [(1, 3)]),
+    (14, [(8, 2)]),
 ]
 
 GOOD = dict(packaging_intact=True, tags_attached=True, item_matches_order=True, visible_damage=False)
@@ -66,9 +65,9 @@ def build_catalogue():
     db.session.flush()
 
     items = []  # items[order_no][line_no]
-    for cust_i, days, lines in ORDERS:
+    for days, lines in ORDERS:
         delivered = (NOW - timedelta(days=days)).replace(hour=14, minute=20)
-        order = Order(customer_id=customers[cust_i].id, order_date=delivered - timedelta(days=3),
+        order = Order(customer_id=customers[0].id, order_date=delivered - timedelta(days=3),
                       delivered_at=delivered,
                       total=sum(products[p].price * q for p, q in lines))
         db.session.add(order)
@@ -126,9 +125,9 @@ def make_return(customer, item, reason, comment, created, until):
 
 
 def seed_returns(customers, items):
-    asha, rohan, priya = customers
+    asha = customers[0]
 
-    # 1. Asha: backpack, grade B, repaired, passed recheck, refunded and closed.
+    # 1. Backpack, grade B, repaired, passed recheck, refunded and closed.
     r = make_return(asha, items[2][0], "Not as described", "Zip pull is a different colour from the photos.",
                     day(8), "receive")
     submit_inspection(r, 1, dict(GOOD, tags_attached=False), "B", "Zip pull swapped, tags missing.")
@@ -137,41 +136,41 @@ def seed_returns(customers, items):
     close_return(r, asha.name)
     backdate(r, day(8, 11))
 
-    # 2. Asha: headphones, pickup booked for today (shows on the agent's list).
+    # 2. Headphones, pickup booked for today (shows on the agent's list).
     r = create_return(asha, items[1][0], "Damaged", "Left ear cup rattles. Hinge cracked out of the box.",
                       today=day(1, 18))
     schedule_pickup(r, NOW.date(), "Morning", asha.name, today=day(1, 18))
     backdate(r, day(1, 18), gap_hours=1)
 
-    # 3-6. Rohan: four returns in the last 30 days, so the admin sees a flag.
-    r = make_return(rohan, items[4][0], "Changed my mind", "Bought a bigger one.", day(1, 9), None)
+    # 3-6. More returns in the last 30 days (with all nine, Asha is a flagged frequent returner).
+    r = make_return(asha, items[4][0], "Changed my mind", "Bought a bigger one.", day(1, 9), None)
     backdate(r, day(1, 9))
 
-    r = make_return(rohan, items[5][0], "Not as described", "Not waterproof. Soaked through in light rain.",
+    r = make_return(asha, items[5][0], "Not as described", "Not waterproof. Soaked through in light rain.",
                     day(4), "pickup")
     backdate(r, day(4, 12), gap_hours=26)
 
-    r = make_return(rohan, items[6][0], "Damaged", "Speaker grille dented on arrival.", day(7), "receive")
+    r = make_return(asha, items[6][0], "Damaged", "Speaker grille dented on arrival.", day(7), "receive")
     backdate(r, day(7, 16), gap_hours=30)
 
-    r = make_return(rohan, items[7][0], "Changed my mind", "Prefer the black ones.", day(10), "receive")
+    r = make_return(asha, items[7][0], "Changed my mind", "Prefer the black ones.", day(10), "receive")
     submit_inspection(r, 1, dict(GOOD, packaging_intact=False), "B", "Box crushed, earcup scuffed.")
     backdate(r, day(10, 10), gap_hours=30)
 
-    # 7. Priya: mugs, wrong item sent, grade A, full refund.
-    r = make_return(priya, items[10][0], "Wrong item", "Got the blue glaze set, ordered the sand one.",
+    # 7. Mugs, wrong item sent, grade A, full refund.
+    r = make_return(asha, items[10][0], "Wrong item", "Got the blue glaze set, ordered the sand one.",
                     day(6), "receive")
     submit_inspection(r, 1, dict(GOOD, item_matches_order=False), "A", "Blue set received. Unused, restock.")
     backdate(r, day(6, 9), gap_hours=22)
 
-    # 8. Priya: speakers, damage confirmed, grade C, still a full refund (damaged exception).
-    r = make_return(priya, items[11][0], "Damaged", "One unit doesn't power on at all.", day(12), "receive")
+    # 8. Speakers, damage confirmed, grade C, still a full refund (damaged exception).
+    r = make_return(asha, items[11][0], "Damaged", "One unit doesn't power on at all.", day(12), "receive")
     submit_inspection(r, 1, dict(GOOD, visible_damage=True, packaging_intact=False), "C",
                       "Board burnt. Not worth repairing.")
     backdate(r, day(12, 13), gap_hours=30)
 
-    # 9. Priya: sneakers, repaired and now waiting for re-inspection.
-    r = make_return(priya, items[9][0], "Not as described", "Sole is stitched, listing said glued.",
+    # 9. Sneakers, repaired and now waiting for re-inspection.
+    r = make_return(asha, items[9][0], "Not as described", "Sole is stitched, listing said glued.",
                     day(3), "receive")
     submit_inspection(r, 1, dict(GOOD, visible_damage=True), "B", "Toe scuffed. Send for cleaning.")
     mark_repaired(r.refurbish_jobs[0], "Farhan Sheikh", "Cleaned and re-laced.")

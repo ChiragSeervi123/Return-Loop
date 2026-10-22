@@ -78,7 +78,7 @@ SLOT_HOURS = {"Morning": "9 - 12", "Afternoon": "12 - 4", "Evening": "4 - 8"}
 # Staff members. There is no staff table in the spec, so they live here.
 # The id is what gets stored in pickups.agent_id, qc_reports.inspector_id, etc.
 STAFF = {
-    "agent": [(1, "Ravi Kumar"), (2, "Meena Iyer")],
+    "agent": [(1, "Ravi Kumar")],
     "qc": [(1, "Anjali Rao")],
     "refurbisher": [(1, "Farhan Sheikh")],
     "warehouse": [(1, "Kiran Patil")],
