@@ -54,18 +54,18 @@ function rings(n) {
 function word(text, n, width) {
   // Draw the word on a 2D canvas in the display font, then sample filled pixels.
   const c = document.createElement('canvas');
-  c.width = 1400;
-  c.height = 340;
-  const ctx = c.getContext('2d');
+  c.width = 1000;   // small canvas: fast to read back, still plenty of detail
+  c.height = 250;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  let size = 300;
+  let size = 220;
   do {
     ctx.font = `800 ${size}px "Bricolage Grotesque", "Arial Black", sans-serif`;
     size -= 10;
-  } while (ctx.measureText(text).width > c.width * 0.94 && size > 60);
-  ctx.fillText(text, c.width / 2, c.height / 2 + 10);
+  } while (ctx.measureText(text).width > c.width * 0.94 && size > 40);
+  ctx.fillText(text, c.width / 2, c.height / 2 + 8);
   const data = ctx.getImageData(0, 0, c.width, c.height).data;
   const filled = [];
   for (let y = 0; y < c.height; y += 2) {
@@ -91,6 +91,7 @@ const VERT = /* glsl */`
   attribute float aRand;
   uniform float uMorph; uniform float uTime; uniform float uScatter; uniform float uSize;
   uniform float uPixelRatio; uniform vec3 uMouse; uniform float uMouseOn;
+  uniform float uRadius; uniform float uPush;   // cursor reach and strength, in the shape's own units
   varying float vBurst; varying float vRand; varying float vDepth;
 
   vec3 pick(float i) {
@@ -116,16 +117,18 @@ const VERT = /* glsl */`
       sin(aRand * 33.0 + uTime * 0.7 + p.z));
     p += swirl * (burst * 2.6 + 0.04 + uScatter * 2.8);
 
-    // the cursor pushes particles out of its way
+    // the cursor parts the particles: pushed outwards, swirled round it, lifted towards the camera
     vec2 away = p.xy - uMouse.xy;
     float dist = length(away);
-    p.xy += normalize(away + 1e-4) * uMouseOn * smoothstep(1.8, 0.0, dist) * 1.1;
-    p.z += uMouseOn * smoothstep(1.8, 0.0, dist) * 0.8;
+    float reach = uMouseOn * smoothstep(uRadius, 0.0, dist);
+    vec2 dir = away / max(dist, 1e-4);
+    p.xy += (dir * 1.0 + vec2(-dir.y, dir.x) * 0.55) * reach * uPush;
+    p.z += reach * uPush * 1.2;
 
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
     gl_PointSize = uSize * uPixelRatio * (0.55 + aRand * 0.9) / -mv.z;
-    vBurst = burst + uScatter;
+    vBurst = burst + uScatter + reach * 0.9;     // particles near the cursor glow hot
     vRand = aRand;
     vDepth = p.z;
   }
@@ -147,7 +150,9 @@ const FRAG = /* glsl */`
 `;
 
 export async function initTeam(host, { words = [], accents = [] } = {}) {
-  const N = isMobile ? 4200 : 10000;
+  // Particle budget: fewer on phones and on machines with few CPU cores (usually weaker GPUs too).
+  const cores = navigator.hardwareConcurrency || 4;
+  const N = isMobile ? 3600 : cores <= 4 ? 6500 : 9000;
   const stage = await createStage(host, {
     camera: { fov: 42 },
     onLowFps: () => {
@@ -179,8 +184,9 @@ export async function initTeam(host, { words = [], accents = [] } = {}) {
 
   const uniforms = {
     uMorph: { value: 0 }, uTime: { value: 0 }, uScatter: { value: 0 },
-    uSize: { value: isMobile ? 46 : 58 }, uPixelRatio: { value: renderer.getPixelRatio() },
+    uSize: { value: isMobile ? 44 : 50 }, uPixelRatio: { value: renderer.getPixelRatio() },
     uMouse: { value: new THREE.Vector3(99, 99, 0) }, uMouseOn: { value: 0 },
+    uRadius: { value: 2.2 }, uPush: { value: 1.4 },
     uAccent: { value: new THREE.Color(ORANGE) },
     uHot: { value: new THREE.Color(ORANGE) },
     uCool: { value: new THREE.Color(0xF6F1E7) },
@@ -232,13 +238,19 @@ export async function initTeam(host, { words = [], accents = [] } = {}) {
   const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
   const ray = new THREE.Raycaster();
   const hit = new THREE.Vector3();
+  const localRay = new THREE.Ray();
+  const inverse = new THREE.Matrix4();
   let mouseActive = false;
   if (!reducedMotion) {
-    window.addEventListener('pointermove', (e) => {
+    const track = (e) => {
       mouseNDC.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
       mouseActive = true;
-    }, { passive: true });
-    document.addEventListener('pointerleave', () => { mouseActive = false; });
+    };
+    window.addEventListener('pointermove', track, { passive: true });
+    window.addEventListener('pointerdown', track, { passive: true });
+    // touch: the finger lifts, so let the particles settle back
+    window.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') mouseActive = false; });
+    document.documentElement.addEventListener('mouseleave', () => { mouseActive = false; });
   }
   const camOffset = new THREE.Vector2();
   const ZERO = new THREE.Vector2();
@@ -259,12 +271,15 @@ export async function initTeam(host, { words = [], accents = [] } = {}) {
     accentTarget.setHex(acc);
     uniforms.uAccent.value.lerp(accentTarget, reducedMotion ? 1 : Math.min(1, dt * 3));
 
-    // cursor in world space, on the plane of the particles
+    // Cursor -> the particles' own coordinates. The shape is moved, scaled and
+    // tilted on screen, so the ray is taken into its local space before hitting z = 0.
+    points.updateMatrixWorld();
     ray.setFromCamera(mouseNDC, camera);
-    if (ray.ray.intersectPlane(plane, hit)) {
-      hit.divideScalar(points.scale.x);
-      uniforms.uMouse.value.lerp(hit, 0.25);
-    }
+    localRay.copy(ray.ray).applyMatrix4(inverse.copy(points.matrixWorld).invert());
+    if (localRay.intersectPlane(plane, hit)) uniforms.uMouse.value.lerp(hit, reducedMotion ? 1 : 0.35);
+    // keep the effect the same size on screen whatever the shape's scale
+    uniforms.uRadius.value = 1.6 / points.scale.x;
+    uniforms.uPush.value = 1.05 / points.scale.x;
     uniforms.uMouseOn.value += ((mouseActive ? 1 : 0) - uniforms.uMouseOn.value) * Math.min(1, dt * 4);
 
     // the whole field turns slowly; names face the camera, the loop and rings tumble

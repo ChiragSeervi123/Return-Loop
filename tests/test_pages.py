@@ -243,6 +243,6 @@ def test_admin_dashboard_shows_flagged_customer(client, seeded):
 
 def test_team_page_lists_every_member(client, seeded):
     page = client.get("/team").data.decode()
-    for name in ("Chirag", "Seervi", "Ansuman", "Aryan"):
+    for name in ("Chirag", "Seervi", "Suman", "Riya"):
         assert name in page
-    assert '["CHIRAG", "ANSUMAN", "ARYAN"]' in page  # words the particles spell
+    assert '["CHIRAG", "SUMAN", "RIYA"]' in page  # words the particles spell

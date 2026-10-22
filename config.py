@@ -111,6 +111,6 @@ ROLE_HOME = {
 # "accent" picks the stamp colour: a = moss, b = amber, c = brick.
 TEAM = [
     {"name": "Chirag Seervi", "role": "Co-creator, ReturnLoop", "accent": "a"},
-    {"name": "Ansuman Singh", "role": "Co-creator, ReturnLoop", "accent": "b"},
-    {"name": "Aryan Singh", "role": "Co-creator, ReturnLoop", "accent": "c"},
+    {"name": "Suman Singh", "role": "Co-creator, ReturnLoop", "accent": "b"},
+    {"name": "Riya Singh", "role": "Co-creator, ReturnLoop", "accent": "c"},
 ]
