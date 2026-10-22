@@ -649,6 +649,118 @@ async function initTeamPage() {
   });
 }
 
+// ---------------------------------------------------------------- presentation (/ppt)
+
+const pad2 = (n) => String(n).padStart(2, '0');
+
+async function initDeck() {
+  const deck = $('[data-deck]');
+  if (!deck) return;
+  const stage = $('[data-deck-stage]', deck);
+  const canvas = $('[data-deck-canvas]', deck);
+  const slides = $$('[data-slide]', deck);
+  const count = $('[data-deck-count]', deck);
+  const bar = $('[data-deck-progress]', deck);
+  slides.forEach((s, i) => {
+    const n = $('[data-slide-no]', s);
+    if (n) n.textContent = `${pad2(i + 1)} / ${pad2(slides.length)}`;
+  });
+
+  // Slides are designed at 1280x720 and scaled to whatever space there is.
+  function fit() {
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+    const scale = Math.min(w / 1280, h / 720);
+    canvas.style.setProperty('--s', scale);
+    stage.style.setProperty('--ox', `${(w - 1280 * scale) / 2}px`);
+    stage.style.setProperty('--oy', `${(h - 720 * scale) / 2}px`);
+  }
+  new ResizeObserver(fit).observe(stage);
+  fit();
+
+  let current = 0;
+  function go(i) {
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, k) => {
+      s.classList.toggle('is-active', k === current);
+      s.classList.toggle('is-before', k < current);
+      s.setAttribute('aria-hidden', k === current ? 'false' : 'true');
+    });
+    count.textContent = `${pad2(current + 1)} / ${pad2(slides.length)}`;
+    bar.style.width = `${((current + 1) / slides.length) * 100}%`;
+    try { history.replaceState(null, '', `#${current + 1}`); } catch (e) { /* ignore */ }
+  }
+  go((parseInt(location.hash.slice(1), 10) || 1) - 1);
+
+  $('[data-deck-next]', deck).addEventListener('click', () => go(current + 1));
+  $('[data-deck-prev]', deck).addEventListener('click', () => go(current - 1));
+  $$('[data-goto]', deck).forEach((a) => a.addEventListener('click', (e) => {
+    e.preventDefault();
+    go(parseInt(a.dataset.goto, 10) - 1);
+  }));
+
+  const present = () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (stage.requestFullscreen) stage.requestFullscreen().catch(() => {});
+  };
+  $('[data-deck-present]').addEventListener('click', present);
+  $('[data-deck-print]').addEventListener('click', () => window.print());
+  document.addEventListener('fullscreenchange', fit);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.closest('input, textarea, select') || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); go(current + 1); }
+    else if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); go(current - 1); }
+    else if (e.key === 'Home') go(0);
+    else if (e.key === 'End') go(slides.length - 1);
+    else if (e.key === 'f' || e.key === 'F') present();
+  });
+
+  // click the slide to advance; swipe on touch screens
+  let downX = null;
+  stage.addEventListener('pointerdown', (e) => { downX = e.clientX; });
+  stage.addEventListener('pointerup', (e) => {
+    if (downX === null || e.target.closest('a, button')) return;
+    const dx = e.clientX - downX;
+    downX = null;
+    if (Math.abs(dx) > 50) go(current + (dx < 0 ? 1 : -1));
+    else if (e.pointerType === 'mouse') go(current + 1);
+  });
+
+  // Diagrams are written as Mermaid text in the page and drawn here, in the app's colours.
+  try {
+    const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs');
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      securityLevel: 'strict',
+      fontFamily: '"Instrument Sans", system-ui, sans-serif',
+      themeVariables: {
+        fontFamily: '"Instrument Sans", system-ui, sans-serif',
+        fontSize: '15px',
+        primaryColor: '#FFFCF5', primaryTextColor: '#14110F', primaryBorderColor: '#14110F',
+        secondaryColor: '#E9DFCB', tertiaryColor: '#F6F1E7', lineColor: '#14110F',
+        edgeLabelBackground: '#F6F1E7', clusterBkg: '#F6F1E7',
+        actorBkg: '#14110F', actorTextColor: '#F6F1E7', actorBorder: '#14110F', actorLineColor: '#6B6A66',
+        signalColor: '#14110F', signalTextColor: '#14110F', labelBoxBkgColor: '#FF5B1F',
+        noteBkgColor: '#FFE6DA', noteBorderColor: '#C2410C', activationBkgColor: '#E9DFCB',
+        sequenceNumberColor: '#F6F1E7',
+      },
+      flowchart: { curve: 'basis', padding: 10, nodeSpacing: 34, rankSpacing: 46 },
+      sequence: { mirrorActors: false, actorMargin: 34, messageMargin: 26, boxMargin: 6 },
+    });
+    // Measure text at full size: the slides are scaled down, which would make every box too small.
+    canvas.style.setProperty('--s', 1);
+    try {
+      await mermaid.run({ querySelector: '.deck pre.mermaid' });
+    } finally {
+      fit();
+    }
+  } catch (e) {
+    console.error('Diagrams could not be drawn; showing their text instead.', e);
+  }
+}
+
 // ---------------------------------------------------------------- boot
 
 initTransitions();
@@ -671,3 +783,4 @@ if (page === 'inventory') initInventory();
 if (page === 'admin') initCharts();
 if (page === 'inspect') initInspect();
 if (page === 'team') initTeamPage();
+if (page === 'deck') initDeck();

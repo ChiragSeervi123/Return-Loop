@@ -28,7 +28,7 @@ The "Switch role" menu in the top bar stores a role and a user id in the session
 | QC inspector | Anjali Rao | `/qc/queue`, `/qc/inspect/<code>` |
 | Refurbisher | Farhan Sheikh | `/refurb/jobs` |
 | Admin | Deepa Nair | `/admin/dashboard` |
-| Anyone | | `/` (landing page), `/switch`, `/team` (the crew) |
+| Anyone | | `/` (landing page), `/switch`, `/ppt` (presentation), `/team` (the crew) |
 | API (customer only) | | `/api/return/<code>/status` |
 
 ## Business rules
@@ -119,6 +119,10 @@ static/js/           main.js, cursor, tilt, transitions, scenes/ (3D), fx/ (stam
 tests/               pytest suite
 docs/                ER diagram and UML mapping
 ```
+
+## Presentation
+
+`/ppt` (the **PPT** link in the top bar) is a 16-slide deck about the project from a software engineering point of view: project planning & management (vision, scope, incremental process, risks), functional and non-functional requirements, use case diagram, class diagram, DFD level 0 and level 1, activity diagram, sequence diagram, layered architecture, and the path of one click from the UI down to the database. Use the arrow keys, click or swipe to move; **Present** (or `F`) goes full screen; **Save as PDF** prints one slide per page. A ready copy is in [docs/ReturnLoop-presentation.pdf](docs/ReturnLoop-presentation.pdf). The diagrams are drawn by Mermaid (loaded from jsdelivr) except the use case and activity diagrams, which are hand-drawn SVG.
 
 ## Team page
 

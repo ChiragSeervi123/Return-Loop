@@ -246,3 +246,12 @@ def test_team_page_lists_every_member(client, seeded):
     for name in ("Chirag", "Seervi", "Suman", "Riya"):
         assert name in page
     assert '["CHIRAG", "SUMAN", "RIYA"]' in page  # words the particles spell
+
+
+def test_presentation_has_every_section(client, seeded):
+    page = client.get("/ppt").data.decode()
+    for section in ("PLANNING &amp; MANAGEMENT", "Functional requirements", "Non-functional requirements",
+                    "USE CASE DIAGRAM", "CLASS DIAGRAM", "LEVEL 0", "LEVEL 1", "ACTIVITY DIAGRAM",
+                    "SEQUENCE DIAGRAM", "Layered architecture", "FROM UI TO DATA"):
+        assert section in page, section
+    assert page.count("data-slide ") + page.count("data-slide>") >= 16

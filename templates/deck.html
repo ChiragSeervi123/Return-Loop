@@ -1,0 +1,569 @@
+{% extends "base.html" %}
+{% block title %}Project presentation{% endblock %}
+{% block page %}deck{% endblock %}
+{% block body_class %}deck-page{% endblock %}
+{% block content %}
+{% macro head(no, kicker, title) -%}
+<header class="sl-head">
+  <span class="sl-no mono">{{ '%02d' % no }}</span>
+  <p class="sl-kicker mono">{{ kicker }}</p>
+  <h2 class="sl-title">{{ title }}</h2>
+</header>
+{%- endmacro %}
+{% macro foot() -%}
+<footer class="sl-foot mono"><span>RETURNLOOP · SOFTWARE ENGINEERING PROJECT</span><span data-slide-no></span></footer>
+{%- endmacro %}
+
+<div class="deck-bar">
+  <div>
+    <p class="mono page-head__label">PROJECT / PRESENTATION</p>
+    <h1 class="deck-bar__title">ReturnLoop, the software engineering view</h1>
+  </div>
+  <div class="deck-bar__actions">
+    <button class="btn btn--primary" type="button" data-deck-present>Present {{ m.icon('arrow', 16) }}</button>
+    <button class="btn btn--ghost" type="button" data-deck-print>Save as PDF</button>
+  </div>
+</div>
+
+<div class="deck" data-deck tabindex="0" aria-roledescription="slide deck" aria-label="Project presentation. Use the arrow keys to move between slides.">
+  <div class="deck__stage" data-deck-stage>
+    <div class="deck__canvas" data-deck-canvas>
+
+      {# ======================= 1. Title ======================= #}
+      <section class="slide slide--title" data-slide aria-label="Title">
+        <div class="tt-grid">
+          <div>
+            <p class="mono sl-kicker">SOFTWARE ENGINEERING · MINI PROJECT</p>
+            <h2 class="tt-title">Return<span>Loop</span></h2>
+            <p class="tt-sub">A returns and reverse-logistics centre for an e-commerce business: request, pickup, quality check, grading, refurbish / restock / scrap, refund.</p>
+          </div>
+          <div class="tt-label">
+            <div class="tt-label__head mono"><span>PRESENTED BY</span><span>{{ '%02d' % team|length }}</span></div>
+            {% for name in team %}<p class="tt-label__name"><span class="mono">{{ '%02d' % loop.index }}</span>{{ name }}</p>{% endfor %}
+            <div class="tt-label__foot">{{ m.barcode('deck') }}<span class="mono">FLASK · SQLITE · THREE.JS</span></div>
+          </div>
+        </div>
+        <span class="stamp stamp--a tt-stamp" aria-hidden="true"><span class="stamp__letter">A</span></span>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 2. Agenda ======================= #}
+      <section class="slide" data-slide aria-label="Agenda">
+        {{ head(2, "AGENDA", "What we'll cover") }}
+        <ol class="agenda mono">
+          {% set agenda = ["Project planning & management", "Functional requirements", "Non-functional requirements",
+            "Use case diagram", "Class diagram", "Data flow diagram, level 0", "Data flow diagram, level 1",
+            "Activity diagram", "Sequence diagram", "Layered architecture", "Architecture: from UI to data"] %}
+          {% for item in agenda %}<li><a href="#" data-goto="{{ loop.index + 2 }}"><b>{{ '%02d' % (loop.index + 2) }}</b> {{ item }}</a></li>{% endfor %}
+        </ol>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 3. PPM: overview ======================= #}
+      <section class="slide" data-slide aria-label="Project planning and management">
+        {{ head(3, "PPM · PRODUCT / PROJECT PLANNING & MANAGEMENT", "Vision, scope and stakeholders") }}
+        <div class="cols cols--3">
+          <div class="card">
+            <h3>Product vision</h3>
+            <p>Give an online store one place to run every return, from the customer's doorstep to a graded item and a correct refund, with every step on record.</p>
+            <h3>Objectives</h3>
+            <ul>
+              <li>Enforce return rules automatically</li>
+              <li>Grade items A / B / C and route them</li>
+              <li>Compute refunds exactly, once</li>
+              <li>Live tracking for the customer</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>In scope</h3>
+            <ul>
+              <li>6 roles, 13-status workflow</li>
+              <li>Pickup booking, 2 attempts</li>
+              <li>QC checklist, fraud check</li>
+              <li>Refurbish & re-inspection</li>
+              <li>Refund + inventory log</li>
+              <li>Admin dashboard & flags</li>
+            </ul>
+            <h3>Out of scope</h3>
+            <ul class="muted-list">
+              <li>Real payments / payment gateway</li>
+              <li>Passwords & real accounts</li>
+              <li>Courier API integration</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Stakeholders</h3>
+            <table class="mini">
+              <tr><td>Customer</td><td>returns items, tracks refund</td></tr>
+              <tr><td>Pickup agent</td><td>collects parcels</td></tr>
+              <tr><td>Warehouse</td><td>checks parcels in</td></tr>
+              <tr><td>QC inspector</td><td>grades items</td></tr>
+              <tr><td>Refurbisher</td><td>repairs grade B</td></tr>
+              <tr><td>Admin</td><td>monitors, flags</td></tr>
+            </table>
+            <h3>Team</h3>
+            <p>{{ team|join(", ") }}</p>
+          </div>
+        </div>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 4. PPM: process & schedule ======================= #}
+      <section class="slide" data-slide aria-label="Process model and plan">
+        {{ head(4, "PPM · PROCESS MODEL & PLAN", "Incremental delivery in seven increments") }}
+        <p class="lead">Each increment was built, tested with <b>pytest</b>, run, and committed to <b>Git</b> before the next one started. Definition of done: all tests green and the app runs.</p>
+        <ol class="chevrons">
+          {% set inc = [
+            ("a", "Core", "Models, config, services, unit tests"),
+            ("b", "Data", "Seed data through real services"),
+            ("c", "Customer", "Orders, return, pickup, tracking"),
+            ("d", "Operations", "Agent, warehouse, QC, refurbisher"),
+            ("e", "Admin", "Dashboard, charts, flags"),
+            ("f", "Experience", "Design system, 3D scenes, effects"),
+            ("g", "Hardening", "Edge cases, docs, end-to-end demo")] %}
+          {% for code, name, what in inc %}
+          <li class="chev"><span class="mono chev__code">INC {{ code|upper }}</span><b>{{ name }}</b><small>{{ what }}</small></li>
+          {% endfor %}
+        </ol>
+        <div class="cols cols--3 cols--tight">
+          <div class="card card--flat"><h3>Why incremental?</h3><p>Business rules first, UI later: the riskiest logic (state machine, refunds) was tested before any screen existed.</p></div>
+          <div class="card card--flat"><h3>Work breakdown</h3><p>Data model → services → routes → templates → visual design → testing & docs.</p></div>
+          <div class="card card--flat"><h3>Tools</h3><p>Python, Flask, SQLite, pytest, Git, VS Code, Playwright for screenshot checks.</p></div>
+        </div>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 5. PPM: risk & quality ======================= #}
+      <section class="slide" data-slide aria-label="Risk management">
+        {{ head(5, "PPM · RISK & QUALITY MANAGEMENT", "Risks, and how we handled them") }}
+        <table class="grid-table">
+          <thead><tr><th>Risk</th><th>Impact</th><th>Mitigation in the product</th></tr></thead>
+          <tbody>
+            <tr><td>Invalid status jumps (e.g. refund before QC)</td><td><span class="lvl lvl--c">High</span></td><td>Single state machine; every change validated and logged in <code>status_history</code></td></tr>
+            <tr><td>Refund paid twice</td><td><span class="lvl lvl--c">High</span></td><td>Unique <code>refunds.return_id</code> + service check + one DB transaction</td></tr>
+            <tr><td>Double-clicks on submit</td><td><span class="lvl lvl--b">Medium</span></td><td>Buttons disable on submit; server rejects the repeat via the state machine</td></tr>
+            <tr><td>Malicious or huge uploads</td><td><span class="lvl lvl--b">Medium</span></td><td>Type, 3 MB size and file-signature checks; random file names</td></tr>
+            <tr><td>Device without WebGL / slow GPU</td><td><span class="lvl lvl--a">Low</span></td><td>Static fallbacks; particles halve if frame rate &lt; 40 fps</td></tr>
+            <tr><td>Rules change later (window, fees)</td><td><span class="lvl lvl--a">Low</span></td><td>All rule constants live in <code>config.py</code></td></tr>
+          </tbody>
+        </table>
+        <p class="note mono">QUALITY: 84 AUTOMATED TESTS · STATE MACHINE, REFUNDS, ELIGIBILITY, FLAGS, API, PAGES, FULL FLOW</p>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 6. Functional requirements ======================= #}
+      <section class="slide" data-slide aria-label="Functional requirements">
+        {{ head(6, "REQUIREMENTS", "Functional requirements") }}
+        <div class="req-grid">
+          {% set fr = [
+            ("Role switch", "Choose any of 6 roles and a user without a password; each page rejects the wrong role (403)."),
+            ("View orders", "Customer sees delivered items with eligibility, or the reason it can't be returned."),
+            ("Eligibility", "Return allowed within 7 days of delivery, for returnable products, with no other open return."),
+            ("Request return", "Reason, comment (≤ 300 chars), optional photo (PNG/JPG/WEBP, ≤ 3 MB)."),
+            ("Book pickup", "Date from tomorrow to +5 days, slot Morning / Afternoon / Evening; reschedule."),
+            ("Collect parcel", "Agent marks picked up or absent; the 2nd absence cancels the return."),
+            ("Receive", "Warehouse checks the parcel in; it joins the QC queue."),
+            ("Inspect & grade", "QC checklist, suggested grade, A/B/C; a mismatched item is rejected as fraud."),
+            ("Refurbish", "Grade B goes to repair, then re-inspection: pass → restock (70%), fail → scrap."),
+            ("Refund", "final = max(0, base × grade% − pickup fee), damaged/wrong-item exception, created once."),
+            ("Track", "Live status (polled every 5 s), history timeline and refund breakdown."),
+            ("Dashboard", "Totals, reasons and grades charts, frequent-returner flags (> 3 in 30 days).")] %}
+          {% for t, d in fr %}
+          <div class="req"><span class="mono req__id">FR{{ '%02d' % loop.index }}</span><b>{{ t }}</b><p>{{ d }}</p></div>
+          {% endfor %}
+        </div>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 7. Non-functional requirements ======================= #}
+      <section class="slide" data-slide aria-label="Non-functional requirements">
+        {{ head(7, "REQUIREMENTS", "Non-functional requirements") }}
+        <div class="req-grid req-grid--nfr">
+          {% set nfr = [
+            ("Performance", "60 fps on a mid laptop, 30+ on phones; pixel ratio capped; 3D pauses off-screen."),
+            ("Reliability", "Refund + inventory log + status change in one transaction; no double refunds."),
+            ("Security", "Role guard on every blueprint; customers only see their own returns; upload validation."),
+            ("Usability", "Works at 360 px wide; tap targets ≥ 44 px; plain-language errors and empty states."),
+            ("Accessibility", "WCAG AA contrast, keyboard-only use, visible focus, reduced-motion mode, text on every badge."),
+            ("Maintainability", "Logic in services/, rules in config.py, thin routes; 84 pytest tests."),
+            ("Portability", "Python 3.10+, SQLite, no build step: install, seed, run in 3 commands."),
+            ("Robustness", "Static fallbacks without WebGL or internet; friendly 403 / 404 / 413 pages.")] %}
+          {% for t, d in nfr %}
+          <div class="req req--nfr"><span class="mono req__id">NFR{{ '%02d' % loop.index }}</span><b>{{ t }}</b><p>{{ d }}</p></div>
+          {% endfor %}
+        </div>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 8. Use case diagram (hand-drawn SVG) ======================= #}
+      <section class="slide" data-slide aria-label="Use case diagram">
+        {{ head(8, "UML · USE CASE DIAGRAM", "Who does what") }}
+        <div class="diagram">
+          <svg viewBox="0 0 1240 540" class="usecase" role="img" aria-label="Use case diagram: six actors and their use cases inside the ReturnLoop system">
+            <defs>
+              <marker id="uc-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z" fill="#14110F"/></marker>
+            </defs>
+            <rect x="215" y="8" width="800" height="524" rx="6" class="uc-system"/>
+            <text x="235" y="34" class="uc-sys-label">ReturnLoop system</text>
+
+            {% set actors = [("Customer", 95, 165), ("Admin", 95, 420), ("Pickup agent", 1145, 70),
+                             ("Warehouse", 1145, 200), ("QC inspector", 1145, 330), ("Refurbisher", 1145, 460)] %}
+            {% for name, x, y in actors %}
+            <g class="uc-actor" transform="translate({{ x }} {{ y }})">
+              <circle cy="-30" r="11"/><path d="M0 -19v28M-17 -8h34M0 9l-13 20M0 9l13 20"/>
+              <text y="48" text-anchor="middle">{{ name }}</text>
+            </g>
+            {% endfor %}
+
+            {% set left = [("View orders", 70), ("Request return", 125), ("Book pickup", 180), ("Track return", 235), ("Close return", 290)] %}
+            {% for label, y in left %}
+            <line x1="120" y1="160" x2="262" y2="{{ y }}" class="uc-line"/>
+            <ellipse cx="370" cy="{{ y }}" rx="108" ry="22" class="uc-case"/><text x="370" y="{{ y + 5 }}" text-anchor="middle">{{ label }}</text>
+            {% endfor %}
+            {% for label, y in [("View dashboard", 410), ("View flagged customers", 470)] %}
+            <line x1="120" y1="415" x2="262" y2="{{ y }}" class="uc-line"/>
+            <ellipse cx="370" cy="{{ y }}" rx="108" ry="22" class="uc-case"/><text x="370" y="{{ y + 5 }}" text-anchor="middle">{{ label }}</text>
+            {% endfor %}
+
+            <ellipse cx="615" cy="150" rx="92" ry="22" class="uc-case uc-case--inc"/><text x="615" y="155" text-anchor="middle">Check eligibility</text>
+            <line x1="478" y1="128" x2="522" y2="146" class="uc-dash" marker-end="url(#uc-arrow)"/>
+            <text x="470" y="108" class="uc-stereo">«include»</text>
+            <ellipse cx="615" cy="380" rx="92" ry="22" class="uc-case uc-case--inc"/><text x="615" y="385" text-anchor="middle">Issue refund</text>
+
+            {% set right = [("View pickups", 40, 70), ("Mark picked up", 88, 70), ("Mark customer absent", 136, 70),
+                            ("Receive parcel", 190, 200), ("View inventory", 238, 200),
+                            ("Inspect & grade", 300, 330), ("Re-inspect item", 348, 330), ("Reject as fraud", 396, 330),
+                            ("Mark repaired", 470, 460)] %}
+            {% for label, y, ay in right %}
+            <line x1="1120" y1="{{ ay }}" x2="968" y2="{{ y }}" class="uc-line"/>
+            <ellipse cx="860" cy="{{ y }}" rx="108" ry="21" class="uc-case"/><text x="860" y="{{ y + 5 }}" text-anchor="middle">{{ label }}</text>
+            {% endfor %}
+            <line x1="752" y1="306" x2="705" y2="370" class="uc-dash" marker-end="url(#uc-arrow)"/>
+            <line x1="752" y1="350" x2="706" y2="378" class="uc-dash" marker-end="url(#uc-arrow)"/>
+            <text x="700" y="330" class="uc-stereo">«include»</text>
+          </svg>
+        </div>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 9. Class diagram ======================= #}
+      <section class="slide" data-slide aria-label="Class diagram">
+        {{ head(9, "UML · CLASS DIAGRAM", "The domain model (models.py)") }}
+        <div class="diagram diagram--mermaid">
+<pre class="mermaid">
+classDiagram
+  direction TB
+  class Customer {
+    +name
+    +email
+    +address
+  }
+  class Product {
+    +name
+    +price
+    +is_returnable
+  }
+  class Order {
+    +order_date
+    +delivered_at
+    +total
+  }
+  class OrderItem {
+    +quantity
+    +unit_price
+  }
+  class ReturnRequest {
+    +return_code
+    +reason
+    +status
+    +flagged_fraud
+  }
+  class Pickup {
+    +slot_date
+    +slot_window
+    +attempt_no
+  }
+  class QCReport {
+    +grade
+    +item_matches_order
+    +is_recheck
+  }
+  class RefurbishJob {
+    +status
+    +completed_at
+  }
+  class Refund {
+    +grade_percent
+    +pickup_fee
+    +final_amount
+  }
+  class InventoryLog {
+    +action
+    +quantity
+  }
+  class StatusHistory {
+    +from_status
+    +to_status
+    +actor_name
+  }
+  Customer "1" --> "*" Order : places
+  Order "1" *-- "1..*" OrderItem : contains
+  OrderItem "*" --> "1" Product
+  OrderItem "1" --> "*" ReturnRequest : returned in
+  ReturnRequest "1" *-- "*" Pickup
+  ReturnRequest "1" *-- "*" QCReport
+  ReturnRequest "1" *-- "*" RefurbishJob
+  ReturnRequest "1" *-- "0..1" Refund
+  ReturnRequest "1" *-- "*" StatusHistory
+  ReturnRequest "1" --> "*" InventoryLog
+</pre>
+        </div>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 10. DFD level 0 ======================= #}
+      <section class="slide" data-slide aria-label="Data flow diagram level 0">
+        {{ head(10, "DFD · LEVEL 0 (CONTEXT DIAGRAM)", "The system and the people around it") }}
+        <div class="diagram diagram--mermaid">
+<pre class="mermaid">
+flowchart LR
+  C[Customer]
+  AG[Pickup agent]
+  WH[Warehouse manager]
+  QC[QC inspector]
+  RF[Refurbisher]
+  AD[Admin]
+  S(("0<br/>ReturnLoop<br/>System"))
+  C -- "return request, photo, pickup slot" --> S
+  S -- "eligibility, status, refund breakdown" --> C
+  S -- "pickup list, addresses" --> AG
+  AG -- "picked up / absent" --> S
+  WH -- "parcel received" --> S
+  S -- "inbound parcels, inventory" --> WH
+  S -- "QC queue, item details" --> QC
+  QC -- "checklist, grade" --> S
+  S -- "repair jobs" --> RF
+  RF -- "repaired" --> S
+  S -- "stats, charts, flagged customers" --> AD
+</pre>
+        </div>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 11. DFD level 1 ======================= #}
+      <section class="slide" data-slide aria-label="Data flow diagram level 1">
+        {{ head(11, "DFD · LEVEL 1", "Processes and data stores") }}
+        <div class="diagram diagram--mermaid">
+<pre class="mermaid">
+flowchart LR
+  C[Customer]
+  AG[Pickup agent]
+  WH[Warehouse]
+  QC[QC inspector]
+  RF[Refurbisher]
+  AD[Admin]
+  P1(("1.0<br/>Check eligibility<br/>& create return"))
+  P2(("2.0<br/>Schedule<br/>pickup"))
+  P3(("3.0<br/>Collect<br/>parcel"))
+  P4(("4.0<br/>Receive<br/>parcel"))
+  P5(("5.0<br/>Inspect<br/>& grade"))
+  P6(("6.0<br/>Refurbish"))
+  P7(("7.0<br/>Issue<br/>refund"))
+  P8(("8.0<br/>Report<br/>& flag"))
+  D1[("D1 Orders / Products")]
+  D2[("D2 Return requests")]
+  D3[("D3 Pickups")]
+  D4[("D4 QC reports")]
+  D5[("D5 Refunds + Inventory log")]
+  D6[("D6 Status history")]
+  C -- "reason, photo" --> P1
+  D1 -- "delivery date, returnable" --> P1
+  P1 -- "new return" --> D2
+  C -- "date, slot" --> P2
+  P2 --> D3
+  D3 -- "pickup list" --> AG
+  AG -- "outcome" --> P3
+  P3 --> D2
+  WH -- "check-in" --> P4
+  P4 --> D2
+  QC -- "checklist, grade" --> P5
+  P5 --> D4
+  P5 -- "grade B" --> P6
+  RF -- "repaired" --> P6
+  P6 -- "re-inspection" --> P5
+  P5 -- "A / C / recheck" --> P7
+  P7 --> D5
+  P5 -. "every status change" .-> D6
+  D2 & D5 --> P8
+  P8 -- "stats, flags" --> AD
+</pre>
+        </div>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 12. Activity diagram ======================= #}
+      <section class="slide" data-slide aria-label="Activity diagram">
+        {{ head(12, "UML · ACTIVITY DIAGRAM", "One return, start to finish") }}
+        {% macro act(x, y, w, label, who='', cls='act-box', label2='') -%}
+          <rect x="{{ x - w / 2 }}" y="{{ y - 21 }}" width="{{ w }}" height="42" rx="9" class="{{ cls }}"/>
+          {% if label2 %}<text x="{{ x }}" y="{{ y - 3 }}" text-anchor="middle">{{ label }}</text><text x="{{ x }}" y="{{ y + 14 }}" text-anchor="middle">{{ label2 }}</text>
+          {% else %}<text x="{{ x }}" y="{{ y + 5 }}" text-anchor="middle">{{ label }}</text>{% endif %}
+          {% if who %}<text x="{{ x - w / 2 }}" y="{{ y - 28 }}" class="act-who">{{ who }}</text>{% endif %}
+        {%- endmacro %}
+        {% macro dec(x, y, w, h, label) -%}
+          <polygon points="{{ x }},{{ y - h / 2 }} {{ x + w / 2 }},{{ y }} {{ x }},{{ y + h / 2 }} {{ x - w / 2 }},{{ y }}" class="act-dec"/>
+          <text x="{{ x }}" y="{{ y + 5 }}" text-anchor="middle" font-size="13">{{ label }}</text>
+        {%- endmacro %}
+        {% macro stop(x, y) -%}<circle cx="{{ x }}" cy="{{ y }}" r="10" class="act-end"/><circle cx="{{ x }}" cy="{{ y }}" r="5.5" class="act-start"/>{%- endmacro %}
+        <div class="diagram">
+          <svg viewBox="0 0 1160 470" class="activity" role="img" aria-label="Activity diagram of one return, from request to refund">
+            <defs><marker id="act-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z" fill="#14110F"/></marker></defs>
+            <g class="act-line" marker-end="url(#act-arrow)">
+              <!-- row 1: request and pickup -->
+              <path d="M31 120 H62"/><path d="M196 120 H220"/><path d="M308 120 H334"/><path d="M464 120 H494"/>
+              <path d="M624 120 H664"/><path d="M794 120 H834"/><path d="M956 120 H984"/>
+              <path d="M265 90 V60"/><path d="M325 37 H346"/>
+              <path d="M716 89 V60"/><path d="M746 60 V89"/>
+              <path d="M730 152 V183"/><path d="M800 206 H826"/>
+              <!-- connector to row 2 -->
+              <path d="M1063 141 V238 H120 V280"/>
+              <!-- row 2: inspection, routing, refund -->
+              <path d="M120 342 V393"/><path d="M190 416 H216"/>
+              <path d="M185 312 H243"/>
+              <path d="M290 282 V270 H688"/><path d="M590 282 V272"/>
+              <path d="M290 342 V400 H688"/><path d="M590 342 V398"/>
+              <path d="M335 312 H372"/><path d="M500 312 H520"/>
+              <path d="M820 270 H905 V289"/><path d="M820 400 H905 V335"/>
+              <path d="M980 312 H1002"/><path d="M1116 312 H1134"/>
+            </g>
+            <circle cx="22" cy="120" r="9" class="act-start"/>
+            {{ act(130, 120, 132, "Open orders", "CUSTOMER") }}
+            {{ dec(265, 120, 86, 60, "Eligible?") }}
+            {{ act(400, 120, 128, "Request return", "CUSTOMER") }}
+            {{ act(560, 120, 128, "Book pickup", "CUSTOMER") }}
+            {{ dec(730, 120, 128, 64, "Customer home?") }}
+            {{ act(896, 120, 120, "Picked up", "AGENT") }}
+            {{ act(1063, 120, 154, "Received at centre", "WAREHOUSE") }}
+            {{ act(265, 37, 120, "Show reason") }}{{ stop(358, 37) }}
+            {{ act(730, 37, 150, "Rebook next day", "AGENT") }}
+            {{ act(730, 206, 140, "Cancel return", "AGENT") }}{{ stop(838, 206) }}
+            <text x="273" y="80" class="act-guard">no</text><text x="312" y="111" class="act-guard">yes</text>
+            <text x="646" y="80" class="act-guard">no (1st)</text><text x="738" y="176" class="act-guard">no (2nd)</text><text x="800" y="111" class="act-guard">yes</text>
+
+            {{ dec(120, 312, 130, 60, "Matches order?") }}
+            {{ act(120, 416, 140, "Reject as fraud", "QC") }}{{ stop(228, 416) }}
+            {{ dec(290, 312, 90, 60, "Grade") }}
+            {{ act(437, 312, 126, "Refurbish", "REFURBISHER") }}
+            {{ dec(590, 312, 136, 60, "Recheck passes?") }}
+            {{ act(755, 270, 130, "Restock", "QC") }}
+            {{ act(755, 400, 130, "Scrap", "QC") }}
+            {{ act(905, 312, 150, "Refund +", "SYSTEM", "act-refund", "inventory log") }}
+            {{ act(1060, 312, 112, "Customer", "CUSTOMER", "act-box", "closes it") }}
+            {{ stop(1146, 312) }}
+            <text x="128" y="364" class="act-guard">no</text><text x="192" y="304" class="act-guard">yes</text>
+            <text x="298" y="264" class="act-guard">A</text><text x="298" y="394" class="act-guard">C</text><text x="343" y="304" class="act-guard">B</text>
+            <text x="598" y="280" class="act-guard">yes</text><text x="598" y="384" class="act-guard">no</text>
+          </svg>
+        </div>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 13. Sequence diagram ======================= #}
+      <section class="slide" data-slide aria-label="Sequence diagram">
+        {{ head(13, "UML · SEQUENCE DIAGRAM", "QC grades a return and the refund is issued") }}
+        <div class="diagram diagram--mermaid">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor QC as QC inspector
+  participant B as Browser
+  participant R as qc blueprint
+  participant W as services.returns
+  participant SM as state_machine
+  participant F as services.refund
+  participant DB as SQLite
+  QC->>B: tick checklist, choose grade A, Stamp it
+  B->>R: POST /qc/inspect/RL-2026-0004
+  R->>W: submit_inspection(ret, checklist, "A")
+  W->>SM: change_status(Received → Inspected)
+  W->>SM: change_status(Inspected → Restocked)
+  W->>F: issue_refund(ret, "Restocked")
+  F->>F: calculate_refund(base, A, reason)
+  F->>SM: change_status(Restocked → Refunded)
+  F->>DB: INSERT refund, inventory_log, status_history (one COMMIT)
+  R-->>B: 302 redirect to queue + toast
+  Note over B,DB: Customer's tracking page polls GET /api/return/code/status every 5 s and moves the parcel
+</pre>
+        </div>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 14. Layered architecture ======================= #}
+      <section class="slide" data-slide aria-label="Layered architecture">
+        {{ head(14, "ARCHITECTURE · LAYERS", "Layered architecture") }}
+        <div class="layers">
+          {% set layers = [
+            ("Presentation", "Jinja2 templates · main.css · ES modules · Three.js scenes · GSAP · Chart.js", "templates/, static/"),
+            ("Controller / routing", "Flask blueprints, one per role + JSON API; role guard on each", "blueprints/"),
+            ("Business logic", "Workflow, state machine, eligibility, refund, flags, uploads, stats", "services/"),
+            ("Configuration", "Every business rule as a named constant (window, fees, %, limits)", "config.py"),
+            ("Data access", "Flask-SQLAlchemy ORM: 11 model classes and their relationships", "models.py"),
+            ("Persistence", "SQLite database file, indexes on status, customer, history", "returnloop.db")] %}
+          {% for name, what, where in layers %}
+          <div class="layer" style="--i: {{ loop.index0 }}">
+            <span class="mono layer__no">L{{ loop.index }}</span>
+            <b>{{ name }}</b>
+            <span class="layer__what">{{ what }}</span>
+            <code class="layer__where">{{ where }}</code>
+          </div>
+          {% endfor %}
+        </div>
+        <p class="note mono">RULE: EACH LAYER ONLY TALKS TO THE ONE BELOW · ROUTES NEVER CONTAIN BUSINESS RULES</p>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 15. From UI to data ======================= #}
+      <section class="slide" data-slide aria-label="Architecture from UI to data">
+        {{ head(15, "ARCHITECTURE · FROM UI TO DATA", "One click, layer by layer: “Request return”") }}
+        <ol class="flow">
+          {% set steps = [
+            ("UI", "Browser", "Form with reason tiles, comment and photo is submitted (button disables itself)."),
+            ("HTTP", "POST /customer/return/new", "Multipart request reaches Flask; session holds role + user id."),
+            ("Guard", "customer blueprint", "before_request checks the role is customer, else friendly 403."),
+            ("Validate", "services.uploads", "Photo type, size ≤ 3 MB and file signature are checked."),
+            ("Rules", "services.eligibility", "7-day window, returnable product, no open return."),
+            ("Logic", "services.returns", "Generates RL-2026-0004, writes the first status_history row."),
+            ("ORM", "models.ReturnRequest", "SQLAlchemy turns objects into INSERT statements."),
+            ("Data", "SQLite", "Rows committed in one transaction."),
+            ("Back to UI", "Redirect + Jinja2", "Pickup page renders; tracking page later polls the JSON API.")] %}
+          {% for tag, who, what in steps %}
+          <li class="flow__step"><span class="mono flow__tag">{{ tag }}</span><b>{{ who }}</b><p>{{ what }}</p></li>
+          {% endfor %}
+        </ol>
+        {{ foot() }}
+      </section>
+
+      {# ======================= 16. Thank you ======================= #}
+      <section class="slide slide--end" data-slide aria-label="Thank you">
+        <div class="end">
+          <p class="mono sl-kicker">END OF DECK · QUESTIONS?</p>
+          <h2 class="tt-title">Thank you.</h2>
+          <p class="tt-sub">{{ team|join(" · ") }}</p>
+          <p class="mono end__run">pip install -r requirements.txt &amp;&amp; python seed.py &amp;&amp; python app.py</p>
+        </div>
+        <span class="stamp stamp--c end__stamp" aria-hidden="true"><span class="stamp__letter">Q&amp;A</span></span>
+        {{ foot() }}
+      </section>
+
+    </div>
+  </div>
+
+  <div class="deck__controls">
+    <button class="btn btn--small" type="button" data-deck-prev aria-label="Previous slide">{{ m.icon('back', 16) }}</button>
+    <span class="mono deck__count" data-deck-count aria-live="polite">01 / 16</span>
+    <button class="btn btn--small" type="button" data-deck-next aria-label="Next slide">{{ m.icon('arrow', 16) }}</button>
+    <div class="deck__progress" aria-hidden="true"><span data-deck-progress></span></div>
+    <span class="mono deck__hint">← → TO MOVE · F FOR FULL SCREEN</span>
+  </div>
+</div>
+{% endblock %}

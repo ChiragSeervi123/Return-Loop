@@ -42,6 +42,12 @@ def team():
     return render_template("team.html", members=members)
 
 
+@bp.get("/ppt")
+def deck():
+    """The project presentation (software engineering view), as slides in the browser."""
+    return render_template("deck.html", team=[person["name"] for person in TEAM])
+
+
 @bp.get("/enter/customer")
 def enter_customer():
     """The landing page's "Start a return" button: become the first customer if nobody yet."""
