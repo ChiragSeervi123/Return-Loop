@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}The crew{% endblock %}
+{% block page %}team{% endblock %}
+{% block body_class %}landing team{% endblock %}
+{% block nav_class %}nav--dark{% endblock %}
+{% block main_class %}team-main{% endblock %}
+{% block content %}
+{# One fixed WebGL canvas behind the whole page. Each section below sets what the particles form. #}
+<div class="team-stage" aria-hidden="true">
+  <div class="team-stage__canvas" data-canvas-host></div>
+  <div class="team-stage__vignette"></div>
+</div>
+
+<div class="team-flow on-dark" data-team
+  data-words='{{ members|map(attribute="first")|map("upper")|list|tojson }}'
+  data-accents='{{ members|map(attribute="accent")|list|tojson }}'>
+
+  {# ---------- 0: intro, particles form a knotted loop ---------- #}
+  <section class="team-sec team-intro" data-team-sec="0" aria-labelledby="team-h">
+    <div class="team-sec__sticky">
+      <p class="mono team-kicker"><span class="dot" aria-hidden="true"></span> THE CREW · MANIFEST 0{{ members|length }}</p>
+      <h1 id="team-h" class="team-title" data-split>Three people. <em>One loop.</em></h1>
+      <p class="team-lede">The people who packed, scanned, graded and shipped ReturnLoop. Move through the particles. Click or tap to shake them loose.</p>
+      <a class="scroll-cue mono" href="#member-1"><span>Meet them</span><i aria-hidden="true"></i></a>
+    </div>
+  </section>
+
+  <div class="tape-run" aria-hidden="true">
+    <div class="tape-run__track mono">
+      {% for _ in range(4) %}{% for mbr in members %}<span>{{ mbr.name|upper }}</span><b>✦</b>{% endfor %}{% endfor %}
+    </div>
+  </div>
+
+  {# ---------- 1..3: one section per member, particles spell their first name ---------- #}
+  {% for mbr in members %}
+  <section class="team-sec team-member team-member--{{ mbr.accent }} {{ 'is-right' if loop.index is even }}" id="member-{{ mbr.no }}"
+    data-team-sec="{{ mbr.no }}" aria-labelledby="mbr-{{ mbr.no }}">
+    <div class="team-sec__sticky">
+      <span class="member__ghost" aria-hidden="true">{{ mbr.first|upper }}</span>
+      <article class="manifest" data-tilt data-reveal>
+        <div class="manifest__head mono">
+          <span>CREW MANIFEST</span><span>{{ '%02d' % mbr.no }} / {{ '%02d' % members|length }}</span>
+        </div>
+        <div class="manifest__body">
+          <div class="manifest__mono" aria-hidden="true">{{ mbr.initials }}</div>
+          <div class="manifest__who">
+            <span class="mono manifest__label">NAME</span>
+            <h2 id="mbr-{{ mbr.no }}" class="manifest__name">
+              <span data-scramble>{{ mbr.first }}</span><br><span class="manifest__last" data-scramble>{{ mbr.last }}</span>
+            </h2>
+            <span class="mono manifest__label">ROLE</span>
+            <p class="manifest__role">{{ mbr.role }}</p>
+          </div>
+        </div>
+        <div class="manifest__grid mono">
+          <div><span>SHIPS FROM</span><b>Team ReturnLoop</b></div>
+          <div><span>STATUS</span><b>On the loop</b></div>
+          <div><span>HANDLING</span><b>With care</b></div>
+        </div>
+        <div class="manifest__foot">
+          {{ m.barcode('crew' ~ mbr.no) }}
+          <span class="mono">RL-CREW-{{ '%04d' % mbr.no }}</span>
+        </div>
+        <button type="button" class="stamp stamp--{{ mbr.accent }} manifest__stamp" data-stamp-burst aria-label="Stamp {{ mbr.first }}'s manifest">
+          <span class="stamp__letter">{{ mbr.initials }}</span>
+        </button>
+      </article>
+    </div>
+  </section>
+  {% endfor %}
+
+  {# ---------- 4: outro, three interlocked rings ---------- #}
+  <section class="team-sec team-outro" data-team-sec="{{ members|length + 1 }}" aria-labelledby="outro-h">
+    <div class="team-sec__sticky">
+      <p class="mono team-kicker">END OF MANIFEST</p>
+      <h2 id="outro-h" class="team-title team-title--small">Packed by three.<br><em>Graded A.</em></h2>
+      <div class="row team-cta">
+        <a class="btn btn--primary btn--big" data-magnetic href="{{ url_for('main.enter_customer') }}">Start a return {{ m.icon('arrow', 18) }}</a>
+        <a class="btn btn--ghost btn--big" href="{{ url_for('main.landing') }}">Back to the loop</a>
+      </div>
+    </div>
+  </section>
+</div>
+<canvas class="team-burst" aria-hidden="true"></canvas>
+{% endblock %}

@@ -28,7 +28,7 @@ The "Switch role" menu in the top bar stores a role and a user id in the session
 | QC inspector | Anjali Rao | `/qc/queue`, `/qc/inspect/<code>` |
 | Refurbisher | Farhan Sheikh | `/refurb/jobs` |
 | Admin | Deepa Nair | `/admin/dashboard` |
-| Anyone | | `/` (landing page), `/switch` |
+| Anyone | | `/` (landing page), `/switch`, `/team` (the crew) |
 | API (customer only) | | `/api/return/<code>/status` |
 
 ## Business rules
@@ -119,6 +119,10 @@ static/js/           main.js, cursor, tilt, transitions, scenes/ (3D), fx/ (stam
 tests/               pytest suite
 docs/                ER diagram and UML mapping
 ```
+
+## Team page
+
+`/team` (the **Team** link in the top bar, for every role) introduces Chirag Seervi, Ansuman Singh and Aryan Singh. About 10,000 particles (4,200 on phones) start as a knotted loop. As you scroll they burst apart and re-form into each member's first name, and end as three interlocked rings. Your cursor pushes particles aside, and clicking (or tapping) the page or a member's stamp shakes them loose. The morphing runs in a vertex shader on the GPU. Each member has a "crew manifest" card with a departure-board name scramble. Names and roles live in `config.TEAM`; edit them there.
 
 ## Accessibility and performance notes
 

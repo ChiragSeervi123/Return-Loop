@@ -106,3 +106,11 @@ ROLE_HOME = {
     "warehouse": "warehouse.receive",
     "admin": "admin.dashboard",
 }
+
+# The team page (/team). Edit names or roles here; the page and its 3D scene read this list.
+# "accent" picks the stamp colour: a = moss, b = amber, c = brick.
+TEAM = [
+    {"name": "Chirag Seervi", "role": "Co-creator, ReturnLoop", "accent": "a"},
+    {"name": "Ansuman Singh", "role": "Co-creator, ReturnLoop", "accent": "b"},
+    {"name": "Aryan Singh", "role": "Co-creator, ReturnLoop", "accent": "c"},
+]

@@ -239,3 +239,10 @@ def test_admin_dashboard_shows_flagged_customer(client, seeded):
     kettle_return(seeded)
     page = client.get("/admin/dashboard").data.decode()
     assert "Asha Menon" in page and "Nobody flagged" not in page
+
+
+def test_team_page_lists_every_member(client, seeded):
+    page = client.get("/team").data.decode()
+    for name in ("Chirag", "Seervi", "Ansuman", "Aryan"):
+        assert name in page
+    assert '["CHIRAG", "ANSUMAN", "ARYAN"]' in page  # words the particles spell

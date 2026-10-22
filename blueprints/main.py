@@ -1,7 +1,7 @@
 """Landing page and the "switch role / user" control."""
 from flask import Blueprint, redirect, render_template, request, session, url_for
 
-from config import ROLE_HOME, ROLES, STAFF
+from config import ROLE_HOME, ROLES, STAFF, TEAM
 from models import Customer, db
 from services.stats import landing_stats
 
@@ -30,6 +30,16 @@ def switch():
         return redirect(url_for("main.switch"))
     session["role"], session["user_id"] = role, int(uid)
     return redirect(url_for(ROLE_HOME[role]))
+
+
+@bp.get("/team")
+def team():
+    members = []
+    for i, person in enumerate(TEAM, start=1):
+        first, _, last = person["name"].partition(" ")
+        members.append({**person, "no": i, "first": first, "last": last,
+                        "initials": "".join(part[0] for part in person["name"].split())})
+    return render_template("team.html", members=members)
 
 
 @bp.get("/enter/customer")

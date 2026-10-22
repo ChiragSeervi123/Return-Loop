@@ -545,6 +545,110 @@ function initInspect() {
   });
 }
 
+// ---------------------------------------------------------------- team page
+
+// Departure-board effect: letters flicker through random glyphs, then lock in left to right.
+function scramble(el) {
+  const final = el.dataset.text || el.textContent;
+  el.dataset.text = final;
+  if (reducedMotion) return;
+  const glyphs = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#/+';
+  const start = performance.now();
+  const dur = 700 + final.length * 60;
+  (function tick(now) {
+    const p = Math.min(1, (now - start) / dur);
+    const locked = Math.floor(p * final.length);
+    el.textContent = final.split('').map((ch, i) => (i < locked || ch === ' ' ? ch
+      : glyphs[Math.floor(Math.random() * glyphs.length)])).join('');
+    if (p < 1) requestAnimationFrame(tick);
+    else el.textContent = final;
+  })(start);
+}
+
+const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+async function initTeamPage() {
+  const flow = $('[data-team]');
+  if (!flow) return;
+  const nav = $('.nav');
+  const onNav = () => nav.classList.toggle('is-scrolled', window.scrollY > 40);
+  window.addEventListener('scroll', onNav, { passive: true });
+  onNav();
+
+  // headline words rise in one after another
+  $$('[data-split]', flow).forEach((el) => splitWords(el).forEach((w, i) => w.style.setProperty('--w', i)));
+
+  const words = JSON.parse(flow.dataset.words || '[]');
+  const accents = JSON.parse(flow.dataset.accents || '[]');
+  let scene = null;
+  try {
+    const { initTeam } = await import('./scenes/team.js');
+    scene = await initTeam($('.team-stage [data-canvas-host]'), { words, accents });
+  } catch (e) {
+    console.error('3D crew scene unavailable, showing the static version.', e);
+  }
+  if (!scene) flow.classList.add('no-webgl');
+
+  // Scroll -> which shape the particles form. Each section holds its shape,
+  // then morphs into the next one during the last part of its scroll.
+  const sections = $$('[data-team-sec]', flow);
+  const mobile = matchMedia('(max-width: 760px)').matches;
+  // where each shape sits: [sideways, up]. The intro knot moves right of the headline on desktop.
+  const last = sections.length - 1;
+  const spots = sections.map((s, i) => (i === 0 ? (mobile ? [0, 1.9] : [3.6, 0.6])
+    : i === last ? [0, mobile ? 1.8 : 2.1] : [0, mobile ? 1.8 : 2.3]));
+  let queued = false;
+  function update() {
+    queued = false;
+    if (!scene) return;
+    let i = 0;
+    sections.forEach((sec, k) => { if (sec.getBoundingClientRect().top <= 1) i = k; });
+    const r = sections[i].getBoundingClientRect();
+    const p = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight)));
+    const t = i < sections.length - 1 ? smooth(0.62, 1, p) : 0;
+    const next = Math.min(i + 1, sections.length - 1);
+    const mix = (k) => spots[i][k] + (spots[next][k] - spots[i][k]) * t;
+    scene.setMorph(i + t, mix(1), mix(0));
+  }
+  window.addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(update); } }, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+
+  // manifest cards fly in, and the names scramble into place
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      io.unobserve(e.target);
+      e.target.classList.add('is-in');
+      $$('[data-scramble]', e.target).forEach((el, k) => setTimeout(() => scramble(el), 200 + k * 180));
+    });
+  }, { threshold: 0.3 });
+  $$('[data-reveal]', flow).forEach((el) => io.observe(el));
+
+  // stamps: ink burst, particles explode, phone buzzes
+  const burstCanvas = $('.team-burst');
+  const inks = { a: '#3FA866', b: '#F0B03A', c: '#E0533F' };
+  $$('[data-stamp-burst]', flow).forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const r = btn.getBoundingClientRect();
+      const kind = (btn.className.match(/stamp--([abc])/) || [])[1];
+      burst(burstCanvas, r.left + r.width / 2, r.top + r.height / 2, inks[kind] || '#FF5B1F', { count: 80, power: 1.5 });
+      scene && scene.scatter();
+      if (navigator.vibrate) navigator.vibrate(30);
+      const card = btn.closest('.manifest');
+      card.classList.add('is-shaking');
+      setTimeout(() => card.classList.remove('is-shaking'), 200);
+    });
+  });
+
+  // click anywhere that isn't a control: shake the particles loose
+  flow.addEventListener('click', (e) => {
+    if (e.target.closest('a, button, .manifest')) return;
+    scene && scene.scatter();
+    burst(burstCanvas, e.clientX, e.clientY, '#FF5B1F', { count: 36 });
+  });
+}
+
 // ---------------------------------------------------------------- boot
 
 initTransitions();
@@ -566,3 +670,4 @@ if (page === 'track') initTrackPage();
 if (page === 'inventory') initInventory();
 if (page === 'admin') initCharts();
 if (page === 'inspect') initInspect();
+if (page === 'team') initTeamPage();
