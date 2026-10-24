@@ -834,6 +834,21 @@ async function initDeck() {
     canvas.style.setProperty('--s', 1);
     try {
       await mermaid.run({ querySelector: '.deck pre.mermaid' });
+      // Mermaid gives every sequence diagram the same marker ids ("sequencenumber",
+      // "arrowhead"...). A later diagram's url(#id) then finds the first one, which sits on
+      // a hidden slide and doesn't draw. Give each diagram's markers ids of its own.
+      $$('.deck pre.mermaid svg').forEach((svg, i) => {
+        $$('marker[id]', svg).forEach((marker) => {
+          const old = marker.id;
+          marker.id = `${old}-d${i}`;
+          $$('[marker-start], [marker-end], [marker-mid]', svg).forEach((el) => {
+            ['marker-start', 'marker-end', 'marker-mid'].forEach((attr) => {
+              const v = el.getAttribute(attr);
+              if (v && v.includes(`#${old})`)) el.setAttribute(attr, v.replace(`#${old})`, `#${marker.id})`));
+            });
+          });
+        });
+      });
     } finally {
       fit();
     }

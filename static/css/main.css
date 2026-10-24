@@ -1425,6 +1425,8 @@ table.mini td:first-child { font-weight: 600; padding-right: 10px; white-space: 
 .diagram--mermaid pre.mermaid svg { width: auto !important; height: auto; max-width: 100% !important; max-height: 510px; }
 /* Mermaid tags its labels with class="label", which the app styles as small mono caps; undo that here */
 .diagram--mermaid svg .label { font: inherit !important; text-transform: none !important; letter-spacing: normal !important; margin: 0; }
+/* actorTextColor is light for the dark actor boxes; the stick-figure actor's name sits on paper */
+.diagram--mermaid svg .actor-man text, .diagram--mermaid svg .actor-man tspan { fill: var(--ink) !important; }
 .usecase, .activity { font-family: var(--f-body); font-size: 14px; }
 .act-box { fill: var(--paper-hi); stroke: var(--ink); stroke-width: 1.5; }
 .act-dec { fill: var(--kraft); stroke: var(--ink); stroke-width: 1.5; }
@@ -1435,6 +1437,18 @@ table.mini td:first-child { font-weight: 600; padding-right: 10px; white-space: 
 .act-start { fill: var(--ink); }
 .act-end { fill: none; stroke: var(--ink); stroke-width: 2; }
 .act-refund { fill: var(--orange); stroke: var(--ink); stroke-width: 1.5; }
+.state .sb { fill: var(--paper-hi); stroke: var(--ink); stroke-width: 1.5; }
+.state .sb-div { fill: none; stroke: var(--ink); stroke-width: 1.2; }
+.state .sb.st--good { fill: var(--a-bg); stroke: var(--a); }
+.state .sb.st--work { fill: var(--b-bg); stroke: var(--b); }
+.state .sb.st--stop { fill: var(--c-bg); stroke: var(--c); }
+.state .sb-div.st--good { stroke: var(--a); }
+.state .sb-div.st--work { stroke: var(--b); }
+.state .sb-div.st--stop { stroke: var(--c); }
+.state .sb-name { font: 600 13.5px var(--f-body); }
+.state .sb-line { font-size: 11.5px; }
+.state .act-guard { font-size: 11px; }
+.state .st-key text { font-size: 13px; }
 .uc-system { fill: var(--paper-hi); stroke: var(--ink); stroke-width: 2; }
 .uc-sys-label { font: 500 13px var(--f-mono); letter-spacing: .12em; fill: var(--muted); text-transform: uppercase; }
 .uc-actor circle, .uc-actor path { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; }

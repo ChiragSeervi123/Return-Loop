@@ -136,7 +136,7 @@ docs/                ER diagram and UML mapping
 
 ## Presentation
 
-`/ppt` (the **PPT** link in the top bar) is a 16-slide deck about the project from a software engineering point of view: project planning & management (vision, scope, incremental process, risks), functional and non-functional requirements, use case diagram, class diagram, DFD level 0 and level 1, activity diagram, sequence diagram, layered architecture, and the path of one click from the UI down to the database. Use the arrow keys, click or swipe to move; **Present** (or `F`) goes full screen; **Save as PDF** prints one slide per page. A ready copy is in [docs/ReturnLoop-presentation.pdf](docs/ReturnLoop-presentation.pdf). The diagrams are drawn by Mermaid (loaded from jsdelivr) except the use case and activity diagrams, which are hand-drawn SVG.
+`/ppt` (the **PPT** link in the top bar) is an 18-slide deck about the project from a software engineering point of view: project planning & management (vision, scope, incremental process, risks), functional and non-functional requirements, use case diagram, class diagram, DFD level 0 and level 1, activity diagram, two sequence diagrams (QC grade and refund; handing a return to the next desk), state diagram, layered architecture, and the path of one click from the UI down to the database. Use the arrow keys, click or swipe to move; **Present** (or `F`) goes full screen; **Save as PDF** prints one slide per page. A ready copy is in [docs/ReturnLoop-presentation.pdf](docs/ReturnLoop-presentation.pdf). The diagrams are drawn by Mermaid (loaded from jsdelivr) except the use case and activity diagrams, which are hand-drawn SVG.
 
 ## Team page
 

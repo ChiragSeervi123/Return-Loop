@@ -253,9 +253,10 @@ def test_presentation_has_every_section(client, seeded):
     page = client.get("/ppt").data.decode()
     for section in ("PLANNING &amp; MANAGEMENT", "Functional requirements", "Non-functional requirements",
                     "USE CASE DIAGRAM", "CLASS DIAGRAM", "LEVEL 0", "LEVEL 1", "ACTIVITY DIAGRAM",
-                    "SEQUENCE DIAGRAM", "Layered architecture", "FROM UI TO DATA"):
+                    "SEQUENCE DIAGRAM", "STATE DIAGRAM", "Handing a return to the next desk",
+                    "Layered architecture", "FROM UI TO DATA"):
         assert section in page, section
-    assert page.count("data-slide ") + page.count("data-slide>") >= 16
+    assert page.count("data-slide ") + page.count("data-slide>") >= 18
 
 
 def test_presentation_agenda_points_at_the_right_slides(client, seeded):
