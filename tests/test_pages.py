@@ -34,13 +34,13 @@ def kettle_return(seeded, until="schedule"):
         if step == "schedule":
             schedule_pickup(ret, TOMORROW, "Morning", asha.name)
         elif step == "pickup":
-            mark_picked_up(ret.current_pickup, "Ravi Kumar")
+            mark_picked_up(ret.current_pickup, "Ayush Dubey")
         elif step == "receive":
-            mark_received(ret, "Kiran Patil")
+            mark_received(ret, "Ansuman Singh")
         elif step == "grade_b":
             submit_inspection(ret, 1, GOOD, "B")
         elif step == "repair":
-            mark_repaired(ret.refurbish_jobs[0], "Farhan Sheikh")
+            mark_repaired(ret.refurbish_jobs[0], "Anumeet")
     return ret
 
 
@@ -146,7 +146,7 @@ def test_staff_pages_render(client, seeded):
     login(client, "qc", 1)
     assert client.get(f"/qc/inspect/{ret.return_code}").status_code == 200
     submit_inspection(ret, 1, GOOD, "B")
-    mark_repaired(ret.refurbish_jobs[0], "Farhan Sheikh")
+    mark_repaired(ret.refurbish_jobs[0], "Anumeet")
     assert client.get(f"/qc/inspect/{ret.return_code}").status_code == 200  # re-inspection view
 
 
@@ -162,15 +162,15 @@ def test_customer_return_shows_up_on_each_staff_screen(client, seeded):
 
     assert code in page("agent", "/agent/pickups")
     assert code not in page("warehouse", "/warehouse/receive")
-    mark_picked_up(ret.current_pickup, "Ravi Kumar")
+    mark_picked_up(ret.current_pickup, "Ayush Dubey")
     assert code in page("warehouse", "/warehouse/receive")
     assert code not in page("qc", "/qc/queue")
-    mark_received(ret, "Kiran Patil")
+    mark_received(ret, "Ansuman Singh")
     assert code in page("qc", "/qc/queue")
     submit_inspection(ret, 1, GOOD, "B")
     assert code in page("refurbisher", "/refurb/jobs")
     assert code not in page("qc", "/qc/queue")
-    mark_repaired(ret.refurbish_jobs[0], "Farhan Sheikh")
+    mark_repaired(ret.refurbish_jobs[0], "Anumeet")
     assert code in page("qc", "/qc/queue")
 
 
@@ -239,7 +239,7 @@ def test_admin_dashboard_shows_flagged_customer(client, seeded):
     assert "Nobody flagged" in client.get("/admin/dashboard").data.decode()
     kettle_return(seeded)
     page = client.get("/admin/dashboard").data.decode()
-    assert "Asha Menon" in page and "Nobody flagged" not in page
+    assert "Chirag" in page and "Nobody flagged" not in page
 
 
 def test_team_page_lists_every_member(client, seeded):

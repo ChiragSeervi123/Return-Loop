@@ -16,7 +16,7 @@ NOW = datetime.now().replace(second=0, microsecond=0)
 
 # One demo customer, so every return in the demo belongs to the same person.
 CUSTOMERS = [
-    ("Asha Menon", "asha@example.com", "98201 44120", "Flat 4B, Sea Breeze, Bandra West, Mumbai 400050"),
+    ("Chirag", "chirag@example.com", "98201 44120", "Flat 4B, Sea Breeze, Bandra West, Mumbai 400050"),
 ]
 
 # name, category, price, returnable
@@ -118,9 +118,9 @@ def make_return(customer, item, reason, comment, created, until):
             schedule_pickup(ret, created.date() + timedelta(days=1), "Morning", customer.name,
                             today=created)
         elif step == "pickup":
-            mark_picked_up(ret.current_pickup, "Ravi Kumar", "Sealed box, label attached.")
+            mark_picked_up(ret.current_pickup, "Ayush Dubey", "Sealed box, label attached.")
         elif step == "receive":
-            mark_received(ret, "Kiran Patil")
+            mark_received(ret, "Ansuman Singh")
     return ret
 
 
@@ -137,7 +137,7 @@ def seed_returns(customers, items):
     r = make_return(asha, items[2][0], "Not as described", "Zip pull is a different colour from the photos.",
                     day(8), "receive")
     submit_inspection(r, 1, dict(GOOD, tags_attached=False), "B", "Zip pull swapped, tags missing.")
-    mark_repaired(r.refurbish_jobs[0], "Farhan Sheikh", "Replaced zip pull, steam cleaned.")
+    mark_repaired(r.refurbish_jobs[0], "Anumeet", "Replaced zip pull, steam cleaned.")
     submit_inspection(r, 1, GOOD, "B", "Repair holds. Good to sell as refurbished.")
     close_return(r, asha.name)
     backdate(r, day(8, 11))

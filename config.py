@@ -78,11 +78,11 @@ SLOT_HOURS = {"Morning": "9 - 12", "Afternoon": "12 - 4", "Evening": "4 - 8"}
 # Staff members. There is no staff table in the spec, so they live here.
 # The id is what gets stored in pickups.agent_id, qc_reports.inspector_id, etc.
 STAFF = {
-    "agent": [(1, "Ravi Kumar")],
-    "qc": [(1, "Anjali Rao")],
-    "refurbisher": [(1, "Farhan Sheikh")],
-    "warehouse": [(1, "Kiran Patil")],
-    "admin": [(1, "Deepa Nair")],
+    "agent": [(1, "Ayush Dubey")],
+    "qc": [(1, "Ayusman")],
+    "refurbisher": [(1, "Anumeet")],
+    "warehouse": [(1, "Ansuman Singh")],
+    "admin": [(1, "Aryan Singh")],
 }
 
 # In the order a return travels, so the role menu follows the process.

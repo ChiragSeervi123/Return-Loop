@@ -139,7 +139,7 @@ def test_each_desk_lists_what_it_handed_on(client, seeded):
                       ("admin", "/admin/dashboard")):
         login(client, role, ret.current_pickup.agent_id if role == "agent" else 1)
         moving = client.get(url).data.decode().split('class="in-flight"')[1]
-        assert ret.return_code in moving and "WITH ANJALI RAO" in moving
+        assert ret.return_code in moving and "WITH AYUSMAN" in moving
     login(client, "customer", ret.customer_id)
     assert "Continue as QC inspector" in client.get("/customer/returns").data.decode()
 
