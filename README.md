@@ -18,18 +18,30 @@ Then open <http://127.0.0.1:5000>. Python 3.10 or newer is required.
 
 ## Logging in (there is none)
 
-The "Switch role" menu in the top bar stores a role and a user id in the session. The same choice is on the `/switch` page, which the landing page's "Staff entry" button opens. "Start a return" signs you in as the first customer. If you open a page that belongs to another role, you get a friendly 403 page with a one-click switch.
+The "Switch role" menu in the top bar stores a role and a user id in the session. The same choice is on the `/switch` page, which the landing page's "Staff entry" button opens. "Start a return" signs you in as the first customer. If you open a page that belongs to another role, you get a friendly 403 page with a one-click switch. You rarely need the menu, though: after each step the app hands the return to the next desk for you (see below).
 
 | Role | Seeded people | Pages |
 |---|---|---|
-| Customer | Asha Menon | `/customer/orders`, `/customer/return/new?item=ID`, `/customer/return/<code>/schedule`, `/customer/returns`, `/customer/return/<code>` (tracking) |
-| Pickup agent | Ravi Kumar | `/agent/pickups`, `/agent/pickup/<id>` |
-| Warehouse manager | Kiran Patil | `/warehouse/receive`, `/warehouse/inventory` |
-| QC inspector | Anjali Rao | `/qc/queue`, `/qc/inspect/<code>` |
-| Refurbisher | Farhan Sheikh | `/refurb/jobs` |
-| Admin | Deepa Nair | `/admin/dashboard` |
+| Customer | Chirag | `/customer/orders`, `/customer/return/new?item=ID`, `/customer/return/<code>/schedule`, `/customer/returns`, `/customer/return/<code>` (tracking) |
+| Pickup agent | Ayush Dubey | `/agent/pickups`, `/agent/pickup/<id>` |
+| Warehouse manager | Ansuman Singh | `/warehouse/receive`, `/warehouse/inventory` |
+| QC inspector | Ayusman | `/qc/queue`, `/qc/inspect/<code>` |
+| Refurbisher | Anumeet | `/refurb/jobs` |
+| Admin | Aryan Singh | `/admin/dashboard` |
 | Anyone | | `/` (landing page), `/switch`, `/ppt` (presentation), `/team` (the crew) |
 | API (customer only) | | `/api/return/<code>/status` |
+
+## Following a return from desk to desk
+
+After anyone finishes their part of a return, a **handoff card** slides up: *Your part is done*, what just happened, who is next and what they'll do, and a strip of all six desks (done, next, skipped). **Continue as …** switches to that person and opens the exact item waiting for them: the agent's pickup slip, the QC inspection form, or the highlighted row on the warehouse dock or repair bench. The relay runs Customer → Pickup agent → Warehouse → QC → (Refurbisher → QC again, grade B only) → Customer, who confirms the refund and closes the return → Admin, where a **Loop complete** card offers *Start another return*.
+
+If the card is closed, the same **Continue as …** button is still around:
+
+- the customer's tracking page shows who holds the return now ("With Ayush Dubey · Pickup agent");
+- each staff page ends with a **still moving** section: the unfinished returns that desk handed on, and where each one is now;
+- the admin dashboard has **Where every return is right now**, covering every unfinished return.
+
+The rules for who is next live in `next_desk()` in [services/handoff.py](services/handoff.py). The card shows once, right after the action; switching by hand through the menu drops it.
 
 ## Business rules
 
@@ -55,24 +67,26 @@ All the numbers live in [config.py](config.py), each with a comment. All the log
 
 Run `python seed.py` (or `reset.bat`) first so the codes below match.
 
-**What the seed contains.** One customer, Asha Menon, with 12 delivered orders. 7 items are returnable; the others show *Window closed* or *Not returnable*, which is handy for explaining the rules. Asha also has 3 finished returns (RL-2026-0001 to 0003, closed or refunded) in *My returns*, so the admin charts and the warehouse inventory aren't empty. **The Agent, Warehouse, QC and Refurbisher queues start empty**: everything that appears there comes from returns you make as the customer, and each return shows up on a screen only when it is that role's turn.
+**What the seed contains.** One customer, Chirag, with 12 delivered orders. 7 items are returnable; the others show *Window closed* or *Not returnable*, which is handy for explaining the rules. Chirag also has 3 finished returns (RL-2026-0001 to 0003, closed or refunded) in *My returns*, so the admin charts and the warehouse inventory aren't empty. **The Agent, Warehouse, QC and Refurbisher queues start empty**: everything that appears there comes from returns you make as the customer, and each return shows up on a screen only when it is that role's turn.
 
 1. **Landing.** Open `/`. Scroll through the 3D loop, the five-step "How a return flows" section, the three stamps and the numbers.
-2. **Customer returns an item.** Click **Start a return** (you become Asha Menon). On the *Brass Desk Lamp* slip, click **Return item**. Pick **Damaged**, write a comment, and drag a PNG or JPG photo onto the drop zone. Click **Request return**. The return gets code **RL-2026-0004**.
-3. **Book the pickup.** Pick any day and the **Evening** slot, tick the address box, and click **Book pickup**. The tracking page shows the parcel at "Scheduled" and names the agent, **Ravi Kumar**. Keep this tab open if you want to watch it update live.
-4. **Agent picks it up.** Use the top-bar menu to switch to **Ravi Kumar**. RL-2026-0004 is under "Coming up", because it's booked for a later day. Open it, click **Mark picked up**, and confirm in the modal. Within 5 seconds the customer's tracking tab moves the parcel to "Picked up".
-5. **Warehouse receives it.** Switch to **Kiran Patil**. On `/warehouse/receive`, click **Mark received at centre** for RL-2026-0004.
-6. **QC grades it B.** Switch to **Anjali Rao**. In the queue, search `0010` and open it. Leave the checklist ticked, choose the **B** stamp, and click **Stamp it**. You get the full-screen stamp moment: the stamp slams down, the screen shakes, and ink sparks fly. The return moves to *Refurbishing*.
-7. **Refurbisher repairs it.** Switch to **Farhan Sheikh**. On `/refurb/jobs`, add a note and click **Mark repaired**. The return goes to *Re-inspection*.
-8. **QC rechecks.** Switch back to **Anjali Rao**. RL-2026-0004 is in the queue, marked *Re-inspection*. Open it, keep **B (repair passed)**, and click **Stamp it**.
-9. **Refund appears.** Switch to **Asha Menon** and open *My returns* → RL-2026-0004. The parcel sits at "Refunded" and the breakdown counts up: ₹2,499 × 70% − ₹0 = ₹1,749.30. Damage wasn't confirmed by QC, so the grade decides the refund. Click **Got it, close this return** to finish.
-10. **Admin dashboard updates.** Switch to **Deepa Nair**. "Returns logged" is now 4, the refunded total has grown, and the reasons bar chart and the grades doughnut include the new return. This was Asha's 4th return in 30 days, so she now appears under **Frequent returners** (3 doesn't flag; 4 does).
+2. **Customer returns an item.** Click **Start a return** (you become Chirag). On the *Brass Desk Lamp* slip, click **Return item**. Pick **Damaged**, write a comment, and drag a PNG or JPG photo onto the drop zone. Click **Request return**. The return gets code **RL-2026-0004**.
+3. **Book the pickup.** Pick any day and the **Evening** slot, tick the address box, and click **Book pickup**. The tracking page shows the parcel at "Scheduled", and the handoff card slides up: *Your part is done. Next up: Ayush Dubey, pickup agent, collects the parcel…* To watch the tracking page update live later, open it in a second tab now.
+4. **Agent picks it up.** Click **Continue as pickup agent** on the card. You are now Ayush Dubey, on the RL-2026-0004 pickup slip. Click **Mark picked up** and confirm in the modal. Within 5 seconds the customer's tracking tab moves the parcel to "Picked up".
+5. **Warehouse receives it.** The card now points at Ansuman Singh. Click **Continue as warehouse**: RL-2026-0004 is highlighted on the inbound dock. Click **Mark received at centre**.
+6. **QC grades it B.** Click **Continue as QC inspector**, which opens RL-2026-0004's inspection form. Leave the checklist ticked, choose the **B** stamp, and click **Stamp it**. You get the full-screen stamp moment: the stamp slams down, the screen shakes, and ink sparks fly. The return moves to *Refurbishing*.
+7. **Refurbisher repairs it.** Click **Continue as refurbisher**: the job is highlighted on the bench. Add a note and click **Mark repaired**. The return goes to *Re-inspection*.
+8. **QC rechecks.** Click **Continue as QC inspector** again. The form opens marked *Re-inspection*. Keep **B (repair passed)** and click **Stamp it**.
+9. **Refund appears.** Click **Continue as customer**. Chirag's tracking page shows RL-2026-0004 at "Refunded", and the breakdown counts up: ₹2,499 × 70% − ₹0 = ₹1,749.30. Damage wasn't confirmed by QC, so the grade decides the refund. Click **Got it, close this return**.
+10. **Loop complete.** Click **Continue as admin**. Aryan Singh's dashboard opens with the **Loop complete** card and every desk ticked. "Returns logged" is now 4, the refunded total has grown, and the reasons bar chart and the grades doughnut include the new return. This was Chirag's 4th return in 30 days, so they now appear under **Frequent returners** (3 doesn't flag; 4 does). **Start another return** on the card goes back to Chirag's orders.
+
+The top-bar menu still switches to anyone at any time, if you'd rather jump around.
 
 Other things to try:
 
-- Return another item as Asha and book a pickup. As Ravi Kumar, click **Customer absent** twice. The return is cancelled and Asha's tracking page says why.
+- Return another item as Chirag and book a pickup. As Ayush Dubey, click **Customer absent** twice. The first miss rebooks it for the same agent, so no card appears; the second cancels it, and the card hands it back to Chirag, whose tracking page says why.
 - Take a return to the QC queue (book it, pick it up, receive it). Untick **Item matches order** and submit. After the confirmation modal, it is rejected as suspected fraud.
-- Take a return through grade B and the repair, then recheck it with **C**: the failed repair scraps the item, and Asha's tracking page shows it scrapped.
+- Take a return through grade B and the repair, then recheck it with **C**: the failed repair scraps the item, and Chirag's tracking page shows it scrapped.
 - Try returning the *Canvas Backpack* or the *In-ear Earbuds*: the button is replaced by *Window closed* / *Not returnable*.
 - Open `/customer/return/RL-2026-9999`. That code doesn't exist, so you get the 404 page. (Another customer's return gives the same 404; the tests check this.)
 
@@ -82,13 +96,13 @@ Decisions I made where the spec was open:
 
 - **Project layout.** The spec's `returnloop/` folder is the repository root itself.
 - **Staff accounts.** The schema has no staff table, so staff are defined in `config.STAFF`. `pickups.agent_id`, `qc_reports.inspector_id` and `refurbish_jobs.technician_id` hold those ids.
-- **One person per role.** The spec asks for three seeded customers; on request this was cut to one customer (Asha Menon) and one pickup agent (Ravi Kumar), so a whole return can be followed without hunting for the right person. All 12 orders belong to Asha. Adding people back only needs `CUSTOMERS` in `seed.py` and `STAFF` in `config.py`.
+- **One person per role.** The spec asks for three seeded customers; on request this was cut to one customer (Chirag) and one pickup agent (Ayush Dubey), so a whole return can be followed without hunting for the right person. All 12 orders belong to Chirag. Adding people back only needs `CUSTOMERS` in `seed.py` and `STAFF` in `config.py`.
 - **Seed has no returns in progress.** On request, the seed only contains finished returns (in the customer's history), so every item in the staff queues comes from the customer during the demo. The spec asked for about 8 returns in varied states; this replaces that.
-- **Frequent-returner seed.** The spec's rule is "more than 3 returns in 30 days", and its tests say 3 does not flag and 4 does. Asha starts with 3 returns, so her first return in the demo makes her flagged on the admin dashboard.
+- **Frequent-returner seed.** The spec's rule is "more than 3 returns in 30 days", and its tests say 3 does not flag and 4 does. Chirag starts with 3 returns, so their first return in the demo gets them flagged on the admin dashboard.
 - **Requested → Rejected.** Ineligible items are stopped before a return is created: the button is disabled, and the server refuses the request if someone posts it anyway. So this transition exists in the state machine and is tested, but no screen uses it.
 - **When is a return "open".** An item can't be returned again while it has any return that isn't *Cancelled*. A finished return shows "Already returned"; a cancelled one (customer absent twice) can be requested again while the window is still open.
 - **First absent attempt.** The agent's "Customer absent" rebooks automatically for the next day, same slot, same agent, and records it as Pickup Scheduled → Pickup Scheduled. The customer can still reschedule.
-- **Agent list.** "Today's pickups" lists today's (and overdue) stops first. Upcoming ones are listed below so the demo doesn't need a calendar change, and an agent can collect early.
+- **Agent list.** "Today's pickups" lists today's (and overdue) stops first. Upcoming ones are listed below so the demo doesn't need a calendar change, and an agent can collect early. Pickups can only be booked from tomorrow, so with nothing due today the header says how many are coming up instead of showing an empty box.
 - **Refund trigger.** The refund is created automatically when the item reaches Restocked or Scrapped. The steps are: QC grade A or C, or the re-inspection result.
 - **Refunded → Closed.** The customer closes the return with "Got it, close this return" once the refund has arrived. Nothing else in the spec says who closes it.
 - **"Wrong item" vs fraud.** For the reason "Wrong item", a mismatch confirms the customer's claim (full refund), so it is not treated as fraud. For any other reason, a mismatch means suspected fraud.
@@ -102,7 +116,7 @@ Decisions I made where the spec was open:
 - **Lenis smooth scroll** is not used. The flow section uses CSS `position: sticky` with ScrollTrigger scrubbing, which behaves well on mobile. Lenis would only add risk there.
 - **One WebGL renderer per page.** The hero and the "How a return flows" section share one sticky canvas, so the landing page has a single renderer.
 - **Stamp moment timing.** On the QC page the form is submitted after the ~0.9 s stamp animation, as the spec asks ("play the stamp moment, then continue"). With reduced motion the animation is skipped and the form submits immediately.
-- **Extra service and script files.** Besides the four service files the spec lists, there are `services/returns.py` (one function per workflow action), `services/stats.py` (dashboard and landing numbers) and `services/uploads.py` (photo checks), so route handlers stay thin.
+- **Extra service and script files.** Besides the four service files the spec lists, there are `services/returns.py` (one function per workflow action), `services/stats.py` (dashboard and landing numbers), `services/uploads.py` (photo checks) and `services/handoff.py` (who is next, for the handoff card), so route handlers stay thin.
 
 ## Where things are
 
@@ -111,9 +125,9 @@ app.py               app factory, error pages, template filters
 config.py            settings and every business-rule constant
 models.py            the 11 tables
 seed.py              demo data, pushed through the real services
-services/            all business logic (state machine, eligibility, refund, flags, workflow)
+services/            all business logic (state machine, eligibility, refund, flags, workflow, handoff)
 blueprints/          thin route handlers, one per role, plus the API
-templates/           Jinja templates (base, macros, landing, one folder per role)
+templates/           Jinja templates (base, macros, handoff card, landing, one folder per role)
 static/css/          main.css (design system) and motion.css (animations, reduced motion)
 static/js/           main.js, cursor, tilt, transitions, scenes/ (3D), fx/ (stamp, burst, counters), lib/webgl.js
 tests/               pytest suite
