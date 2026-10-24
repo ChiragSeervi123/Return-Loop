@@ -708,11 +708,11 @@ async function initTeamPage() {
 
   // stamps: ink burst, particles explode, phone buzzes
   const burstCanvas = $('.team-burst');
-  const inks = { a: '#3FA866', b: '#F0B03A', c: '#E0533F' };
+  const inks = { a: '#3FA866', b: '#F0B03A', c: '#E0533F', d: '#FF7A3D' };
   $$('[data-stamp-burst]', flow).forEach((btn) => {
     btn.addEventListener('click', () => {
       const r = btn.getBoundingClientRect();
-      const kind = (btn.className.match(/stamp--([abc])/) || [])[1];
+      const kind = (btn.className.match(/stamp--([a-d])/) || [])[1];
       burst(burstCanvas, r.left + r.width / 2, r.top + r.height / 2, inks[kind] || '#FF5B1F', { count: 80, power: 1.5 });
       scene && scene.scatter();
       if (navigator.vibrate) navigator.vibrate(30);

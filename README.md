@@ -25,7 +25,7 @@ The "Switch role" menu in the top bar stores a role and a user id in the session
 | Customer | Chirag | `/customer/orders`, `/customer/return/new?item=ID`, `/customer/return/<code>/schedule`, `/customer/returns`, `/customer/return/<code>` (tracking) |
 | Pickup agent | Ayush Dubey | `/agent/pickups`, `/agent/pickup/<id>` |
 | Warehouse manager | Ansuman Singh | `/warehouse/receive`, `/warehouse/inventory` |
-| QC inspector | Ayusman | `/qc/queue`, `/qc/inspect/<code>` |
+| QC inspector | Aadi Srivastava | `/qc/queue`, `/qc/inspect/<code>` |
 | Refurbisher | Anumeet | `/refurb/jobs` |
 | Admin | Aryan Singh | `/admin/dashboard` |
 | Anyone | | `/` (landing page), `/switch`, `/ppt` (presentation), `/team` (the crew) |
@@ -140,7 +140,7 @@ docs/                ER diagram and UML mapping
 
 ## Team page
 
-`/team` (the **Team** link in the top bar, for every role) introduces Chirag Seervi, Anshuman Singh and Aryan Singh. Up to 9,000 particles (3,600 on phones, fewer on low-power machines) start as a knotted loop. As you scroll they burst apart and re-form into each member's first name, and end as three interlocked rings. Your cursor (or finger) parts and swirls the particles around it, and clicking (or tapping) the page or a member's stamp shakes them loose. The morphing runs in a vertex shader on the GPU. Each member has a "crew manifest" card with a departure-board name scramble. Names and roles live in `config.TEAM`; edit them there.
+`/team` (the **Team** link in the top bar, for every role) introduces Chirag Seervi, Anshuman Singh, Aryan Singh and Aadi Srivastava. Up to 9,000 particles (3,600 on phones, fewer on low-power machines) start as a knotted loop. As you scroll they burst apart and re-form into each member's first name, and end as interlocked rings, one per member. Your cursor (or finger) parts and swirls the particles around it, and clicking (or tapping) the page or a member's stamp shakes them loose. The morphing runs in a vertex shader on the GPU. Each member has a "crew manifest" card with a departure-board name scramble. Names and roles live in `config.TEAM`; edit them there. The page and the particle scene adapt to however many members are listed.
 
 ## Accessibility and performance notes
 

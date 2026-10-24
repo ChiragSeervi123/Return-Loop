@@ -273,6 +273,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .stamp--a { --stamp-ink: var(--a); }
 .stamp--b { --stamp-ink: var(--b); }
 .stamp--c { --stamp-ink: var(--c); }
+.stamp--d { --stamp-ink: var(--orange-dk); }
 .stamp--xs { width: 1.6rem; border-width: 2px; border-radius: 5px; box-shadow: none; transform: rotate(-6deg); }
 .stamp--xs .stamp__letter { font-size: .95rem; }
 
@@ -1207,6 +1208,7 @@ a.ledger__link:hover { background: var(--kraft); padding-left: .75rem; }
 .team-member--a { --acc: #3FA866; }
 .team-member--b { --acc: #F0B03A; }
 .team-member--c { --acc: #E0533F; }
+.team-member--d { --acc: #FF7A3D; }
 .team-member.is-right .team-sec__sticky { justify-items: end; }
 .member__ghost {
   display: none; position: absolute; left: var(--gutter); right: var(--gutter); top: 14vh; text-align: center;

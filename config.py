@@ -84,7 +84,7 @@ SLOT_HOURS = {"Morning": "9 - 12", "Afternoon": "12 - 4", "Evening": "4 - 8"}
 # The id is what gets stored in pickups.agent_id, qc_reports.inspector_id, etc.
 STAFF = {
     "agent": [(1, "Ayush Dubey")],
-    "qc": [(1, "Ayusman")],
+    "qc": [(1, "Aadi Srivastava")],
     "refurbisher": [(1, "Anumeet")],
     "warehouse": [(1, "Ansuman Singh")],
     "admin": [(1, "Aryan Singh")],
@@ -113,9 +113,10 @@ ROLE_HOME = {
 }
 
 # The team page (/team). Edit names or roles here; the page and its 3D scene read this list.
-# "accent" picks the stamp colour: a = moss, b = amber, c = brick.
+# "accent" picks the stamp colour: a = moss, b = amber, c = brick, d = orange.
 TEAM = [
     {"name": "Chirag Seervi", "role": "Co-creator, ReturnLoop", "accent": "a"},
     {"name": "Anshuman Singh", "role": "Co-creator, ReturnLoop", "accent": "b"},
     {"name": "Aryan Singh", "role": "Co-creator, ReturnLoop", "accent": "c"},
+    {"name": "Aadi Srivastava", "role": "Co-creator, ReturnLoop", "accent": "d"},
 ]

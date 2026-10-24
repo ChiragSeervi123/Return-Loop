@@ -1,13 +1,14 @@
-// Team page scene: thousands of particles morph between five shapes as you scroll:
-//   0 a knotted loop, 1-3 each member's first name, 4 three interlocked rings.
-// All five target shapes are stored as vertex attributes, and the morph,
+// Team page scene: thousands of particles morph between shapes as you scroll:
+//   0 a knotted loop, 1..n each member's first name, n+1 one interlocked ring per member.
+// Every target shape is stored as a vertex attribute, and the morph,
 // the mid-flight burst, the idle shimmer and the cursor push all run in the
 // vertex shader, so the CPU only updates a handful of uniforms per frame.
 import {
   createStage, isMobile, makeParcel, parcelSideTexture, parcelTopTexture, reducedMotion,
 } from '../lib/webgl.js';
 
-const ACCENTS = { a: 0x3FA866, b: 0xF0B03A, c: 0xE0533F }; // brighter grade colours for glowing on ink
+// brighter grade colours for glowing on ink, plus the brand orange for a fourth member
+const ACCENTS = { a: 0x3FA866, b: 0xF0B03A, c: 0xE0533F, d: 0xFF7A3D };
 const ORANGE = 0xFF5B1F;
 
 // ---------- target shapes (each returns a Float32Array of n * 3) ----------
@@ -27,12 +28,14 @@ function knot(n) {
   return out;
 }
 
-function rings(n) {
-  // three interlocked rings, tilted like a gyroscope
+function rings(n, count = 3) {
+  // interlocked rings, one per member, tilted like a gyroscope: the first lies flat,
+  // the others stand up and fan out around the vertical axis
   const out = new Float32Array(n * 3);
-  const tilts = [[0, 0], [Math.PI / 2, 0], [Math.PI / 2, Math.PI / 2]];
+  const tilts = Array.from({ length: count }, (_, k) => (k === 0 ? [0, 0]
+    : [Math.PI / 2, count > 2 ? (Math.PI * (k - 1)) / (count - 1) : 0]));
   for (let i = 0; i < n; i++) {
-    const k = i % 3;
+    const k = i % count;
     const t = Math.random() * Math.PI * 2;
     const R = 2.6, w = 0.2 * Math.sqrt(Math.random()), a = Math.random() * Math.PI * 2;
     let x = (R + Math.cos(a) * w) * Math.cos(t);
@@ -44,7 +47,7 @@ function rings(n) {
     let z2 = y * Math.sin(rx) + z * Math.cos(rx);
     let x3 = x * Math.cos(ry) + z2 * Math.sin(ry);
     let z3 = -x * Math.sin(ry) + z2 * Math.cos(ry);
-    out[i * 3] = x3 + (k - 1) * 0.75;
+    out[i * 3] = x3 + (k - (count - 1) / 2) * 0.75;
     out[i * 3 + 1] = y2;
     out[i * 3 + 2] = z3;
   }
@@ -86,8 +89,9 @@ function word(text, n, width) {
 
 // ---------- shaders ----------
 
-const VERT = /* glsl */`
-  attribute vec3 aP0; attribute vec3 aP1; attribute vec3 aP2; attribute vec3 aP3; attribute vec3 aP4;
+// The vertex shader is built for the number of shapes: one aP<i> attribute each.
+const makeVert = (count) => /* glsl */`
+  ${Array.from({ length: count }, (_, i) => `attribute vec3 aP${i};`).join(' ')}
   attribute float aRand;
   uniform float uMorph; uniform float uTime; uniform float uScatter; uniform float uSize;
   uniform float uPixelRatio; uniform vec3 uMouse; uniform float uMouseOn;
@@ -95,16 +99,13 @@ const VERT = /* glsl */`
   varying float vBurst; varying float vRand; varying float vDepth;
 
   vec3 pick(float i) {
-    if (i < 0.5) return aP0;
-    if (i < 1.5) return aP1;
-    if (i < 2.5) return aP2;
-    if (i < 3.5) return aP3;
-    return aP4;
+    ${Array.from({ length: count - 1 }, (_, i) => `if (i < ${i}.5) return aP${i};`).join('\n    ')}
+    return aP${count - 1};
   }
 
   void main() {
-    float m = clamp(uMorph, 0.0, 4.0);
-    float i0 = floor(min(m, 3.999));
+    float m = clamp(uMorph, 0.0, ${count - 1}.0);
+    float i0 = floor(min(m, ${count - 1}.0 - 0.001));
     float f = m - i0;
     float d = aRand * 0.4;                         // each particle leaves a little later
     float t = smoothstep(d, d + 0.6, f);
@@ -173,7 +174,8 @@ export async function initTeam(host, { words = [], accents = [] } = {}) {
 
   // ---------- particles ----------
   const wordWidth = 14;
-  const shapes = [knot(N), ...[0, 1, 2].map((i) => word(words[i] || 'CREW', N, wordWidth)), rings(N)];
+  const names = words.length ? words : ['CREW'];
+  const shapes = [knot(N), ...names.map((w) => word(w, N, wordWidth)), rings(N, names.length)];
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(shapes[0].slice(), 3));
   shapes.forEach((arr, i) => geo.setAttribute(`aP${i}`, new THREE.BufferAttribute(arr, 3)));
@@ -192,7 +194,7 @@ export async function initTeam(host, { words = [], accents = [] } = {}) {
     uCool: { value: new THREE.Color(0xF6F1E7) },
   };
   const points = new THREE.Points(geo, new THREE.ShaderMaterial({
-    vertexShader: VERT, fragmentShader: FRAG, uniforms,
+    vertexShader: makeVert(shapes.length), fragmentShader: FRAG, uniforms,
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   }));
   points.userData.count = N;
@@ -267,7 +269,7 @@ export async function initTeam(host, { words = [], accents = [] } = {}) {
 
     // accent colour follows whichever member is on screen
     const nearest = Math.round(state.morph);
-    const acc = nearest >= 1 && nearest <= 3 ? ACCENTS[accents[nearest - 1]] || ORANGE : ORANGE;
+    const acc = nearest >= 1 && nearest <= names.length ? ACCENTS[accents[nearest - 1]] || ORANGE : ORANGE;
     accentTarget.setHex(acc);
     uniforms.uAccent.value.lerp(accentTarget, reducedMotion ? 1 : Math.min(1, dt * 3));
 
@@ -283,7 +285,10 @@ export async function initTeam(host, { words = [], accents = [] } = {}) {
     uniforms.uMouseOn.value += ((mouseActive ? 1 : 0) - uniforms.uMouseOn.value) * Math.min(1, dt * 4);
 
     // the whole field turns slowly; names face the camera, the loop and rings tumble
-    const wordness = Math.max(0, 1 - Math.min(Math.abs(state.morph - 2), 1.5) / 1.5) * (state.morph > 0.5 && state.morph < 3.5 ? 1 : 0);
+    // (names sit at morph 1..n; strongest in the middle of that run)
+    const mid = (1 + names.length) / 2, half = names.length / 2;
+    const wordness = Math.max(0, 1 - Math.min(Math.abs(state.morph - mid), half) / half)
+      * (state.morph > 0.5 && state.morph < names.length + 0.5 ? 1 : 0);
     const spin = reducedMotion ? 0 : time * 0.25;
     points.rotation.y = (1 - wordness) * Math.sin(spin) * 0.6;
     points.rotation.x = (1 - wordness) * Math.cos(spin * 0.8) * 0.25;
@@ -311,7 +316,7 @@ export async function initTeam(host, { words = [], accents = [] } = {}) {
   else stage.start();
 
   return {
-    // m: 0..4 which shape; lift / shift: move the shape up or sideways (world units)
+    // m: 0..n+1 which shape; lift / shift: move the shape up or sideways (world units)
     setMorph(m, lift = 0, shift = 0) {
       state.targetMorph = m;
       state.lift = lift;
