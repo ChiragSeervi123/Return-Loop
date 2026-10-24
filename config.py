@@ -7,14 +7,19 @@ import tempfile
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
+# On Vercel the project folder is read-only; only /tmp can be written.
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+DATA_DIR = "/tmp" if ON_VERCEL else BASE_DIR
+
 
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "returnloop-dev-secret")
     SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL", "sqlite:///" + os.path.join(BASE_DIR, "returnloop.db")
+        "DATABASE_URL", "sqlite:///" + os.path.join(DATA_DIR, "returnloop.db")
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
+    UPLOAD_FOLDER = (os.path.join(DATA_DIR, "uploads") if ON_VERCEL
+                     else os.path.join(BASE_DIR, "static", "uploads"))
     # Flask rejects any request body above this with a 413. We set it a little
     # above MAX_PHOTO_BYTES so the friendly "photo too large" check can run first.
     MAX_CONTENT_LENGTH = 4 * 1024 * 1024

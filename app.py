@@ -4,7 +4,7 @@ import os
 from flask import Flask, render_template, request, session
 
 from blueprints import current_role, current_user_id, current_user_name
-from config import ROLE_LABELS, ROLES, STAFF, Config
+from config import ON_VERCEL, ROLE_LABELS, ROLES, STAFF, Config
 from models import Customer, ReturnRequest, db
 from services.handoff import handoff_for
 from services.refund import inr
@@ -87,8 +87,18 @@ def create_app(config_class=Config):
     return app
 
 
+# Top-level instance so hosts like Vercel can find the app.
+app = create_app()
+
+if ON_VERCEL:
+    # Each serverless instance starts with an empty /tmp, so fill it with the demo data.
+    with app.app_context():
+        if not db.inspect(db.engine).has_table("customers"):
+            from seed import main as seed_demo
+            seed_demo()
+
+
 if __name__ == "__main__":
-    app = create_app()
     with app.app_context():
         db.create_all()
     app.run(debug=True, port=5000)
