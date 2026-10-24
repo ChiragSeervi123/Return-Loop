@@ -10,6 +10,20 @@ class RefundError(Exception):
     pass
 
 
+def inr(amount):
+    """₹ with Indian digit grouping: 123456 -> ₹1,23,456. Paise only when there are some."""
+    whole, paise = divmod(round(float(amount or 0) * 100), 100)
+    digits = str(int(whole))
+    if len(digits) > 3:
+        head, tail = digits[:-3], digits[-3:]
+        groups = []
+        while len(head) > 2:
+            groups.insert(0, head[-2:])
+            head = head[:-2]
+        digits = ",".join(([head] if head else []) + groups) + "," + tail
+    return f"₹{digits}" + (f".{paise:02d}" if paise else "")
+
+
 def claim_confirmed(reason, report):
     """Did QC confirm the customer's complaint? (the full-refund exception)"""
     if report is None:
@@ -68,7 +82,7 @@ def issue_refund(ret, actor_role, actor_name, inventory_action):
         db.session.add(InventoryLog(product_id=item.product_id, return_id=ret.id,
                                     action=inventory_action, quantity=item.quantity))
         ret.refund_status = "Credited"
-        note = f"Refund of ₹{parts['final_amount']:.2f} credited."
+        note = f"Refund of {inr(parts['final_amount'])} credited."
         change_status(ret, REFUNDED, actor_role, actor_name, note, commit=False)
         db.session.commit()
     except Exception:

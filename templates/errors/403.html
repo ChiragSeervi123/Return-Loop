@@ -8,13 +8,13 @@
     <p class="tape" aria-hidden="true">STAFF ONLY · STAFF ONLY · STAFF ONLY · STAFF ONLY</p>
     <h1 class="page-head__title">Staff only past this tape.</h1>
     <p class="page-head__text">
-      {% if needed %}This page is for the <b>{{ needed }}</b> desk{% if role %}, and you're signed in as <b>{{ role }}</b>{% endif %}.
+      {% if needed %}This page is for the <b>{{ role_labels[needed] }}</b> desk{% if role %}, and you're signed in as <b>{{ role_labels[role] }}</b>{% endif %}.
       {% else %}You need to pick a role first.{% endif %}
     </p>
     <div class="row">
       {% if needed %}
         <form method="post" action="{{ url_for('main.switch') }}">
-          <button class="btn btn--primary" name="who" value="{{ needed }}:{{ people[needed][0][0] }}">Switch to {{ people[needed][0][1] }} ({{ needed }})</button>
+          <button class="btn btn--primary" name="who" value="{{ needed }}:{{ people[needed][0][0] }}">Switch to {{ people[needed][0][1] }} ({{ role_labels[needed] }})</button>
         </form>
       {% endif %}
       <a class="btn btn--ghost" href="{{ url_for('main.switch') }}">Choose another desk</a>

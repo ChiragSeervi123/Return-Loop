@@ -16,11 +16,19 @@
 {% endmacro %}
 
 {% block content %}
-{{ m.page_head(today.strftime('%d'), "AGENT / " ~ user_name|upper, "Today's pickups", today_list|length ~ " stop" ~ ('' if today_list|length == 1 else 's') ~ ". Morning first.") }}
+{% set n_today, n_later = today_list|length, upcoming|length %}
+{% if n_today %}
+  {% set sub = n_today ~ " stop" ~ ('' if n_today == 1 else 's') ~ " today. Morning first." %}
+{% elif n_later %}
+  {% set sub = "Nothing today. " ~ n_later ~ " coming up, soonest first." %}
+{% else %}
+  {% set sub = "No pickups booked." %}
+{% endif %}
+{{ m.page_head(today.strftime('%d'), "AGENT / " ~ user_name|upper, "Today's pickups", sub) }}
 
 {% if today_list %}
   <div class="jobs">{% for p in today_list %}{{ pickup_card(p) }}{% endfor %}</div>
-{% else %}
+{% elif not upcoming %}
   {{ m.empty_state("Nothing today", "No pickups booked for today. Kettle on.") }}
 {% endif %}
 
@@ -28,7 +36,7 @@
   <h2 class="section-label mono">COMING UP</h2>
   <div class="jobs jobs--later">
     {% for p in upcoming %}
-      <div class="jobs__day mono">{{ p.slot_date.strftime('%a %d %b')|upper }}</div>
+      {% if loop.changed(p.slot_date) %}<div class="jobs__day mono">{{ p.slot_date.strftime('%a %d %b')|upper }}</div>{% endif %}
       {{ pickup_card(p) }}
     {% endfor %}
   </div>

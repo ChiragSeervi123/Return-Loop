@@ -7,6 +7,7 @@ from blueprints import current_role, current_user_id, current_user_name
 from config import ROLE_LABELS, ROLES, STAFF, Config
 from models import Customer, ReturnRequest, db
 from services.handoff import handoff_for
+from services.refund import inr
 
 
 # Navbar links for each role: (endpoint, label)
@@ -38,19 +39,7 @@ def create_app(config_class=Config):
     for bp in (main_bp, customer_bp, agent_bp, qc_bp, refurb_bp, warehouse_bp, admin_bp, api_bp):
         app.register_blueprint(bp)
 
-    @app.template_filter("inr")
-    def inr(amount):
-        """₹ with Indian digit grouping: 123456 -> ₹1,23,456."""
-        whole, paise = divmod(round(float(amount or 0) * 100), 100)
-        digits = str(int(whole))
-        if len(digits) > 3:
-            head, tail = digits[:-3], digits[-3:]
-            groups = []
-            while len(head) > 2:
-                groups.insert(0, head[-2:])
-                head = head[:-2]
-            digits = ",".join(([head] if head else []) + groups) + "," + tail
-        return f"₹{digits}" + (f".{paise:02d}" if paise else "")
+    app.add_template_filter(inr, "inr")
 
     @app.template_filter("when")
     def when(value):

@@ -39,10 +39,16 @@
       <p class="mono small muted">Agent: {{ agents.get(p.agent_id, 'Unassigned') }}</p>
       {% if p.attempt_no > 1 %}<p class="notice notice--b">{{ m.icon('alert') }} <span>We missed you last time. This is attempt {{ p.attempt_no }} of {{ max_attempts }}; if nobody's home again, the return is cancelled.</span></p>{% endif %}
       <a class="btn btn--ghost" href="{{ url_for('customer.schedule', code=ret.return_code) }}">Reschedule</a>
-    {% elif ret.status in ['Picked Up', 'Received'] %}
-      <p>It's on its way to our QC bench. Grading usually takes a day.</p>
-    {% elif ret.status in ['Inspected', 'Refurbishing', 'Re-inspection'] %}
-      <p>Graded {{ ret.first_report.grade }}. We're giving it a quick repair, then a second check. Your refund follows.</p>
+    {% elif ret.status == 'Picked Up' %}
+      <p>Collected. It's on its way to our returns centre.</p>
+    {% elif ret.status == 'Received' %}
+      <p>It's at our returns centre, waiting for a QC check. Grading usually takes a day.</p>
+    {% elif ret.status == 'Refurbishing' %}
+      <p>Graded B. It's on the repair bench now; a second QC check follows, then your refund.</p>
+    {% elif ret.status == 'Re-inspection' %}
+      <p>Repaired. QC is giving it a second check, then your refund follows.</p>
+    {% elif ret.status in ['Inspected', 'Restocked', 'Scrapped'] %}
+      <p>Graded {{ ret.latest_report.grade }}. Your refund is being worked out.</p>
     {% elif ret.status == 'Refunded' %}
       <p>Your refund is on its way back to the original payment method.</p>
       <form method="post" action="{{ url_for('customer.close', code=ret.return_code) }}" data-once>
@@ -86,7 +92,7 @@
         <li class="timeline__row">
           <span class="mono timeline__when">{{ h.created_at|when }}</span>
           <span class="timeline__what">{{ m.badge(h.to_status) }}<span>{{ h.note }}</span></span>
-          <span class="mono muted timeline__who">{{ h.actor_name }} · {{ h.actor_role }}</span>
+          <span class="mono muted timeline__who">{{ h.actor_name }} · {{ role_labels.get(h.actor_role, h.actor_role) }}</span>
         </li>
       {% endfor %}
     </ol>

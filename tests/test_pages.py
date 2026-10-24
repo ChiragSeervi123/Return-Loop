@@ -265,3 +265,23 @@ def test_presentation_agenda_points_at_the_right_slides(client, seeded):
     for no, topic in re.findall(r'data-goto="(\d+)"><b>\d+</b> ([^<]+)<small', page):
         first_word = topic.split()[0].strip(":,").lower()
         assert first_word in slides[int(no) - 1].lower(), (no, topic, slides[int(no) - 1])
+
+
+def test_polish_labels_money_and_agent_header(client, seeded):
+    """Role labels instead of role keys, Indian money format in notes, and a useful agent header."""
+    ret = kettle_return(seeded, "receive")
+    submit_inspection(ret, 1, GOOD, "A")
+    assert ret.history[-1].note.startswith("Refund of ₹") and ".00" not in ret.history[-1].note
+
+    login(client, "customer", ret.customer_id)
+    page = client.get(f"/customer/return/{ret.return_code}").data.decode()
+    assert "· QC inspector" in page and "· qc<" not in page
+
+
+def test_agent_header_points_at_upcoming_pickups(client, seeded):
+    ret = kettle_return(seeded)                   # booked for tomorrow
+    login(client, "agent", ret.current_pickup.agent_id)
+    page = client.get("/agent/pickups").data.decode()
+    assert "Nothing today. 1 coming up" in page
+    assert "Kettle on" not in page                # no big empty box above real work
+    assert "· Pickup agent" in page               # footer uses the role label
