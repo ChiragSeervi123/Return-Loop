@@ -811,6 +811,121 @@ a.ledger__link:hover { background: var(--kraft); padding-left: .75rem; }
 .toast--info .toast__tag { background: var(--b-bg); color: var(--b-ink); }
 .toast__x { display: grid; place-items: center; width: 44px; height: 44px; border: 0; background: none; cursor: pointer; }
 
+/* ---------- handoff card (who's next) ----------
+   Docked bottom-left so it never sits on the toasts (bottom-right). */
+.handoff {
+  position: fixed; z-index: 850; left: 16px; bottom: 16px;
+  width: min(calc(100% - 32px), 31rem); max-height: calc(100vh - 96px); overflow: auto;
+  background: var(--paper-hi); color: var(--ink);
+  border: 2px solid var(--ink); box-shadow: 7px 7px 0 var(--ink);
+  animation: handoff-in .6s var(--ease-out) both;
+}
+.handoff.is-leaving { animation: handoff-out .3s var(--ease-snap) forwards; }
+@keyframes handoff-in { from { opacity: 0; transform: translateY(40px) rotate(-1.5deg); } }
+@keyframes handoff-out { to { opacity: 0; transform: translateY(40px) rotate(-1.5deg); } }
+.handoff__head {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: .3rem .3rem .3rem 1rem; background: var(--night); color: var(--on-night);
+  font-size: .72rem; letter-spacing: .14em;
+}
+.handoff__x { display: grid; place-items: center; width: 40px; height: 40px; border: 0; background: none; color: inherit; cursor: pointer; }
+.handoff__body { position: relative; display: grid; gap: .6rem; padding: 1.2rem 1.25rem 1.3rem; }
+.handoff__label { margin: 0; font-size: .7rem; letter-spacing: .12em; color: var(--muted); }
+.handoff__title { margin: 0; font: 800 clamp(1.6rem, 4vw, 2rem)/1.05 var(--f-display); letter-spacing: -.03em; padding-right: 5.5rem; }
+.handoff__note { margin: 0; color: var(--muted); }
+.handoff__stamp {
+  position: absolute; top: 1rem; right: 1.1rem;
+  padding: .2rem .55rem; border: 3px solid var(--a); border-radius: 6px; color: var(--a);
+  font: 800 1.15rem var(--f-display); letter-spacing: .06em;
+  box-shadow: inset 0 0 0 2px var(--paper-hi), inset 0 0 0 3.5px var(--a);
+  filter: url(#rough); transform: rotate(-9deg);
+  animation: handoff-stamp .45s .35s cubic-bezier(.3, 1.6, .5, 1) both;
+}
+.handoff--end .handoff__stamp { border-color: var(--orange-dk); color: var(--orange-dk); box-shadow: inset 0 0 0 2px var(--paper-hi), inset 0 0 0 3.5px var(--orange-dk); }
+@keyframes handoff-stamp { from { opacity: 0; transform: rotate(-20deg) scale(2.4); } }
+
+.handoff__next {
+  display: flex; gap: .85rem; align-items: center; margin-top: .3rem;
+  padding: .85rem 1rem; background: var(--kraft); border-left: 4px solid var(--orange);
+}
+.handoff__next p { margin: 0; line-height: 1.4; }
+.handoff__next .mono { display: block; font-size: .66rem; letter-spacing: .16em; color: var(--muted); }
+.handoff__icon {
+  display: grid; place-items: center; flex: none; width: 44px; height: 44px;
+  background: var(--orange); color: var(--night); border: 2px solid var(--ink);
+  animation: relay-pulse 1.8s ease-in-out infinite;
+}
+.handoff__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: .4rem; }
+.handoff__actions .handoff-go { flex: 1 1 15rem; }
+.handoff__actions .handoff-go .btn { width: 100%; }
+
+/* The relay strip: every desk a return can pass through, in order. */
+.relay {
+  list-style: none; margin: .35rem 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(6, 1fr);
+}
+.relay__stop { position: relative; display: grid; justify-items: center; gap: .3rem; text-align: center; }
+/* dashed track joining each stop to the one before it */
+.relay__stop + .relay__stop::before {
+  content: ""; position: absolute; top: 15px; right: calc(50% + 17px); width: calc(100% - 34px);
+  border-top: 1.5px dashed var(--line);
+}
+.relay__stop.is-done + .relay__stop::before { border-top: 2px solid var(--ink); }
+.relay__dot {
+  display: grid; place-items: center; width: 32px; height: 32px;
+  border: 1.5px solid var(--line); background: var(--paper-hi); color: var(--muted);
+}
+.relay__name { font-size: .6rem; letter-spacing: .06em; line-height: 1.2; color: var(--muted); }
+.relay__stop.is-done .relay__dot { background: var(--ink); border-color: var(--ink); color: var(--paper-hi); }
+.relay__stop.is-done .relay__name { color: var(--ink); }
+.relay__stop.is-next .relay__dot { background: var(--orange); border: 2px solid var(--ink); color: var(--night); animation: relay-pulse 1.8s ease-in-out infinite; }
+.relay__stop.is-next .relay__name { color: var(--ink); font-weight: 500; }
+.relay__stop.is-skipped .relay__dot { border-style: dashed; opacity: .55; }
+.relay__stop.is-skipped .relay__name { text-decoration: line-through; opacity: .6; }
+@keyframes relay-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 91, 31, .5); }
+  50% { box-shadow: 0 0 0 7px rgba(255, 91, 31, 0); }
+}
+@media (max-width: 520px) {
+  .relay__name { font-size: .52rem; letter-spacing: 0; }
+  .relay__dot { width: 28px; height: 28px; }
+  .relay__stop + .relay__stop::before { top: 13px; right: calc(50% + 15px); width: calc(100% - 30px); }
+}
+/* On phones the card fills the bottom, so toasts move to the top. */
+@media (max-width: 760px) {
+  body:has(.handoff) .toasts { top: 76px; bottom: auto; }
+}
+
+/* Track page: who holds the return right now, one tap away. */
+.relay-line { display: grid; gap: .35rem; justify-items: start; margin-top: 1.1rem; padding-top: 1rem; border-top: 1.5px dashed var(--line); }
+.relay-line p { margin: 0; }
+.relay-line__who { display: flex; align-items: center; gap: .5rem; font-size: .74rem; letter-spacing: .12em; }
+.relay-line__pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--orange); animation: relay-pulse 1.8s ease-in-out infinite; }
+.relay-line .handoff-go { margin-top: .35rem; }
+.relay-line--flush { margin-top: .2rem; padding-top: .8rem; }
+
+/* Every desk's "handed on, still moving" list: one small card per return. */
+.in-flight { margin-top: 1rem; }
+.in-flight__count {
+  display: inline-grid; place-items: center; min-width: 1.6rem; height: 1.3rem; margin-left: .35rem; padding: 0 .35rem;
+  background: var(--ink); color: var(--paper-hi); font-size: .7rem; letter-spacing: 0;
+}
+.flights {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+}
+.flight {
+  display: grid; align-content: start; gap: .35rem;
+  padding: 1rem 1.15rem 1.15rem; background: var(--paper-hi); border: 1.5px solid var(--ink);
+}
+.flight__head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; font-size: .86rem; letter-spacing: .06em; }
+.flight__item { margin: 0; }
+.flight__item b { font: 600 1.1rem/1.2 var(--f-display); letter-spacing: -.02em; }
+
+/* The row a handoff landed on. */
+.job--focus { border-width: 2px; box-shadow: 6px 6px 0 var(--orange); animation: job-focus 1.2s var(--ease-out) .3s both; }
+@keyframes job-focus { 0% { box-shadow: 0 0 0 0 var(--orange); } 40% { box-shadow: 0 0 0 8px rgba(255, 91, 31, .25); } }
+
 /* ---------- confirm modal ---------- */
 .modal {
   border: 2px solid var(--ink); padding: 0; max-width: min(92vw, 30rem); width: 100%;

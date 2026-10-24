@@ -105,6 +105,31 @@ function initSwitcher() {
   });
 }
 
+// Handoff card: close it, or continue as the next desk (the role chip flips on arrival).
+function initHandoff() {
+  // Delegated: the track page re-renders its panels while polling.
+  document.addEventListener('submit', (e) => {
+    if (!e.target.matches('form[data-handoff-go]')) return;
+    try { sessionStorage.setItem('rl-role-flip', '1'); } catch (err) { /* ignore */ }
+  });
+
+  const card = $('[data-handoff]');
+  if (card) {
+    const close = () => {
+      card.classList.add('is-leaving');
+      setTimeout(() => card.remove(), reducedMotion ? 0 : 300);
+    };
+    $$('[data-handoff-close]', card).forEach((b) => b.addEventListener('click', close));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && card.isConnected && !$('dialog[open]')) close();
+    });
+    // Enter continues the relay; the card itself is the next thing to do.
+    setTimeout(() => $('.handoff-go button', card)?.focus({ preventScroll: true }), reducedMotion ? 0 : 500);
+  }
+
+  $('.job--focus')?.scrollIntoView({ block: 'center', behavior: reducedMotion ? 'auto' : 'smooth' });
+}
+
 // Shared confirmation modal for buttons with data-confirm.
 function confirmDialog(title, text) {
   const dlg = $('#confirm-modal');
@@ -824,6 +849,7 @@ initStagger();
 initToasts();
 initThemeToggle();
 initSwitcher();
+initHandoff();
 initConfirm();
 initOnce();
 initCommentCounter();

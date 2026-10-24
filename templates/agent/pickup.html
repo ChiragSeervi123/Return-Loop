@@ -42,5 +42,6 @@
 </form>
 {% else %}
   <p class="notice">{{ m.icon('check') }} <span>Already handled: {{ p.outcome|lower }}.</span></p>
+  {% if desk and desk.role != 'agent' %}{{ m.relay_line(desk, r.return_code) }}{% endif %}
 {% endif %}
 {% endblock %}

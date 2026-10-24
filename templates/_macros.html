@@ -123,3 +123,54 @@
 {%- endif -%}
 </svg>
 {%- endmacro %}
+
+
+{# Desk icon per role, shared by the handoff card and its relay strip. #}
+{% set DESK_ICON = {'customer': 'box', 'agent': 'truck', 'warehouse': 'shelf', 'qc': 'scan', 'refurbisher': 'wrench', 'admin': 'chart'} %}
+
+
+{# Hand a return to the next desk: switch to that person and land on their page. #}
+{% macro continue_as(desk, code, cls='btn btn--primary', text=None) -%}
+<form class="handoff-go" method="post" action="{{ url_for('main.switch') }}" data-handoff-go>
+  <input type="hidden" name="who" value="{{ desk.role }}:{{ desk.user_id }}">
+  <input type="hidden" name="next" value="{{ url_for(desk.endpoint, **desk.args) }}">
+  <input type="hidden" name="code" value="{{ code }}">
+  <button class="{{ cls }}" type="submit">{{ icon(DESK_ICON[desk.role], 18) }} {{ text or 'Continue as ' ~ desk.noun }} {{ icon('arrow', 18) }}</button>
+</form>
+{%- endmacro %}
+
+
+{# "With <name> · <role>": who holds a return right now, with a button to become them. #}
+{% macro relay_line(desk, code, cls='') -%}
+<div class="relay-line {{ cls }}">
+  <p class="mono relay-line__who"><span class="relay-line__pulse" aria-hidden="true"></span> WITH {{ desk.name|upper }} · {{ desk.label|upper }}</p>
+  <p class="small muted">{{ desk.name }} {{ desk.task }}</p>
+  {{ continue_as(desk, code, 'btn btn--small') }}
+</div>
+{%- endmacro %}
+
+
+{# Returns a desk has handed on that are still moving: one small card each. #}
+{% macro in_flight(rows, label, empty=None, show_customer=True) -%}
+{% if rows or empty %}
+<section class="in-flight" aria-label="{{ label|title }}">
+  <h2 class="section-label mono">{{ label }} <span class="in-flight__count">{{ rows|length }}</span></h2>
+  {% if rows %}
+  <ol class="flights">
+    {% for row in rows %}{% set r = row.ret %}
+    <li class="flight">
+      <div class="flight__head">
+        <span class="mono">{{ r.return_code }}</span>
+        {{ badge(r.status) }}
+      </div>
+      <p class="flight__item"><b>{{ r.product.name }}</b>{% if show_customer %} <span class="muted">· {{ r.customer.name }}</span>{% endif %}</p>
+      {{ relay_line(row.desk, r.return_code, 'relay-line--flush') }}
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+    <p class="muted">{{ empty }}</p>
+  {% endif %}
+</section>
+{% endif %}
+{%- endmacro %}

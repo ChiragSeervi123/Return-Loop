@@ -31,4 +31,6 @@
 {% else %}
   {{ m.empty_state("Queue's empty", "Nothing to grade. The warehouse will send more.") }}
 {% endif %}
+
+{{ m.in_flight(moving, "GRADED · STILL MOVING") }}
 {% endblock %}

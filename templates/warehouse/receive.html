@@ -8,7 +8,7 @@
 {% if incoming %}
 <div class="jobs">
   {% for r in incoming %}
-  <div class="job job--row">
+  <div class="job job--row{% if request.args.focus == r.return_code %} job--focus{% endif %}" id="{{ r.return_code }}">
     <span class="job__slot mono">{{ r.return_code }}<small>PICKED {{ r.updated_at.strftime('%d %b')|upper }}</small></span>
     <span class="job__main">
       <b>{{ r.product.name }}{% if r.order_item.quantity > 1 %} × {{ r.order_item.quantity }}{% endif %}</b>
@@ -23,4 +23,6 @@
 {% else %}
   {{ m.empty_state("Dock's clear", "Nothing in transit right now.") }}
 {% endif %}
+
+{{ m.in_flight(moving, "CHECKED IN · STILL MOVING") }}
 {% endblock %}

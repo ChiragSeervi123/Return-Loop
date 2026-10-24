@@ -1,8 +1,9 @@
 """Landing page and the "switch role / user" control."""
-from flask import Blueprint, redirect, render_template, request, session, url_for
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
 from config import ROLE_HOME, ROLES, STAFF, TEAM
-from models import Customer, db
+from models import Customer, ReturnRequest, db
+from services.handoff import role_noun
 from services.stats import landing_stats
 
 bp = Blueprint("main", __name__)
@@ -13,23 +14,43 @@ def landing():
     return render_template("landing.html", stats=landing_stats())
 
 
-def _valid_user(role, user_id):
+def _user_name(role, user_id):
+    """The person's name, or None if there is no such user for that role."""
     if role == "customer":
-        return db.session.get(Customer, user_id) is not None
-    return user_id in dict(STAFF.get(role, []))
+        customer = db.session.get(Customer, user_id)
+        return customer.name if customer else None
+    return dict(STAFF.get(role, [])).get(user_id)
+
+
+def _local(url):
+    """Only follow `next` to a path on this site, never to another host."""
+    return url.startswith("/") and not url.startswith("//") and "\\" not in url
 
 
 @bp.route("/switch", methods=["GET", "POST"])
 def switch():
-    """GET shows the full-page role picker; POST stores the choice in the session."""
+    """GET shows the full-page role picker; POST stores the choice in the session.
+
+    The handoff card also posts here, with `next` (the page to land on) and
+    `code` (the return being passed along).
+    """
     if request.method == "GET":
         return render_template("switch.html")
 
     role, _, uid = request.form.get("who", "").partition(":")
-    if role not in ROLES or not uid.isdigit() or not _valid_user(role, int(uid)):
+    name = _user_name(role, int(uid)) if role in ROLES and uid.isdigit() else None
+    if name is None:
         return redirect(url_for("main.switch"))
     session["role"], session["user_id"] = role, int(uid)
-    return redirect(url_for(ROLE_HOME[role]))
+    # A card left over from the last person is not for whoever comes next.
+    session.pop("handoff", None)
+
+    code = request.form.get("code", "")
+    if code and ReturnRequest.query.filter_by(return_code=code).first():
+        session["handoff"] = code
+        flash(f"You're {name} now, the {role_noun(role)}. {code} is in your hands.", "info")
+    target = request.form.get("next", "")
+    return redirect(target if _local(target) else url_for(ROLE_HOME[role]))
 
 
 @bp.get("/team")

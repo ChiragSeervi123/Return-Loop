@@ -9,7 +9,7 @@
 <div class="jobs">
   {% for job in jobs %}
   {% set r = job.return_request %}
-  <form class="job job--bench" method="post" action="{{ url_for('refurbisher.repaired', job_id=job.id) }}" data-once>
+  <form class="job job--bench{% if request.args.focus == r.return_code %} job--focus{% endif %}" id="{{ r.return_code }}" method="post" action="{{ url_for('refurbisher.repaired', job_id=job.id) }}" data-once>
     <span class="job__slot mono">{{ r.return_code }}<small>IN {{ job.created_at.strftime('%d %b')|upper }}</small></span>
     <span class="job__main">
       <b>{{ r.product.name }}</b>
@@ -24,6 +24,8 @@
 {% else %}
   {{ m.empty_state("Bench is empty", "No grade B items waiting. Sharpen something.") }}
 {% endif %}
+
+{{ m.in_flight(moving, "REPAIRED · STILL MOVING") }}
 
 {% if done %}
 <h2 class="section-label mono">RECENTLY FIXED</h2>

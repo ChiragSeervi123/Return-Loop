@@ -53,6 +53,7 @@
     {% elif ret.status in ['Cancelled', 'Rejected'] %}
       <div class="notice notice--c">{{ m.icon('alert') }} <span>{{ ret.history[-1].note }}</span></div>
     {% endif %}
+    {% if desk and desk.role != 'customer' %}{{ m.relay_line(desk, ret.return_code) }}{% endif %}
   </section>
 
   <section class="panel panel--receipt" id="refund" aria-labelledby="refund-h">

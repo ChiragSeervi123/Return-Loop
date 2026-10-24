@@ -4,7 +4,10 @@
 {% block content %}
 {{ m.page_head("04", "CUSTOMER / RETURNS", "My returns", "Every parcel you've sent back, and where it is now.") }}
 
+{{ m.in_flight(moving, "ON THE MOVE", show_customer=False) }}
+
 {% if returns %}
+{% if moving %}<h2 class="section-label mono">ALL RETURNS</h2>{% endif %}
 <ol class="ledger">
   {% for r in returns %}
   <li class="ledger__row">

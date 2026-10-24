@@ -1,0 +1,53 @@
+{# The "who's next" card, shown once after someone finishes their part of a return.
+   pass: offer to continue as the next desk.  end: the loop is finished. #}
+{% if handoff %}
+{% set h = handoff %}{% set d = h.desk %}{% set r = h.ret %}
+<aside class="handoff handoff--{{ h.kind }}" data-handoff role="dialog" aria-modal="false" aria-labelledby="handoff-title">
+  <div class="handoff__head">
+    <span class="mono">{{ 'HANDOFF' if h.kind == 'pass' else 'LOOP COMPLETE' }} · {{ r.return_code }}</span>
+    <button type="button" class="handoff__x" data-handoff-close aria-label="Close">{{ m.icon('x', 16) }}</button>
+  </div>
+
+  <div class="handoff__body">
+    <span class="handoff__stamp" aria-hidden="true">{{ 'DONE' if h.kind == 'pass' else r.status|upper }}</span>
+    <p class="mono handoff__label">{{ user_name|upper }} · {{ role_labels[role]|upper }}</p>
+
+    {% if h.kind == 'pass' %}
+      <h2 id="handoff-title" class="handoff__title">Your part is done.</h2>
+      <p class="handoff__note">{{ h.note }}</p>
+      <div class="handoff__next">
+        <span class="handoff__icon">{{ m.icon(m.DESK_ICON[d.role], 22) }}</span>
+        <p><span class="mono">NEXT UP</span><b>{{ d.name }}</b>, {{ d.noun }}, {{ d.task }}</p>
+      </div>
+    {% else %}
+      <h2 id="handoff-title" class="handoff__title">{{ 'The loop is complete.' if r.status == 'Closed' else 'This return stopped here.' }}</h2>
+      <p class="handoff__note">
+        {% if r.status == 'Closed' and r.refund %}
+          {{ r.product.name }} went from {{ r.customer.name }}'s door to a {{ r.refund.final_amount|inr }} refund in {{ r.history|length }} steps.
+        {% else %}{{ h.note }}{% endif %}
+      </p>
+    {% endif %}
+
+    <ol class="relay" aria-label="Desks this return passes through">
+      {% for s in h.relay %}
+        <li class="relay__stop is-{{ s.state }}">
+          <span class="relay__dot">{{ m.icon('check' if s.state == 'done' else m.DESK_ICON[s.role], 15) }}</span>
+          <span class="mono relay__name">{{ s.label }}</span>
+          <span class="sr-only">({{ s.state }})</span>
+        </li>
+      {% endfor %}
+    </ol>
+
+    <div class="handoff__actions">
+      {% if h.kind == 'pass' %}
+        {{ m.continue_as(d, r.return_code, 'btn btn--primary btn--big') }}
+        <button type="button" class="btn btn--ghost" data-handoff-close>Stay as {{ user_name }}</button>
+      {% else %}
+        {% set again = {'role': 'customer', 'user_id': r.customer_id, 'endpoint': 'customer.orders', 'args': {}} %}
+        {{ m.continue_as(again, '', 'btn btn--primary btn--big', 'Start another return') }}
+        <button type="button" class="btn btn--ghost" data-handoff-close>Stay here</button>
+      {% endif %}
+    </div>
+  </div>
+</aside>
+{% endif %}

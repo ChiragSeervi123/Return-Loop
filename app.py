@@ -1,11 +1,12 @@
 """ReturnLoop entry point. Run with:  python app.py"""
 import os
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session
 
 from blueprints import current_role, current_user_id, current_user_name
 from config import ROLE_LABELS, ROLES, STAFF, Config
-from models import Customer, db
+from models import Customer, ReturnRequest, db
+from services.handoff import handoff_for
 
 
 # Navbar links for each role: (endpoint, label)
@@ -60,7 +61,14 @@ def create_app(config_class=Config):
         """Makes the current role and the switcher list available in every template."""
         people = {"customer": [(c.id, c.name) for c in Customer.query.order_by(Customer.id)]}
         people.update(STAFF)
+        # Set by the last action (or a handoff switch); shown once, on this page.
+        handoff = None
+        code = session.pop("handoff", None)
+        ret = code and ReturnRequest.query.filter_by(return_code=code).first()
+        if ret:
+            handoff = handoff_for(ret, current_role(), current_user_id())
         return {
+            "handoff": handoff,
             "role": current_role(),
             "user_id": current_user_id(),
             "user_name": current_user_name(),

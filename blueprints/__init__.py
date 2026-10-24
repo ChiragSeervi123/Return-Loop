@@ -27,6 +27,11 @@ def current_user_name():
     return dict(STAFF.get(role, [])).get(uid, "Guest")
 
 
+def hand_off(ret):
+    """After an action on `ret`, show the "who's next" card on the next page."""
+    session["handoff"] = ret.return_code
+
+
 def guard(role):
     """Use as a blueprint before_request hook: only `role` may enter."""
     def check():

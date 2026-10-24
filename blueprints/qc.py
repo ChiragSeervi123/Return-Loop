@@ -2,9 +2,10 @@
 from flask import (Blueprint, abort, flash, redirect, render_template, request,
                    url_for)
 
-from blueprints import current_user_id, guard
+from blueprints import current_user_id, guard, hand_off
 from config import GRADE_REFUND_PERCENT, GRADE_ROUTE
 from models import ReturnRequest
+from services.handoff import in_flight
 from services.returns import (WorkflowError, is_suspected_fraud,
                               submit_inspection, suggest_grade)
 from services.state_machine import RECEIVED, REINSPECTION, InvalidTransition
@@ -27,7 +28,8 @@ def queue():
     if search:
         query = query.filter(ReturnRequest.return_code.contains(search))
     items = query.order_by(ReturnRequest.updated_at).all()
-    return render_template("qc/queue.html", items=items, search=search)
+    return render_template("qc/queue.html", items=items, search=search,
+                           moving=in_flight("qc", current_user_id(), 6))
 
 
 @bp.route("/inspect/<code>", methods=["GET", "POST"])
@@ -48,6 +50,7 @@ def inspect(code):
             flash(f"{code} rejected as suspected fraud.", "error")
         else:
             flash(f"{code} graded {grade}. Status: {ret.status}.", "success")
+        hand_off(ret)
         return redirect(url_for("qc.queue"))
 
     if ret.status not in (RECEIVED, REINSPECTION):

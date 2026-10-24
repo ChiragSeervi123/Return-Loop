@@ -156,8 +156,9 @@ def test_customer_return_shows_up_on_each_staff_screen(client, seeded):
     code = ret.return_code
 
     def page(role, url):
+        """The desk's work list only, not its "still moving" section below it."""
         login(client, role, 1)
-        return client.get(url).data.decode()
+        return client.get(url).data.decode().split('class="in-flight"')[0]
 
     assert code in page("agent", "/agent/pickups")
     assert code not in page("warehouse", "/warehouse/receive")

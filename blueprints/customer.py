@@ -4,11 +4,12 @@ from datetime import date
 from flask import (Blueprint, abort, flash, redirect, render_template, request,
                    url_for)
 
-from blueprints import current_customer, guard
+from blueprints import current_customer, guard, hand_off
 from config import (COMMENT_MAX_CHARS, MAX_PICKUP_ATTEMPTS, PICKUP_SLOTS,
                     RETURN_REASONS, RETURN_WINDOW_DAYS, SLOT_HOURS, STAFF)
 from models import Order, OrderItem, ReturnRequest, db
 from services.eligibility import check_eligibility, days_left
+from services.handoff import in_flight, next_desk
 from services.returns import (WorkflowError, close_return, create_return,
                               pickup_dates, schedule_pickup)
 from services.state_machine import (InvalidTransition, TERMINAL, TRACK_STEPS,
@@ -80,6 +81,7 @@ def schedule(code):
             flash(str(err), "error")
             return redirect(url_for("customer.schedule", code=code))
         flash("Pickup booked. Keep the parcel packed and ready.", "success")
+        hand_off(ret)
         return redirect(url_for("customer.track", code=code))
 
     return render_template("customer/schedule.html", ret=ret, dates=pickup_dates(),
@@ -90,7 +92,8 @@ def schedule(code):
 def returns():
     my = (ReturnRequest.query.filter_by(customer_id=current_customer().id)
           .order_by(ReturnRequest.created_at.desc()).all())
-    return render_template("customer/returns.html", returns=my)
+    return render_template("customer/returns.html", returns=my,
+                           moving=in_flight("customer", current_customer().id))
 
 
 @bp.get("/return/<code>")
@@ -98,7 +101,8 @@ def track(code):
     ret = _own_return(code)
     return render_template("customer/track.html", ret=ret, steps=TRACK_STEPS,
                            step=step_index(ret), terminal=ret.status in TERMINAL,
-                           max_attempts=MAX_PICKUP_ATTEMPTS, agents=dict(STAFF["agent"]))
+                           max_attempts=MAX_PICKUP_ATTEMPTS, agents=dict(STAFF["agent"]),
+                           desk=next_desk(ret))
 
 
 @bp.post("/return/<code>/close")
@@ -107,6 +111,7 @@ def close(code):
     try:
         close_return(ret, current_customer().name)
         flash("All done. This return is closed.", "success")
+        hand_off(ret)
     except InvalidTransition as err:
         flash(str(err), "error")
     return redirect(url_for("customer.track", code=code))

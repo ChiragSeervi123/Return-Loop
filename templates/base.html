@@ -95,6 +95,8 @@
     {% endfor %}
   </div>
 
+  {% include "_handoff.html" %}
+
   <main id="main" class="{% block main_class %}page{% endblock %}">
     {% block content %}{% endblock %}
   </main>
