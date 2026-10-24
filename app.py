@@ -84,6 +84,16 @@ def create_app(config_class=Config):
     def too_large(err):
         return render_template("errors/413.html"), 413
 
+    @app.after_request
+    def cache_static(response):
+        """Let Vercel's edge keep CSS/JS near the visitor (s-maxage) instead of asking
+        the Python function every time. Each deploy clears that cache, so files never go
+        stale; browsers still revalidate (max-age=0). Uploaded photos are not cached."""
+        if request.endpoint == "static" and response.status_code == 200 \
+                and not request.view_args.get("filename", "").startswith("uploads/"):
+            response.headers["Cache-Control"] = "public, max-age=0, must-revalidate, s-maxage=31536000"
+        return response
+
     return app
 
 

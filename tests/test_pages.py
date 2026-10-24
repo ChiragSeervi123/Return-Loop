@@ -292,3 +292,9 @@ def test_agent_header_points_at_upcoming_pickups(client, seeded):
     assert "Nothing today. 1 coming up" in page
     assert "Kettle on" not in page                # no big empty box above real work
     assert "· Pickup agent" in page               # footer uses the role label
+
+
+def test_static_files_can_be_cached_at_the_edge(client, seeded):
+    res = client.get("/static/css/main.css")
+    assert res.status_code == 200 and "s-maxage=31536000" in res.headers["Cache-Control"]
+    assert "s-maxage" not in client.get("/").headers.get("Cache-Control", "")   # pages stay live
