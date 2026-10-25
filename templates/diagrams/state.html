@@ -1,0 +1,76 @@
+{# UML state diagram: 13 states with entry/do actions; arrows are event [guard] / action. Shared by the deck (/ppt) and the documentation (/docs). #}
+{# A UML state: name on top, its internal actions (entry/, do/) underneath. #}
+{% macro sbox(x, y, w, h, name, lines, cls='') -%}
+<rect x="{{ x }}" y="{{ y }}" width="{{ w }}" height="{{ h }}" rx="12" class="sb {{ cls }}"/>
+<text x="{{ x + w / 2 }}" y="{{ y + 17 }}" text-anchor="middle" class="sb-name">{{ name }}</text>
+<path d="M{{ x }} {{ y + 24 }} H{{ x + w }}" class="sb-div {{ cls }}"/>
+{% for line in lines %}<text x="{{ x + 10 }}" y="{{ y + 39 + loop.index0 * 15 }}" class="sb-line">{{ line }}</text>{% endfor %}
+{%- endmacro %}
+{# A transition label: event [guard] / action, on one or two lines. #}
+{% macro lab(x, y, l1, l2='', anchor='middle') -%}
+<text x="{{ x }}" y="{{ y }}" text-anchor="{{ anchor }}" class="act-guard">{{ l1 }}{% if l2 %}<tspan x="{{ x }}" dy="13">{{ l2 }}</tspan>{% endif %}</text>
+{%- endmacro %}
+{% macro fin(x, y) -%}<circle cx="{{ x }}" cy="{{ y }}" r="10" class="act-end"/><circle cx="{{ x }}" cy="{{ y }}" r="5.5" class="act-start"/>{%- endmacro %}
+        <svg viewBox="0 0 1200 570" class="activity state" role="img" aria-label="UML state diagram of a return: 13 states with their entry and do actions, and the events that move a return between them">
+  <defs><marker id="st-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z" fill="#14110F"/></marker></defs>
+  <g class="act-line" marker-end="url(#st-arrow)">
+    <!-- main path -->
+    <path d="M34 163 H58"/><path d="M240 163 H348"/><path d="M540 163 H638"/><path d="M810 163 H918"/>
+    <path d="M425 196 V222 H470 V198"/>
+    <!-- stopping early -->
+    <path d="M445 130 V72"/><path d="M1010 130 V72"/><path d="M150 130 V8 H980 V18"/>
+    <path d="M535 45 H565"/><path d="M1100 45 H1135"/>
+    <!-- inspection and repair -->
+    <path d="M1010 196 V298"/>
+    <path d="M920 333 H812"/><path d="M640 333 H542"/>
+    <path d="M950 300 V245 H150 V260"/>
+    <path d="M950 366 V445 H200 V424"/>
+    <path d="M350 320 H295 V287 H242"/><path d="M350 346 H295 V397 H242"/>
+    <!-- refund and close -->
+    <path d="M110 422 V478"/><path d="M60 287 H35 V513 H58"/>
+    <path d="M240 513 H348"/><path d="M530 513 H565"/>
+  </g>
+  <circle cx="25" cy="163" r="9" class="act-start"/>
+
+  {{ sbox(60, 130, 180, 66, "Requested", ["entry/ assign RL code", "entry/ log reason"]) }}
+  {{ sbox(350, 130, 190, 66, "Pickup Scheduled", ["entry/ create pickup slot", "do/ wait for the agent"]) }}
+  {{ sbox(640, 130, 170, 66, "Picked Up", ["entry/ outcome = Picked", "do/ travel to centre"]) }}
+  {{ sbox(920, 130, 180, 66, "Received", ["entry/ join QC queue", "do/ wait for inspection"]) }}
+  {{ sbox(355, 20, 180, 50, "Cancelled", ["entry/ log missed pickups"], "st--stop") }}{{ fin(577, 45) }}
+  {{ sbox(920, 20, 180, 50, "Rejected", ["entry/ log why it stopped"], "st--stop") }}{{ fin(1147, 45) }}
+  {{ sbox(920, 300, 180, 66, "Inspected", ["entry/ save QC report", "entry/ route by grade"], "st--work") }}
+  {{ sbox(640, 300, 170, 66, "Refurbishing", ["entry/ open repair job", "do/ repair the item"], "st--work") }}
+  {{ sbox(350, 300, 190, 66, "Re-inspection", ["entry/ job = Repaired", "do/ second QC check"], "st--work") }}
+  {{ sbox(60, 262, 180, 50, "Restocked", ["entry/ back on the shelf"], "st--good") }}
+  {{ sbox(60, 372, 180, 50, "Scrapped", ["entry/ write the item off"], "st--stop") }}
+  {{ sbox(60, 480, 180, 66, "Refunded", ["entry/ save Refund row", "entry/ log inventory"], "st--good") }}
+  {{ sbox(350, 488, 180, 50, "Closed", ["entry/ customer confirmed"], "st--good") }}{{ fin(577, 513) }}
+
+  {{ lab(8, 214, "requestReturn", "[eligible]", "start") }}
+  {{ lab(295, 141, "bookPickup /", "assignAgent") }}
+  {{ lab(590, 155, "markPickedUp") }}
+  {{ lab(865, 155, "markReceived") }}
+  {{ lab(453, 105, "absent [2nd]", "", "start") }}
+  {{ lab(1018, 96, "inspect [mismatch] /", "flagFraud", "start") }}
+  {{ lab(760, 24, "[not eligible]") }}
+  {{ lab(478, 212, "absent [1st] / rebook,", "reschedule", "start") }}
+  {{ lab(1018, 240, "submitInspection", "[item matches]", "start") }}
+  {{ lab(560, 239, "[grade A]") }}
+  {{ lab(866, 312, "[grade B] /", "openJob") }}
+  {{ lab(591, 325, "markRepaired") }}
+  {{ lab(300, 279, "recheck [B]", "", "start") }}
+  {{ lab(300, 414, "recheck [C]", "", "start") }}
+  {{ lab(560, 439, "[grade C]") }}
+  {{ lab(118, 455, "/ issueRefund", "", "start") }}
+  <text x="28" y="400" class="act-guard" text-anchor="middle" transform="rotate(-90 28 400)">/ issueRefund</text>
+  {{ lab(294, 505, "closeReturn") }}
+
+  <g class="st-key" transform="translate(650 478)">
+    <rect x="0" y="0" width="18" height="18" rx="6" class="sb st--good"/><text x="26" y="14">done well</text>
+    <rect x="118" y="0" width="18" height="18" rx="6" class="sb st--work"/><text x="144" y="14">QC / repair</text>
+    <rect x="248" y="0" width="18" height="18" rx="6" class="sb st--stop"/><text x="274" y="14">stopped or scrapped</text>
+    <text x="0" y="42" class="act-guard">ARROWS  event [guard] / action</text>
+    <text x="0" y="58" class="act-guard">BOXES   entry/ on arrival · do/ while in the state</text>
+    <text x="0" y="78" class="act-guard">change_status() REFUSES ANY MOVE NOT DRAWN HERE</text>
+  </g>
+</svg>

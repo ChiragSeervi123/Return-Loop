@@ -1,0 +1,44 @@
+{# UML use case diagram: six actors and their use cases. Shared by the deck (/ppt) and the documentation (/docs). #}
+<svg viewBox="0 0 1240 540" class="usecase" role="img" aria-label="Use case diagram: six actors and their use cases inside the ReturnLoop system">
+  <defs>
+    <marker id="uc-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z" fill="#14110F"/></marker>
+  </defs>
+  <rect x="215" y="8" width="800" height="524" rx="6" class="uc-system"/>
+  <text x="235" y="34" class="uc-sys-label">ReturnLoop system</text>
+
+  {% set actors = [("Customer", 95, 165), ("Admin", 95, 420), ("Pickup agent", 1145, 70),
+                   ("Warehouse", 1145, 200), ("QC inspector", 1145, 330), ("Refurbisher", 1145, 460)] %}
+  {% for name, x, y in actors %}
+  <g class="uc-actor" transform="translate({{ x }} {{ y }})">
+    <circle cy="-30" r="11"/><path d="M0 -19v28M-17 -8h34M0 9l-13 20M0 9l13 20"/>
+    <text y="48" text-anchor="middle">{{ name }}</text>
+  </g>
+  {% endfor %}
+
+  {% set left = [("View orders", 70), ("Request return", 125), ("Book pickup", 180), ("Track return", 235), ("Close return", 290)] %}
+  {% for label, y in left %}
+  <line x1="120" y1="160" x2="262" y2="{{ y }}" class="uc-line"/>
+  <ellipse cx="370" cy="{{ y }}" rx="108" ry="22" class="uc-case"/><text x="370" y="{{ y + 5 }}" text-anchor="middle">{{ label }}</text>
+  {% endfor %}
+  {% for label, y in [("View dashboard", 410), ("View flagged customers", 470)] %}
+  <line x1="120" y1="415" x2="262" y2="{{ y }}" class="uc-line"/>
+  <ellipse cx="370" cy="{{ y }}" rx="108" ry="22" class="uc-case"/><text x="370" y="{{ y + 5 }}" text-anchor="middle">{{ label }}</text>
+  {% endfor %}
+
+  <ellipse cx="615" cy="150" rx="92" ry="22" class="uc-case uc-case--inc"/><text x="615" y="155" text-anchor="middle">Check eligibility</text>
+  <line x1="478" y1="128" x2="522" y2="146" class="uc-dash" marker-end="url(#uc-arrow)"/>
+  <text x="470" y="108" class="uc-stereo">«include»</text>
+  <ellipse cx="615" cy="380" rx="92" ry="22" class="uc-case uc-case--inc"/><text x="615" y="385" text-anchor="middle">Issue refund</text>
+
+  {% set right = [("View pickups", 40, 70), ("Mark picked up", 88, 70), ("Mark customer absent", 136, 70),
+                  ("Receive parcel", 190, 200), ("View inventory", 238, 200),
+                  ("Inspect & grade", 300, 330), ("Re-inspect item", 348, 330), ("Reject as fraud", 396, 330),
+                  ("Mark repaired", 470, 460)] %}
+  {% for label, y, ay in right %}
+  <line x1="1120" y1="{{ ay }}" x2="968" y2="{{ y }}" class="uc-line"/>
+  <ellipse cx="860" cy="{{ y }}" rx="108" ry="21" class="uc-case"/><text x="860" y="{{ y + 5 }}" text-anchor="middle">{{ label }}</text>
+  {% endfor %}
+  <line x1="752" y1="306" x2="705" y2="370" class="uc-dash" marker-end="url(#uc-arrow)"/>
+  <line x1="752" y1="350" x2="706" y2="378" class="uc-dash" marker-end="url(#uc-arrow)"/>
+  <text x="700" y="330" class="uc-stereo">«include»</text>
+</svg>

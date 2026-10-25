@@ -1,0 +1,28 @@
+{# Requirements, shared by the deck (/ppt) and the documentation (/docs).
+   FR: (title, description, actor, priority).  NFR: (quality, requirement, how it is checked). #}
+{% set FR = [
+  ("Role switch", "Choose any of 6 roles and a user without a password; each page rejects the wrong role (403).", "All", "Must"),
+  ("View orders", "Customer sees delivered items with eligibility, or the reason it can't be returned.", "Customer", "Must"),
+  ("Eligibility", "Return allowed within 7 days of delivery, for returnable products, with no other open return.", "System", "Must"),
+  ("Request return", "Reason, comment (≤ 300 chars), optional photo (PNG/JPG/WEBP, ≤ 3 MB).", "Customer", "Must"),
+  ("Book pickup", "Date from tomorrow to +5 days, slot Morning / Afternoon / Evening; reschedule.", "Customer", "Must"),
+  ("Collect parcel", "Agent marks picked up or absent; the 2nd absence cancels the return.", "Pickup agent", "Must"),
+  ("Receive", "Warehouse checks the parcel in; it joins the QC queue.", "Warehouse", "Must"),
+  ("Inspect & grade", "QC checklist, suggested grade, A/B/C; a mismatched item is rejected as fraud.", "QC inspector", "Must"),
+  ("Refurbish", "Grade B goes to repair, then re-inspection: pass → restock (70%), fail → scrap.", "Refurbisher, QC", "Must"),
+  ("Refund", "final = max(0, base × grade% − pickup fee), damaged/wrong-item exception, created once.", "System", "Must"),
+  ("Track", "Live status (polled every 5 s), history timeline and refund breakdown.", "Customer", "Should"),
+  ("Dashboard", "Totals, reasons and grades charts, frequent-returner flags (> 3 in 30 days).", "Admin", "Should"),
+  ("Hand off", "After each step, a card names the next desk and opens its page in one click.", "All", "Should")
+] %}
+
+{% set NFR = [
+  ("Performance", "60 fps on a mid laptop, 30+ on phones; pixel ratio capped; 3D pauses off-screen.", "Frame-rate guard halves particles below 40 fps"),
+  ("Reliability", "Refund + inventory log + status change in one transaction; no double refunds.", "Unique refunds.return_id; double-submit tests"),
+  ("Security", "Role guard on every blueprint; customers only see their own returns; upload validation.", "403/404 tests; file-signature check on photos"),
+  ("Usability", "Plain-language errors and empty states; the handoff card always names the next step.", "End-to-end relay test over HTTP"),
+  ("Accessibility", "WCAG AA contrast, keyboard-only use, visible focus, reduced-motion mode, text on every badge.", "Manual keyboard pass; reduced-motion mode"),
+  ("Maintainability", "Logic in services/, rules in config.py, thin routes; a pytest suite over services, pages and the full flow.", "pytest on every increment"),
+  ("Portability", "Python 3.10+, SQLite, no build step: install, seed, run in 3 commands.", "Runs locally and on Vercel"),
+  ("Robustness", "Static fallbacks without WebGL or internet; friendly 403 / 404 / 413 pages.", "Pages tested with 3D unavailable")
+] %}
