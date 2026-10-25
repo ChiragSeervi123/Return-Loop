@@ -311,3 +311,22 @@ def test_maker_page_shows_the_id_card(client, seeded):
     for text in ("Chirag", "Seervi", "SVKM&#39;s NMIMS, Hyderabad", "B.Tech", "Computer Science and Engineering (Data Science)",
                  "Division A · 2025 – 2029", "70572500055", "A055"):
         assert text in page, text
+
+
+def test_docs_page_has_every_required_part(client, seeded):
+    """The faculty's list: FR, NFR, use case, activity, swimlane, class, CRC, DFD, state,
+    sequence diagrams, wireframes and prototypes, plus a PDF to download."""
+    page = client.get("/docs").data.decode()
+    for part in ("Functional requirements", "Non-functional requirements", "Use case diagram",
+                 "Activity diagram", "Swimlane diagram", "Class diagram", "CRC cards",
+                 "DFD level 0", "DFD level 1", "State diagram", "Sequence: QC grades",
+                 "Sequence: handing a return", "Wireframes", "Prototypes", "FR13", "NFR08"):
+        assert part in page, part
+    assert "mermaid.esm" not in page and "three.module" not in page.split("</head>")[1]  # no heavy libraries
+    assert client.get("/static/docs/ReturnLoop-Documentation.pdf").status_code == 200
+
+
+def test_docs_link_sits_between_ppt_and_team(client, seeded):
+    page = client.get("/").data.decode()
+    nav = page.split('aria-label="Main"')[1].split("</nav>")[0]
+    assert nav.index(">PPT<") < nav.index(">Docs<") < nav.index(">Team<")

@@ -106,6 +106,11 @@ function initSwitcher() {
 }
 
 // Handoff card: close it, or continue as the next desk (the role chip flips on arrival).
+// Any button with data-print opens the browser's print dialog (the docs page prints to A4).
+function initPrint() {
+  $$('[data-print]').forEach((b) => b.addEventListener('click', () => window.print()));
+}
+
 function initHandoff() {
   // Delegated: the track page re-renders its panels while polling.
   document.addEventListener('submit', (e) => {
@@ -883,6 +888,7 @@ initToasts();
 initThemeToggle();
 initSwitcher();
 initHandoff();
+initPrint();
 initConfirm();
 initOnce();
 initCommentCounter();

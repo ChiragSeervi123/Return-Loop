@@ -58,6 +58,7 @@
         <a href="{{ url_for(endpoint) }}" {% if request.endpoint == endpoint %}aria-current="page"{% endif %}>{{ label }}</a>
       {% endfor %}
       <a href="{{ url_for('main.deck') }}" {% if request.endpoint == 'main.deck' %}aria-current="page"{% endif %}>PPT</a>
+      <a href="{{ url_for('main.docs') }}" {% if request.endpoint == 'main.docs' %}aria-current="page"{% endif %}>Docs</a>
       <a href="{{ url_for('main.team') }}" {% if request.endpoint == 'main.team' %}aria-current="page"{% endif %}>Team</a>
     </nav>
 

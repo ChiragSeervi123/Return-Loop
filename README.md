@@ -28,7 +28,7 @@ The "Switch role" menu in the top bar stores a role and a user id in the session
 | QC inspector | Aadi Srivastava | `/qc/queue`, `/qc/inspect/<code>` |
 | Refurbisher | Anumeet | `/refurb/jobs` |
 | Admin | Aryan Singh | `/admin/dashboard` |
-| Anyone | | `/` (landing page), `/switch`, `/ppt` (presentation), `/team` (the crew) |
+| Anyone | | `/` (landing page), `/switch`, `/ppt` (presentation), `/docs` (documentation), `/team` (the crew), `/maker` (who built it) |
 | API (customer only) | | `/api/return/<code>/status` |
 
 ## Following a return from desk to desk
@@ -137,6 +137,19 @@ docs/                ER diagram and UML mapping
 ## Presentation
 
 `/ppt` (the **PPT** link in the top bar) is an 18-slide deck about the project from a software engineering point of view: project planning & management (vision, scope, incremental process, risks), functional and non-functional requirements, use case diagram, class diagram, DFD level 0 and level 1, activity diagram, two sequence diagrams (QC grade and refund; handing a return to the next desk), state diagram, layered architecture, and the path of one click from the UI down to the database. Use the arrow keys, click or swipe to move; **Present** (or `F`) goes full screen; **Save as PDF** prints one slide per page. A ready copy is in [docs/ReturnLoop-presentation.pdf](docs/ReturnLoop-presentation.pdf). The diagrams are drawn by Mermaid (loaded from jsdelivr) except the use case and activity diagrams, which are hand-drawn SVG.
+
+## Documentation
+
+`/docs` (the **Docs** link in the top bar, between PPT and Team) is the project's software requirements & design document, in the site's paper-and-ink style with no animation: introduction and scope, functional and non-functional requirements, the use case, activity, swimlane, class, CRC, DFD (level 0 and 1), state and sequence diagrams, then UI design with wireframes and prototypes. **Download PDF** gives a ready A4 copy ([static/docs/ReturnLoop-Documentation.pdf](static/docs/ReturnLoop-Documentation.pdf)); **Print** prints the page itself on A4.
+
+The diagrams are plain SVG in the page, so it loads no diagram library. The requirements and the use case, activity and state diagrams are shared with the presentation (`templates/_spec.html`, `templates/diagrams/`), so the two never disagree. The class, DFD and sequence diagrams are the presentation's Mermaid drawings saved as static SVG. The prototype screenshots live in `static/docs/proto/`.
+
+After changing the docs or the deck, rebuild both PDFs from a running app:
+
+```
+pip install playwright
+python tools/make_pdfs.py --base http://127.0.0.1:5000
+```
 
 ## Team page
 

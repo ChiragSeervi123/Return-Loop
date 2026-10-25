@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+{% import "_spec.html" as spec %}
+{% import "diagrams/wireframes.html" as wf %}
+{% block title %}Documentation{% endblock %}
+{% block page %}docs{% endblock %}
+{% block body_class %}docs-page{% endblock %}
+{% block content %}
+{# The project documentation: requirements, analysis & design diagrams, wireframes and
+   prototypes. Plain page, no 3D or animation; prints to A4 (see @media print). #}
+{% macro section(no, id, title) -%}
+<header class="doc-h" id="{{ id }}"><span class="mono doc-h__no">{{ no }}</span><h2>{{ title }}</h2></header>
+{%- endmacro %}
+{% macro fig(no, title, text='', cls='') -%}
+<figure class="doc-fig {{ cls }}">
+  <div class="doc-fig__art">{{ caller() }}</div>
+  <figcaption><b class="mono">FIGURE {{ no }}</b> {{ title }}{% if text %}<span>{{ text }}</span>{% endif %}</figcaption>
+</figure>
+{%- endmacro %}
+
+<div class="docs-bar">
+  <div>
+    <p class="mono page-head__label">PROJECT / DOCUMENTATION</p>
+    <h1 class="deck-bar__title">Requirements, diagrams and UI design</h1>
+  </div>
+  <div class="deck-bar__actions">
+    <a class="btn btn--primary" href="{{ url_for('static', filename='docs/ReturnLoop-Documentation.pdf') }}" download>Download PDF {{ m.icon('arrow', 16) }}</a>
+    <button class="btn btn--ghost" type="button" data-print>Print</button>
+  </div>
+</div>
+
+<article class="doc">
+
+  {# ---------------------------------------------------------------- cover #}
+  <section class="doc-cover">
+    <p class="mono doc-kicker">SOFTWARE ENGINEERING · MINI PROJECT</p>
+    <h1 class="doc-cover__title">Return<span>Loop</span></h1>
+    <p class="doc-cover__sub">Software requirements &amp; design document</p>
+    <dl class="doc-meta">
+      <div><dt>System</dt><dd>Returns and reverse-logistics centre for an e-commerce business</dd></div>
+      <div><dt>Team</dt><dd>{{ team|join(", ") }}</dd></div>
+      <div><dt>Institute</dt><dd>{{ institute }}</dd></div>
+      <div><dt>Version</dt><dd>1.0 · {{ today }}</dd></div>
+      <div><dt>Live app</dt><dd class="mono"><a href="{{ public_url }}">{{ public_url.split('//')[-1] }}</a></dd></div>
+    </dl>
+    {{ m.barcode('docs') }}
+  </section>
+
+  {# ---------------------------------------------------------------- contents #}
+  <nav class="doc-toc" aria-labelledby="toc-h">
+    <h2 id="toc-h" class="mono">CONTENTS</h2>
+    <ol>
+      <li><a href="#intro">Introduction</a></li>
+      <li><a href="#fr">Functional requirements</a></li>
+      <li><a href="#nfr">Non-functional requirements</a></li>
+      <li><a href="#diagrams">Analysis &amp; design diagrams</a>
+        <ol>
+          <li><a href="#usecase">Use case diagram</a></li>
+          <li><a href="#activity">Activity diagram</a></li>
+          <li><a href="#swimlane">Swimlane diagram</a></li>
+          <li><a href="#class">Class diagram</a></li>
+          <li><a href="#crc">CRC cards</a></li>
+          <li><a href="#dfd">Data flow diagrams (level 0, level 1)</a></li>
+          <li><a href="#state">State diagram</a></li>
+          <li><a href="#sequence">Sequence diagrams</a></li>
+        </ol>
+      </li>
+      <li><a href="#ui">UI design: wireframes &amp; prototypes</a></li>
+    </ol>
+  </nav>
+
+  {# ---------------------------------------------------------------- 1 #}
+  <section class="doc-sec">
+    {{ section("01", "intro", "Introduction") }}
+    <h3>1.1 Purpose</h3>
+    <p>ReturnLoop gives an online store one place to run every return: from the customer's request and the doorstep pickup, through quality check and grading, to a correct refund and the item going back on the shelf, to the repair bench or to scrap. Every step is recorded.</p>
+    <h3>1.2 Scope</h3>
+    <div class="doc-cols">
+      <div><p class="mono doc-label">IN SCOPE</p><ul>
+        <li>Six roles and a 13-status return workflow</li><li>Eligibility rules, pickup booking with two attempts</li>
+        <li>QC checklist, A / B / C grading, fraud check</li><li>Refurbishing and re-inspection</li>
+        <li>Refund calculation and inventory log</li><li>Admin dashboard and frequent-returner flags</li></ul></div>
+      <div><p class="mono doc-label">OUT OF SCOPE</p><ul>
+        <li>Real payments or a payment gateway</li><li>Passwords and real accounts (a role switcher stands in)</li>
+        <li>Courier API integration</li></ul></div>
+    </div>
+    <h3>1.3 Users and roles</h3>
+    <table class="grid-table doc-table">
+      <thead><tr><th>Role</th><th>Demo user</th><th>Main tasks</th></tr></thead>
+      <tbody>
+        {% set tasks = {'customer': 'Requests returns, books pickups, tracks and closes them',
+                        'agent': 'Collects parcels, or marks the customer absent',
+                        'warehouse': 'Checks parcels in at the returns centre',
+                        'qc': 'Inspects, grades A / B / C, rejects mismatched items',
+                        'refurbisher': 'Repairs grade B items for a second check',
+                        'admin': 'Watches totals, reasons, grades and flagged customers'} %}
+        {% for r in roles %}<tr><td><b>{{ role_labels[r] }}</b></td><td>{{ people[r][0][1] if people[r] else '' }}</td><td>{{ tasks[r] }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    <h3>1.4 Key terms</h3>
+    <dl class="doc-terms">
+      <div><dt>Return code</dt><dd>The ID of a return, e.g. <code>RL-2026-0004</code>.</dd></div>
+      <div><dt>Grade A / B / C</dt><dd>QC's verdict: A restocked (100%), B repaired then rechecked (70%), C scrapped (0%).</dd></div>
+      <div><dt>Handoff</dt><dd>After each step the app names the next desk and opens its page in one click.</dd></div>
+      <div><dt>Return window</dt><dd>7 days from delivery; outside it, the item can't be returned.</dd></div>
+    </dl>
+  </section>
+
+  {# ---------------------------------------------------------------- 2 #}
+  <section class="doc-sec">
+    {{ section("02", "fr", "Functional requirements") }}
+    <p>What the system must do. Priority uses MoSCoW: <b>Must</b> is needed for a working return flow, <b>Should</b> makes it complete.</p>
+    <table class="grid-table doc-table">
+      <thead><tr><th>ID</th><th>Requirement</th><th>Description</th><th>Actor</th><th>Priority</th></tr></thead>
+      <tbody>
+        {% for t, d, actor, prio in spec.FR %}
+        <tr><td class="mono doc-id">FR{{ '%02d' % loop.index }}</td><td><b>{{ t }}</b></td><td>{{ d }}</td><td>{{ actor }}</td>
+          <td><span class="lvl lvl--{{ 'c' if prio == 'Must' else 'b' }}">{{ prio }}</span></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  {# ---------------------------------------------------------------- 3 #}
+  <section class="doc-sec">
+    {{ section("03", "nfr", "Non-functional requirements") }}
+    <p>How well the system must do it, and how each quality is checked.</p>
+    <table class="grid-table doc-table">
+      <thead><tr><th>ID</th><th>Quality</th><th>Requirement</th><th>How it is checked</th></tr></thead>
+      <tbody>
+        {% for t, d, check in spec.NFR %}
+        <tr><td class="mono doc-id">NFR{{ '%02d' % loop.index }}</td><td><b>{{ t }}</b></td><td>{{ d }}</td><td>{{ check }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  {# ---------------------------------------------------------------- 4 #}
+  <section class="doc-sec">
+    {{ section("04", "diagrams", "Analysis & design diagrams") }}
+    <p>Each diagram below is drawn from the code: the statuses and moves come from <code>services/state_machine.py</code>, the classes from <code>models.py</code>, and the messages from the real functions.</p>
+
+    <div class="doc-keep">
+    <h3 id="usecase">4.1 Use case diagram</h3>
+    <p>Six actors and what each can do. Requesting a return always includes the eligibility check; grading includes issuing the refund.</p>
+    {% call fig("4.1", "Use case diagram") %}{% include "diagrams/usecase.html" %}{% endcall %}
+    </div>
+
+    <div class="doc-keep">
+    <h3 id="activity">4.2 Activity diagram</h3>
+    <p>One return from the customer's orders to the refund, with every decision: eligibility, whether the customer is home, whether the item matches the order, the grade, and the recheck.</p>
+    {% call fig("4.2", "Activity diagram: one return, start to finish") %}{% include "diagrams/activity.html" %}{% endcall %}
+    </div>
+
+    <div class="doc-keep">
+    <h3 id="swimlane">4.3 Swimlane diagram</h3>
+    <p>The same flow split by who acts: each column is a role, so every arrow that crosses a column is a handoff from one desk to the next.</p>
+    {% call fig("4.3", "Swimlane activity diagram", "", "doc-fig--tall") %}{% include "diagrams/swimlane.html" %}{% endcall %}
+    </div>
+
+    <div class="doc-keep">
+    <h3 id="class">4.4 Class diagram</h3>
+    <p>The domain model in <code>models.py</code>: eleven classes, one per database table. A return request owns its pickups, QC reports, repair jobs, refund and history.</p>
+    {% call fig("4.4", "Class diagram", "", "doc-fig--mermaid") %}{% include "diagrams/class.svg" %}{% endcall %}
+    </div>
+
+    <h3 id="crc">4.5 CRC cards</h3>
+    <p>Class, responsibilities, collaborators: what each key class (or service) knows and does, and whom it works with.</p>
+    {% set crc = [
+      ("ReturnRequest", "models.py", ["Holds reason, comment, photo and status", "Knows its pickups, QC reports, refund and history", "Gives its current pickup and latest report"], ["OrderItem", "Pickup", "QCReport", "Refund", "StatusHistory"]),
+      ("State machine", "services/state_machine.py", ["Allows only the moves in the transition table", "Writes a history row for every move", "Refuses anything else"], ["ReturnRequest", "StatusHistory"]),
+      ("Eligibility", "services/eligibility.py", ["Checks the 7-day window", "Checks the product is returnable", "Checks there is no open return"], ["OrderItem", "Product", "ReturnRequest"]),
+      ("Pickup", "models.py", ["Holds slot date and window", "Counts attempts (max 2)", "Records the outcome"], ["ReturnRequest", "Pickup agent"]),
+      ("QCReport", "models.py", ["Holds the checklist and grade", "Marks a recheck", "Keeps the inspector's remarks"], ["ReturnRequest", "QC inspector"]),
+      ("RefurbishJob", "models.py", ["Tracks open / repaired", "Keeps repair notes and technician"], ["ReturnRequest", "Refurbisher"]),
+      ("Refund service", "services/refund.py", ["Computes base × grade% − fee", "Applies the damaged / wrong-item exception", "Creates the refund and inventory log once"], ["ReturnRequest", "QCReport", "Refund", "InventoryLog", "State machine"]),
+      ("Handoff", "services/handoff.py", ["Works out who acts next", "Picks the page they land on", "Lists returns each desk handed on"], ["ReturnRequest", "Pickup", "RefurbishJob"]),
+      ("Flags", "services/flags.py", ["Counts returns per customer in 30 days", "Flags more than 3"], ["Customer", "ReturnRequest"]),
+    ] %}
+    <div class="crc-grid">
+      {% for name, where, resp, collab in crc %}
+      <article class="crc">
+        <header class="crc__head"><b>{{ name }}</b><span class="mono">{{ where }}</span></header>
+        <div class="crc__body">
+          <div><p class="mono doc-label">RESPONSIBILITIES</p><ul>{% for r in resp %}<li>{{ r }}</li>{% endfor %}</ul></div>
+          <div><p class="mono doc-label">COLLABORATORS</p><ul>{% for c in collab %}<li>{{ c }}</li>{% endfor %}</ul></div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+
+    <div class="doc-keep">
+    <h3 id="dfd">4.6 Data flow diagrams</h3>
+    <p><b>Level 0</b> shows the whole system as one process and the data each role sends and receives. <b>Level 1</b> opens it into eight processes and six data stores.</p>
+    {% call fig("4.6a", "DFD level 0 (context diagram)", "", "doc-fig--mermaid") %}{% include "diagrams/dfd0.svg" %}{% endcall %}
+    </div>
+    {% call fig("4.6b", "DFD level 1: processes and data stores", "", "doc-fig--mermaid") %}{% include "diagrams/dfd1.svg" %}{% endcall %}
+
+    <div class="doc-keep">
+    <h3 id="state">4.7 State diagram</h3>
+    <p>All 13 statuses of a return. Boxes list the actions on entering (<code>entry/</code>) and while in the state (<code>do/</code>); arrows read <code>event [guard] / action</code>. <code>change_status()</code> refuses any move not drawn here.</p>
+    {% call fig("4.7", "State diagram of a return") %}{% include "diagrams/state.html" %}{% endcall %}
+    </div>
+
+    <div class="doc-keep">
+    <h3 id="sequence">4.8 Sequence diagrams</h3>
+    <p><b>(a)</b> QC grades a return A: the inspection, two status changes and the refund are committed in one transaction. <b>(b)</b> The handoff: after the agent collects a parcel, the next page shows a card that switches to the warehouse in one click.</p>
+    {% call fig("4.8a", "Sequence: QC grades a return and the refund is issued", "", "doc-fig--mermaid") %}{% include "diagrams/seq_refund.svg" %}{% endcall %}
+    </div>
+    {% call fig("4.8b", "Sequence: handing a return to the next desk", "", "doc-fig--mermaid") %}{% include "diagrams/seq_handoff.svg" %}{% endcall %}
+  </section>
+
+  {# ---------------------------------------------------------------- 5 #}
+  <section class="doc-sec">
+    {{ section("05", "ui", "UI design: wireframes & prototypes") }}
+    <h3>5.1 Design language</h3>
+    <p>"Mailroom meets control tower": kraft paper, ink and one signal orange. Return codes and labels are set in a monospace font like shipping labels; grades are rubber stamps; every status badge carries text, so colour is never the only signal.</p>
+    <div class="doc-swatches">
+      {% for name, var, hex in [("Paper", "--paper", "#F6F1E7"), ("Kraft", "--kraft", "#E9DFCB"), ("Ink", "--ink", "#14110F"), ("Signal orange", "--orange", "#FF5B1F"), ("Grade A", "--a", "#2F7D4F"), ("Grade B", "--b", "#D99A1E"), ("Grade C", "--c", "#B3392B")] %}
+      <div class="doc-swatch"><span style="background: {{ hex }}"></span><b>{{ name }}</b><small class="mono">{{ hex }}</small></div>
+      {% endfor %}
+    </div>
+    <p class="doc-type"><span class="doc-type__d">Bricolage Grotesque</span> headings · <span class="doc-type__b">Instrument Sans</span> body · <span class="mono">DM Mono</span> codes &amp; labels</p>
+
+    <h3>5.2 Wireframes</h3>
+    <p>Low-fidelity sketches of the main screens, drawn before the visual design: layout, content and the one main action on each screen.</p>
+    <div class="wf-grid">
+      {% for draw, title, note in [(wf.orders, "Customer · My orders", "Each delivered item is a shipping slip with its return window and one button."),
+                                   (wf.new_return, "Customer · Request return", "The item on the left; reason tiles, comment and an optional photo on the right."),
+                                   (wf.schedule, "Customer · Book pickup", "Five day tiles, three slots, the pickup address to confirm."),
+                                   (wf.track, "Customer · Track return", "Six-step progress, what happens next, refund breakdown, history."),
+                                   (wf.agent, "Agent · Pickups (phone)", "Phone-first list of stops, morning first, large tap targets."),
+                                   (wf.inspect, "QC · Inspect & grade", "Checklist toggles suggest a grade; the inspector stamps A, B or C."),
+                                   (wf.dashboard, "Admin · Dashboard", "Key numbers on top, reasons and grades charts, flagged customers.")] %}
+      {% call fig("5." ~ loop.index, title, note) %}{{ draw() }}{% endcall %}
+      {% endfor %}
+    </div>
+
+    <h3>5.3 Prototypes</h3>
+    <p>High-fidelity screens of the working prototype, the app as built. Each follows its wireframe above.</p>
+    <div class="proto-grid">
+      {% for file, title in prototypes %}
+      {% call fig("5." ~ (7 + loop.index), title, "", "doc-fig--shot") %}<img src="{{ url_for('static', filename='docs/proto/' ~ file) }}" alt="Screenshot: {{ title }}" loading="lazy" width="1440" height="900">{% endcall %}
+      {% endfor %}
+    </div>
+  </section>
+
+  <footer class="doc-end mono">
+    <span>RETURNLOOP · SOFTWARE REQUIREMENTS &amp; DESIGN · v1.0</span>
+    <span>{{ team|join(" · ") }}</span>
+  </footer>
+</article>
+{% endblock %}

@@ -1,8 +1,8 @@
 """Landing page and the "switch role / user" control."""
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
-from config import MAKER, ROLE_HOME, ROLES, STAFF, TEAM
-from models import Customer, ReturnRequest, db
+from config import MAKER, PUBLIC_URL, ROLE_HOME, ROLES, STAFF, TEAM
+from models import Customer, ReturnRequest, db, now
 from services.handoff import role_noun
 from services.stats import landing_stats
 
@@ -67,6 +67,27 @@ def team():
 def maker():
     """The person who built ReturnLoop: a student ID card."""
     return render_template("maker.html", maker=MAKER)
+
+
+# Screens shown as prototypes in the documentation: (file in static/docs/proto, caption).
+PROTOTYPES = [
+    ("landing.jpg", "Landing page"),
+    ("orders.jpg", "Customer · My orders"),
+    ("new-return.jpg", "Customer · Request return"),
+    ("schedule.jpg", "Customer · Book pickup"),
+    ("track.jpg", "Customer · Track return, with the handoff card"),
+    ("agent.jpg", "Agent · Pickup slip"),
+    ("inspect.jpg", "QC · Inspect & grade"),
+    ("dashboard.jpg", "Admin · Dashboard"),
+]
+
+
+@bp.get("/docs")
+def docs():
+    """The project documentation: requirements, diagrams, wireframes, prototypes. Prints to A4."""
+    return render_template("docs.html", team=[person["name"] for person in TEAM],
+                           institute=f"{MAKER['institute']}, {MAKER['campus']}",
+                           today=now().strftime("%B %Y"), prototypes=PROTOTYPES, public_url=PUBLIC_URL)
 
 
 @bp.get("/ppt")

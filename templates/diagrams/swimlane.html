@@ -1,0 +1,83 @@
+{# UML activity diagram with swimlanes: one column per role, the return flows down and across.
+   Used by the documentation (/docs). Shapes reuse the activity diagram's styles. #}
+{% macro act(x, y, w, label, label2='', cls='act-box') -%}
+<rect x="{{ x - w / 2 }}" y="{{ y - 22 }}" width="{{ w }}" height="44" rx="9" class="{{ cls }}"/>
+{% if label2 %}<text x="{{ x }}" y="{{ y - 3 }}" text-anchor="middle">{{ label }}</text><text x="{{ x }}" y="{{ y + 14 }}" text-anchor="middle">{{ label2 }}</text>
+{% else %}<text x="{{ x }}" y="{{ y + 5 }}" text-anchor="middle">{{ label }}</text>{% endif %}
+{%- endmacro %}
+{% macro dec(x, y, w, h, label) -%}
+<polygon points="{{ x }},{{ y - h / 2 }} {{ x + w / 2 }},{{ y }} {{ x }},{{ y + h / 2 }} {{ x - w / 2 }},{{ y }}" class="act-dec"/>
+<text x="{{ x }}" y="{{ y + 4 }}" text-anchor="middle" font-size="12.5">{{ label }}</text>
+{%- endmacro %}
+{% macro stop(x, y) -%}<circle cx="{{ x }}" cy="{{ y }}" r="10" class="act-end"/><circle cx="{{ x }}" cy="{{ y }}" r="5.5" class="act-start"/>{%- endmacro %}
+<svg viewBox="0 0 1210 830" class="activity swimlane" role="img" aria-label="Swimlane activity diagram: a return moving between the customer, pickup agent, warehouse, QC inspector, refurbisher and the system">
+  <defs><marker id="sl-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z" fill="#14110F"/></marker></defs>
+
+  {# lanes: name, left edge, right edge #}
+  {% set lanes = [("Customer", 20, 180), ("Pickup agent", 180, 420), ("Warehouse", 420, 570),
+                  ("QC inspector", 570, 870), ("Refurbisher", 870, 1030), ("System", 1030, 1205)] %}
+  {% for name, l, r in lanes %}
+  <rect x="{{ l }}" y="20" width="{{ r - l }}" height="800" class="lane {{ 'lane--alt' if loop.index is even }}"/>
+  <rect x="{{ l }}" y="20" width="{{ r - l }}" height="36" class="lane-head"/>
+  <text x="{{ (l + r) / 2 }}" y="43" text-anchor="middle" class="lane-name">{{ name }}</text>
+  {% endfor %}
+
+  <g class="act-line" marker-end="url(#sl-arrow)">
+    <!-- customer asks, books -->
+    <path d="M100 91 V108"/><path d="M100 154 V176"/><path d="M165 200 H213"/>
+    <!-- agent: attempt, home?, rebook loop, collect -->
+    <path d="M275 222 V238"/><path d="M275 292 V311"/>
+    <path d="M342 265 H375 V154"/><path d="M335 130 H275 V176"/>
+    <!-- warehouse, QC -->
+    <path d="M335 335 H433"/><path d="M555 335 H720 V366"/>
+    <path d="M720 422 V445 H760 V463"/>
+    <path d="M655 395 H625 V536"/><path d="M625 582 V603"/>
+    <!-- grade: B to repair, A to restock, C to scrap -->
+    <path d="M805 490 H888"/>
+    <path d="M760 515 V560 H1058"/>
+    <path d="M715 490 H690 V650 H1058"/>
+    <!-- repair, re-inspect, recheck routing -->
+    <path d="M950 468 V300 H867"/>
+    <path d="M815 278 V255 H1058"/>
+    <path d="M1115 280 V536"/>
+    <path d="M1170 255 H1185 V650 H1172"/>
+    <!-- refund, close -->
+    <path d="M1170 560 H1197 V745 H1182"/>
+    <path d="M1115 672 V721"/>
+    <path d="M1048 745 H167"/>
+    <path d="M100 767 V788"/>
+  </g>
+
+  <circle cx="100" cy="82" r="9" class="act-start"/>
+  {{ act(100, 132, 130, "Request return") }}
+  {{ act(100, 200, 130, "Book pickup slot") }}
+  {{ act(275, 200, 120, "Attempt pickup") }}
+  {{ dec(275, 265, 134, 54, "Customer home?") }}
+  {{ act(375, 130, 80, "Rebook", "next day") }}
+  {{ act(275, 335, 120, "Collect parcel") }}
+  {{ act(495, 335, 120, "Check parcel in") }}
+  {{ dec(720, 395, 130, 54, "Matches order?") }}
+  {{ act(625, 560, 96, "Reject", "as fraud") }}{{ stop(625, 615) }}
+  {{ dec(760, 490, 90, 50, "Grade") }}
+  {{ act(950, 490, 120, "Repair item") }}
+  {{ act(815, 300, 100, "Re-inspect", "repair") }}
+  {{ dec(1115, 255, 110, 50, "Recheck?") }}
+  {{ act(1115, 560, 110, "Restock") }}
+  {{ act(1115, 650, 110, "Scrap") }}
+  {{ act(1115, 745, 134, "Issue refund +", "inventory log", "act-refund") }}
+  {{ act(100, 745, 130, "Close return") }}
+  {{ stop(100, 800) }}
+
+  <text x="347" y="258" class="act-guard">no</text>
+  <text x="283" y="306" class="act-guard">yes</text>
+  <text x="347" y="290" class="act-guard">2nd miss:</text><text x="347" y="304" class="act-guard">cancelled</text>
+  <text x="663" y="388" class="act-guard">no</text>
+  <text x="728" y="440" class="act-guard">yes</text>
+  <text x="840" y="482" class="act-guard">B</text>
+  <text x="768" y="540" class="act-guard">A</text>
+  <text x="696" y="600" class="act-guard">C</text>
+  <text x="958" y="390" class="act-guard">repaired</text>
+  <text x="1123" y="300" class="act-guard">B (pass)</text>
+  <text x="1150" y="240" class="act-guard">C (fail)</text>
+  <text x="600" y="737" class="act-guard">refund arrives</text>
+</svg>
