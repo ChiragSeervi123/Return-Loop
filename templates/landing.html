@@ -38,17 +38,9 @@
   </div>
 
   <section class="hero" aria-labelledby="hero-h">
-    {# The maker's mark: a slowly turning rubber stamp, top left. Links to his crew card. #}
-    <a class="maker" href="{{ url_for('main.team') }}#member-1" aria-label="Made by Chirag Seervi. Meet the crew.">
-      <svg class="maker__stamp" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
-        <defs><path id="maker-ring" d="M100 100m-74 0a74 74 0 1 1 148 0a74 74 0 1 1-148 0"/></defs>
-        <circle cx="100" cy="100" r="95" class="maker__edge"/>
-        <circle cx="100" cy="100" r="56" class="maker__edge maker__edge--in"/>
-        <g class="maker__ring">
-          <text class="maker__text"><textPath href="#maker-ring" textLength="462" lengthAdjust="spacing">MADE BY CHIRAG SEERVI ✦ MADE BY CHIRAG SEERVI ✦</textPath></text>
-        </g>
-        <text x="100" y="103" text-anchor="middle" dominant-baseline="middle" class="maker__mono">CS</text>
-      </svg>
+    {# The maker's mark: a slowly turning rubber stamp, top left. Opens his ID card. #}
+    <a class="maker" href="{{ url_for('main.maker') }}" aria-label="Designed and built by Chirag Seervi. See his ID card.">
+      {{ m.maker_stamp("Chirag Seervi", "CS") }}
       <span class="maker__sig">
         <span class="mono maker__by">DESIGNED &amp; BUILT BY</span>
         <span class="maker__name">Chirag Seervi</span>

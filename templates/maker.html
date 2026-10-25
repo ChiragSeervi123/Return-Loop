@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ maker.name }}{% endblock %}
+{% block page %}maker{% endblock %}
+{% block body_class %}landing{% endblock %}
+{% block nav_class %}nav--dark{% endblock %}
+{% block main_class %}landing-main{% endblock %}
+{% block content %}
+{% set first, _, last = maker.name.partition(" ") %}
+<section class="maker-page on-dark" aria-labelledby="maker-h">
+  <div class="maker-page__intro">
+    <p class="mono team-kicker"><span class="dot" aria-hidden="true"></span> THE MAKER · RETURNLOOP</p>
+    <h1 id="maker-h" class="maker-page__title">{{ first }}<br><em>{{ last }}</em></h1>
+    <p class="maker-page__lede">Designed and built ReturnLoop: the return workflow, the handoff between desks, the 3D scenes and the presentation.</p>
+    <div class="row maker-page__cta">
+      <a class="btn btn--primary btn--big" data-magnetic href="{{ url_for('main.landing') }}">{{ m.icon('back', 18) }} Back to the loop</a>
+      <a class="btn btn--ghost btn--big" href="{{ url_for('main.team') }}">Meet the crew</a>
+    </div>
+  </div>
+
+  {# A student ID card, in the same style as the crew manifests. #}
+  <article class="manifest idcard" data-tilt aria-label="Student ID card of {{ maker.name }}">
+    <div class="manifest__head mono">
+      <span>STUDENT ID · {{ maker.institute|upper }}</span><span>{{ maker.campus|upper }}</span>
+    </div>
+    <div class="manifest__body">
+      <div class="manifest__mono" aria-hidden="true">{{ maker.initials }}</div>
+      <div class="manifest__who">
+        <span class="mono manifest__label">NAME</span>
+        <h2 class="manifest__name">{{ first }}<br><span class="manifest__last">{{ last }}</span></h2>
+        <span class="mono manifest__label">PROGRAMME</span>
+        <p class="manifest__role">{{ maker.degree }}, {{ maker.programme }}</p>
+      </div>
+    </div>
+    <dl class="idcard__grid mono">
+      <div><dt>INSTITUTE</dt><dd>{{ maker.institute }}, {{ maker.campus }}</dd></div>
+      <div><dt>BATCH</dt><dd>Division {{ maker.division }} · {{ maker.batch }}</dd></div>
+      <div><dt>SAP ID</dt><dd>{{ maker.sap_id }}</dd></div>
+      <div><dt>ROLL NUMBER</dt><dd>{{ maker.roll_no }}</dd></div>
+    </dl>
+    <div class="manifest__foot">
+      {{ m.barcode(maker.sap_id) }}
+      <span class="mono">{{ maker.sap_id }}</span>
+    </div>
+    <div class="idcard__stamp">{{ m.maker_stamp(maker.name, maker.initials) }}</div>
+  </article>
+</section>
+{% endblock %}

@@ -302,4 +302,12 @@ def test_static_files_can_be_cached_at_the_edge(client, seeded):
 
 def test_landing_carries_the_makers_mark(client, seeded):
     page = client.get("/").data.decode()
-    assert 'aria-label="Made by Chirag Seervi. Meet the crew."' in page and "MADE BY CHIRAG SEERVI" in page
+    assert 'href="/maker" aria-label="Designed and built by Chirag Seervi' in page
+    assert "MADE BY CHIRAG SEERVI" in page
+
+
+def test_maker_page_shows_the_id_card(client, seeded):
+    page = client.get("/maker").data.decode()
+    for text in ("Chirag", "Seervi", "SVKM&#39;s NMIMS, Hyderabad", "B.Tech", "Computer Science",
+                 "Division A · 2025 – 2029", "70572500055", "A055"):
+        assert text in page, text

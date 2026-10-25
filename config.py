@@ -120,3 +120,17 @@ TEAM = [
     {"name": "Aryan Singh", "role": "Co-creator, ReturnLoop", "accent": "c"},
     {"name": "Aadi Srivastava", "role": "Co-creator, ReturnLoop", "accent": "d"},
 ]
+
+# The maker's page (/maker), opened from the stamp on the landing page. Edit details here.
+MAKER = {
+    "name": "Chirag Seervi",
+    "initials": "CS",
+    "institute": "SVKM's NMIMS",
+    "campus": "Hyderabad",
+    "degree": "B.Tech",
+    "programme": "Computer Science & Engineering (with specialization)",
+    "division": "A",
+    "batch": "2025 – 2029",
+    "sap_id": "70572500055",
+    "roll_no": "A055",
+}

@@ -1,7 +1,7 @@
 """Landing page and the "switch role / user" control."""
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
-from config import ROLE_HOME, ROLES, STAFF, TEAM
+from config import MAKER, ROLE_HOME, ROLES, STAFF, TEAM
 from models import Customer, ReturnRequest, db
 from services.handoff import role_noun
 from services.stats import landing_stats
@@ -61,6 +61,12 @@ def team():
         members.append({**person, "no": i, "first": first, "last": last,
                         "initials": "".join(part[0] for part in person["name"].split())})
     return render_template("team.html", members=members)
+
+
+@bp.get("/maker")
+def maker():
+    """The person who built ReturnLoop: a student ID card."""
+    return render_template("maker.html", maker=MAKER)
 
 
 @bp.get("/ppt")
