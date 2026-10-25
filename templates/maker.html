@@ -17,6 +17,12 @@
     </div>
   </div>
 
+  {# A little character made of parcels (static/js/scenes/boxbot.js). Click it to make it hop. #}
+  <div class="maker-bot" aria-hidden="true">
+    <div class="maker-bot__canvas" data-canvas-host data-maker-bot data-initials="{{ maker.initials }}"></div>
+    <p class="mono maker-bot__hint">CLICK ME</p>
+  </div>
+
   {# A student ID card, in the same style as the crew manifests. #}
   <article class="manifest idcard" data-tilt aria-label="Student ID card of {{ maker.name }}">
     <div class="manifest__head mono">

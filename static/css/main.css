@@ -1068,12 +1068,19 @@ a.ledger__link:hover { background: var(--kraft); padding-left: .75rem; }
 @keyframes maker-turn { to { transform: rotate(360deg); } }
 /* /maker: the person who built it, with a student ID card */
 .maker-page {
-  min-height: calc(100vh - 64px); display: grid; align-items: center; gap: 3rem 4rem;
-  grid-template-columns: 1fr minmax(0, 580px);
+  min-height: calc(100vh - 64px); display: grid; align-items: center; gap: 2rem;
+  grid-template-columns: minmax(0, 1fr) clamp(220px, 21vw, 360px) minmax(0, 560px);
   padding: clamp(3rem, 8vh, 6rem) var(--gutter); max-width: calc(var(--max) + 2 * var(--gutter) + 120px); margin: 0 auto;
   background: radial-gradient(60% 60% at 75% 55%, rgba(255, 91, 31, .16), transparent 70%);
 }
-.maker-page__title { font-size: clamp(3.6rem, 9vw, 8rem); font-weight: 800; line-height: .86; letter-spacing: -.055em; margin: 0; }
+.maker-bot { position: relative; height: clamp(380px, 62vh, 560px); }
+.maker-bot__canvas { position: absolute; inset: 0; cursor: pointer; }
+.maker-bot__hint {
+  position: absolute; left: 50%; bottom: .2rem; translate: -50% 0; margin: 0;
+  font-size: .66rem; letter-spacing: .2em; color: #8F877A; pointer-events: none;
+}
+.maker-bot.no-webgl { display: none; }
+.maker-page__title { font-size: clamp(3.4rem, 7vw, 7rem); font-weight: 800; line-height: .86; letter-spacing: -.055em; margin: 0; }
 .maker-page__title em { font-style: normal; color: var(--orange); }
 .maker-page__lede { max-width: 28rem; margin: 1.5rem 0 0; font-size: 1.08rem; color: #DCD4C4; }
 .maker-page__cta { margin-top: 2rem; }
@@ -1086,6 +1093,11 @@ a.ledger__link:hover { background: var(--kraft); padding-left: .75rem; }
 .idcard__grid dd { margin: 0; font-size: .92rem; letter-spacing: .03em; font-weight: 500; }
 .idcard__stamp { position: absolute; right: -2.6rem; top: 3.2rem; width: 128px; color: var(--orange); pointer-events: none; }
 .idcard__stamp .maker__stamp { width: 100%; }
+.idcard__stamp .maker__mono { fill: var(--orange); }
+@media (max-width: 1080px) {
+  .maker-page { grid-template-columns: minmax(0, 1fr) minmax(0, 560px); }
+  .maker-bot { grid-column: 1 / -1; grid-row: 1; height: 360px; }
+}
 @media (max-width: 900px) {
   .maker-page { grid-template-columns: 1fr; }
   .idcard { justify-self: start; }

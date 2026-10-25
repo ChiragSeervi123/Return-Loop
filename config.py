@@ -128,7 +128,7 @@ MAKER = {
     "institute": "SVKM's NMIMS",
     "campus": "Hyderabad",
     "degree": "B.Tech",
-    "programme": "Computer Science & Engineering (with specialization)",
+    "programme": "Computer Science and Engineering (Data Science)",
     "division": "A",
     "batch": "2025 – 2029",
     "sap_id": "70572500055",

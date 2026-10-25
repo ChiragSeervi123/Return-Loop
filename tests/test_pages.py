@@ -308,6 +308,6 @@ def test_landing_carries_the_makers_mark(client, seeded):
 
 def test_maker_page_shows_the_id_card(client, seeded):
     page = client.get("/maker").data.decode()
-    for text in ("Chirag", "Seervi", "SVKM&#39;s NMIMS, Hyderabad", "B.Tech", "Computer Science",
+    for text in ("Chirag", "Seervi", "SVKM&#39;s NMIMS, Hyderabad", "B.Tech", "Computer Science and Engineering (Data Science)",
                  "Division A · 2025 – 2029", "70572500055", "A055"):
         assert text in page, text

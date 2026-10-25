@@ -860,6 +860,21 @@ async function initDeck() {
   }
 }
 
+// ---------------------------------------------------------------- maker page
+
+async function initMakerPage() {
+  const host = $('[data-maker-bot]');
+  if (!host) return;
+  let bot = null;
+  try {
+    const { initBoxbot } = await import('./scenes/boxbot.js');
+    bot = await initBoxbot(host, { initials: host.dataset.initials });
+  } catch (e) {
+    console.error('3D parcel character unavailable.', e);
+  }
+  if (!bot) host.closest('.maker-bot').classList.add('no-webgl');
+}
+
 // ---------------------------------------------------------------- boot
 
 initTransitions();
@@ -885,3 +900,4 @@ if (page === 'admin') initCharts();
 if (page === 'inspect') initInspect();
 if (page === 'team') initTeamPage();
 if (page === 'deck') initDeck();
+if (page === 'maker') initMakerPage();

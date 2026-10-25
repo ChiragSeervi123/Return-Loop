@@ -153,7 +153,7 @@ function canvas2d(w, h) {
   return [c, c.getContext('2d')];
 }
 
-function kraftBase(ctx, w, h, tone) {
+export function kraftBase(ctx, w, h, tone) {
   ctx.fillStyle = tone;
   ctx.fillRect(0, 0, w, h);
   // paper fibres
@@ -163,7 +163,7 @@ function kraftBase(ctx, w, h, tone) {
   }
 }
 
-function barcode(ctx, x, y, w, h) {
+export function barcode(ctx, x, y, w, h) {
   let cx = x;
   ctx.fillStyle = '#14110F';
   while (cx < x + w) {
