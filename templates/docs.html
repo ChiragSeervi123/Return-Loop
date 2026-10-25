@@ -42,7 +42,14 @@
       <div><dt>Version</dt><dd>1.0 · {{ today }}</dd></div>
       <div><dt>Live app</dt><dd class="mono"><a href="{{ public_url }}">{{ public_url.split('//')[-1] }}</a></dd></div>
     </dl>
-    {{ m.barcode('docs') }}
+    {# Scanning the printed cover opens the live app. Rebuilt by tools/make_qr.py. #}
+    <a class="doc-qr" href="{{ public_url }}">
+      {% include "diagrams/qr_live.svg" %}
+      <span class="doc-qr__text">
+        <span class="mono doc-label">SCAN TO OPEN THE LIVE APP</span>
+        <span class="mono doc-qr__url">{{ public_url.split('//')[-1] }}</span>
+      </span>
+    </a>
   </section>
 
   {# ---------------------------------------------------------------- contents #}

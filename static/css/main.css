@@ -1589,7 +1589,10 @@ table.mini td:first-child { font-weight: 600; padding-right: 10px; white-space: 
 .doc-meta div { display: grid; grid-template-columns: 9rem 1fr; gap: 1rem; padding: .55rem 0; border-bottom: 1.5px dashed var(--line); }
 .doc-meta dt { font: 500 .74rem var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); padding-top: .2rem; }
 .doc-meta dd { margin: 0; }
-.doc-cover .barcode { width: 240px; height: 40px; }
+.doc-qr { display: inline-flex; align-items: center; gap: 1.2rem; color: var(--ink); text-decoration: none; }
+.doc-qr__code { display: block; width: 132px; height: 132px; flex: none; shape-rendering: crispEdges; border: 1.5px solid var(--ink); }
+.doc-qr__text { display: grid; gap: .2rem; }
+.doc-qr__url { font-size: .9rem; }
 
 .doc-toc { padding: 2rem 0; border-bottom: 2px solid var(--ink); }
 .doc-toc h2 { font-size: .78rem; letter-spacing: .16em; margin-bottom: .8rem; }
@@ -1699,6 +1702,8 @@ table.mini td:first-child { font-weight: 600; padding-right: 10px; white-space: 
   .doc-h { margin-bottom: .8rem; }
   .doc, .doc * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .doc-cover { min-height: 245mm; display: flex; flex-direction: column; justify-content: center; border-bottom: 0; break-after: page; }
+  .doc-qr { align-self: flex-start; }
+  .doc-qr__code { width: 34mm; height: 34mm; }   /* comfortably scannable from a printed page */
   .doc-toc { border-bottom: 0; padding-top: 0; }
   .doc-sec { break-before: page; padding-top: 0; }
   .doc-fig, .doc-table tr, .crc, .doc-swatch, .doc-keep { break-inside: avoid; }

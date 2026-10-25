@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import pytest
 
 import seed
+from config import PUBLIC_URL
 from conftest import login
 from models import ReturnRequest
 from services.returns import (create_return, mark_picked_up, mark_received,
@@ -324,6 +325,12 @@ def test_docs_page_has_every_required_part(client, seeded):
         assert part in page, part
     assert "mermaid.esm" not in page and "three.module" not in page.split("</head>")[1]  # no heavy libraries
     assert client.get("/static/docs/ReturnLoop-Documentation.pdf").status_code == 200
+
+
+def test_docs_cover_has_a_qr_to_the_live_app(client, seeded):
+    cover = client.get("/docs").data.decode().split('class="doc-cover"')[1].split("</section>")[0]
+    assert f"<title>QR code: {PUBLIC_URL}</title>" in cover and f'href="{PUBLIC_URL}"' in cover
+    assert 'class="barcode' not in cover
 
 
 def test_docs_link_sits_between_ppt_and_team(client, seeded):
