@@ -298,3 +298,8 @@ def test_static_files_can_be_cached_at_the_edge(client, seeded):
     res = client.get("/static/css/main.css")
     assert res.status_code == 200 and "s-maxage=31536000" in res.headers["Cache-Control"]
     assert "s-maxage" not in client.get("/").headers.get("Cache-Control", "")   # pages stay live
+
+
+def test_landing_carries_the_makers_mark(client, seeded):
+    page = client.get("/").data.decode()
+    assert 'aria-label="Made by Chirag Seervi. Meet the crew."' in page and "MADE BY CHIRAG SEERVI" in page

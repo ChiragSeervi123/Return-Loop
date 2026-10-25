@@ -1039,6 +1039,39 @@ a.ledger__link:hover { background: var(--kraft); padding-left: .75rem; }
   position: absolute; right: var(--gutter); top: 6.5rem; display: grid; justify-items: end; gap: .3rem;
   font-size: .7rem; letter-spacing: .14em; color: #8F877A;
 }
+/* The maker's mark: a rubber stamp in the top-left corner whose ring of text turns slowly. */
+.maker {
+  position: absolute; left: var(--gutter); top: 5.5rem;
+  display: flex; align-items: center; gap: 1.4rem;
+  color: var(--orange); text-decoration: none;
+}
+.maker:focus-visible { outline: 2px solid var(--orange); outline-offset: 8px; }
+.maker__stamp {
+  flex: none; width: 184px; aspect-ratio: 1; overflow: visible; filter: url(#rough);
+  transform: rotate(-10deg); transition: transform .5s var(--ease-out), color .3s;
+}
+.maker:hover .maker__stamp, .maker:focus-visible .maker__stamp { transform: rotate(0deg) scale(1.06); color: #FF7A3D; }
+.maker__sig { display: grid; gap: .45rem; }
+.maker__by { font-size: .72rem; letter-spacing: .2em; color: #CFC7B6; }
+.maker__name {
+  font: 800 clamp(2rem, 3.2vw, 3rem)/.9 var(--f-display); letter-spacing: -.045em; color: var(--on-night);
+  background: linear-gradient(var(--orange), var(--orange)) 0 100% / 0 3px no-repeat; padding-bottom: .3rem;
+  transition: background-size .45s var(--ease-out);
+}
+.maker:hover .maker__name, .maker:focus-visible .maker__name { background-size: 100% 3px; }
+.maker__edge { fill: none; stroke: currentColor; stroke-width: 3; }
+.maker__edge--in { stroke-width: 1.5; stroke-dasharray: 3 5; }
+.maker__ring { transform-origin: 100px 100px; animation: maker-turn 26s linear infinite; }
+.maker:hover .maker__ring { animation-duration: 8s; }
+.maker__text { fill: currentColor; font: 500 15.5px var(--f-mono); letter-spacing: .08em; }
+.maker__mono { fill: var(--on-night); font: 800 56px var(--f-display); letter-spacing: -.06em; }
+@keyframes maker-turn { to { transform: rotate(360deg); } }
+@media (max-width: 760px) {
+  .maker { top: 4.75rem; gap: .9rem; }
+  .maker__stamp { width: 96px; }
+  .maker__name { font-size: 1.6rem; }
+}
+
 .scroll-cue {
   position: absolute; right: var(--gutter); bottom: 2rem; display: grid; justify-items: center; gap: .5rem;
   font-size: .68rem; letter-spacing: .2em; text-transform: uppercase; color: #CFC7B6; text-decoration: none;

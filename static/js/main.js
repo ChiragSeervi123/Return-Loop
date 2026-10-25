@@ -278,7 +278,10 @@ async function initLanding() {
     tl.from(words, { yPercent: 115, rotate: 4, duration: 1.05, ease: 'power4.out', stagger: 0.07 })
       .from('.hero__tag', { autoAlpha: 0, y: 12, duration: 0.6 }, 0.1)
       .from('.hero__foot > *', { autoAlpha: 0, y: 24, duration: 0.8, ease: 'power3.out', stagger: 0.1 }, 0.55)
-      .from('.hero__meta, .scroll-cue', { autoAlpha: 0, duration: 0.8 }, 0.9);
+      .from('.hero__meta, .scroll-cue', { autoAlpha: 0, duration: 0.8 }, 0.9)
+      // the maker's stamp slams down; clearProps hands its transform back to CSS for the hover
+      .from('.maker__stamp', { autoAlpha: 0, scale: 1.9, rotate: -40, duration: 0.55, ease: 'back.out(2.2)', clearProps: 'all' }, 1.0)
+      .from('.maker__sig', { autoAlpha: 0, x: -16, duration: 0.6, ease: 'power3.out', clearProps: 'all' }, 1.3);
   }
   document.documentElement.classList.remove('hero-wait');
 
