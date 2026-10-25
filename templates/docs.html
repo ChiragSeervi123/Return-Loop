@@ -141,30 +141,30 @@
 
     <div class="doc-keep">
     <h3 id="usecase">4.1 Use case diagram</h3>
-    <p>Six actors and what each can do. Requesting a return always includes the eligibility check; grading includes issuing the refund.</p>
+    <p>The six actors stand outside the system boundary, each linked to the use cases they can start. The customer views orders, requests a return, books a pickup, tracks it and finally closes it; requesting a return always <i>includes</i> Check eligibility (the 7-day window, a returnable product, no open return). The pickup agent, warehouse, QC inspector and refurbisher each handle one stage of the parcel's journey. Grading and re-inspecting always include Issue refund, so no graded item is left without one. The admin only reads: the dashboard and the list of flagged customers.</p>
     {% call fig("4.1", "Use case diagram") %}{% include "diagrams/usecase.html" %}{% endcall %}
     </div>
 
     <div class="doc-keep">
     <h3 id="activity">4.2 Activity diagram</h3>
-    <p>One return from the customer's orders to the refund, with every decision: eligibility, whether the customer is home, whether the item matches the order, the grade, and the recheck.</p>
+    <p>The diagram follows one return from start to finish. The customer opens their orders; an ineligible item only shows the reason, and the flow ends there. An eligible item is requested and a pickup booked: if nobody is home the agent rebooks for the next day, and a second miss cancels the return. A collected parcel is received at the centre, where QC first checks it matches the order, otherwise it is rejected as fraud. Grade A restocks and C scraps the item; B goes to the refurbisher and a recheck decides between restock and scrap. Every route ends in the same refund and inventory log, and the customer closes the return.</p>
     {% call fig("4.2", "Activity diagram: one return, start to finish") %}{% include "diagrams/activity.html" %}{% endcall %}
     </div>
 
     <div class="doc-keep">
     <h3 id="swimlane">4.3 Swimlane diagram</h3>
-    <p>The same flow split by who acts: each column is a role, so every arrow that crosses a column is a handoff from one desk to the next.</p>
+    <p>This is the same process split into one column (lane) per role, so it shows who is responsible for each action. Reading top to bottom, the return starts in the customer's lane and moves to the pickup agent, the warehouse and then the QC inspector. Every arrow that crosses into another lane is a handoff, which the app turns into a "Continue as …" card. The refurbisher's lane is used only for grade B items, which loop back to QC for a recheck. The System lane holds the automatic steps (routing by grade, restocking or scrapping, issuing the refund) before the refund arrives back in the customer's lane.</p>
     {% call fig("4.3", "Swimlane activity diagram", "", "doc-fig--tall") %}{% include "diagrams/swimlane.html" %}{% endcall %}
     </div>
 
     <div class="doc-keep">
     <h3 id="class">4.4 Class diagram</h3>
-    <p>The domain model in <code>models.py</code>: eleven classes, one per database table. A return request owns its pickups, QC reports, repair jobs, refund and history.</p>
+    <p>The domain model has eleven classes, one for each database table in <code>models.py</code>. A Customer places Orders, each Order contains one or more OrderItems, and each item refers to a Product. A ReturnRequest belongs to one OrderItem and sits at the centre of the model: it owns its Pickups, QC reports, refurbish jobs, its Refund and its StatusHistory. The filled diamonds mean composition, so those parts cannot exist without their return; InventoryLog rows only reference the return they came from. The multiplicities (1, *, 0..1) match the database rules, for example a return has at most one refund.</p>
     {% call fig("4.4", "Class diagram", "", "doc-fig--mermaid") %}{% include "diagrams/class.svg" %}{% endcall %}
     </div>
 
     <h3 id="crc">4.5 CRC cards</h3>
-    <p>Class, responsibilities, collaborators: what each key class (or service) knows and does, and whom it works with.</p>
+    <p>Each card names a class or service, its responsibilities (what it knows and does) and its collaborators (the classes it works with). The model classes, such as ReturnRequest, Pickup and QCReport, mainly hold the data for one step of a return. The services hold the rules: the state machine allows only valid moves, Eligibility checks the return window, and the refund service computes the amount exactly once. Handoff and Flags read across several classes to decide who acts next and which customers return too often. Keeping rules in services and data in models is what keeps the route handlers thin.</p>
     {% set crc = [
       ("ReturnRequest", "models.py", ["Holds reason, comment, photo and status", "Knows its pickups, QC reports, refund and history", "Gives its current pickup and latest report"], ["OrderItem", "Pickup", "QCReport", "Refund", "StatusHistory"]),
       ("State machine", "services/state_machine.py", ["Allows only the moves in the transition table", "Writes a history row for every move", "Refuses anything else"], ["ReturnRequest", "StatusHistory"]),
@@ -190,20 +190,20 @@
 
     <div class="doc-keep">
     <h3 id="dfd">4.6 Data flow diagrams</h3>
-    <p><b>Level 0</b> shows the whole system as one process and the data each role sends and receives. <b>Level 1</b> opens it into eight processes and six data stores.</p>
+    <p><b>Level 0</b> treats ReturnLoop as a single process (0) and shows only the data flowing between it and the six external entities. The customer sends a request, photo and pickup slot and gets back eligibility, status and the refund breakdown; each staff role exchanges its work list and its results. <b>Level 1</b> opens that process into eight numbered processes, from 1.0 Check eligibility to 8.0 Report &amp; flag, and six data stores D1–D6. Data enters from an entity, is changed by a process and written to a store: 2.0 Schedule pickup writes D3 Pickups, which the agent then reads as the pickup list. The dotted line shows that every status change is also written to D6 Status history.</p>
     {% call fig("4.6a", "DFD level 0 (context diagram)", "", "doc-fig--mermaid") %}{% include "diagrams/dfd0.svg" %}{% endcall %}
     </div>
     {% call fig("4.6b", "DFD level 1: processes and data stores", "", "doc-fig--mermaid") %}{% include "diagrams/dfd1.svg" %}{% endcall %}
 
     <div class="doc-keep">
     <h3 id="state">4.7 State diagram</h3>
-    <p>All 13 statuses of a return. Boxes list the actions on entering (<code>entry/</code>) and while in the state (<code>do/</code>); arrows read <code>event [guard] / action</code>. <code>change_status()</code> refuses any move not drawn here.</p>
+    <p>A return is always in exactly one of 13 states. It starts as Requested and moves through Pickup Scheduled, Picked Up and Received; it can stop early as Cancelled (a second missed pickup) or Rejected (not eligible, or the item doesn't match the order). After grading it is Restocked, sent through Refurbishing and Re-inspection, or Scrapped; both Restocked and Scrapped lead to Refunded and then Closed. Each box lists what happens on entering the state (<code>entry/</code>) and while in it (<code>do/</code>), and each arrow reads <code>event [guard] / action</code>, e.g. <code>inspect [mismatch] / flagFraud</code>. <code>change_status()</code> refuses any move not drawn here, so the diagram is also the rule.</p>
     {% call fig("4.7", "State diagram of a return") %}{% include "diagrams/state.html" %}{% endcall %}
     </div>
 
     <div class="doc-keep">
     <h3 id="sequence">4.8 Sequence diagrams</h3>
-    <p><b>(a)</b> QC grades a return A: the inspection, two status changes and the refund are committed in one transaction. <b>(b)</b> The handoff: after the agent collects a parcel, the next page shows a card that switches to the warehouse in one click.</p>
+    <p>Both diagrams show objects as columns and messages in time order from top to bottom. <b>(a)</b> When the QC inspector grades a return A, the browser posts the form to the qc blueprint, which calls <code>submit_inspection()</code>; that moves the return to Inspected and then Restocked through the state machine and calls <code>issue_refund()</code>. The refund service calculates the amount, moves the return to Refunded and writes the refund, inventory log and history rows in one commit, so either all of it is saved or none. <b>(b)</b> After the agent marks a parcel picked up, <code>hand_off()</code> remembers the return; the next page asks <code>services.handoff</code> who is next, and "Continue as warehouse" posts to <code>/switch</code>, which opens the warehouse page with that parcel highlighted.</p>
     {% call fig("4.8a", "Sequence: QC grades a return and the refund is issued", "", "doc-fig--mermaid") %}{% include "diagrams/seq_refund.svg" %}{% endcall %}
     </div>
     {% call fig("4.8b", "Sequence: handing a return to the next desk", "", "doc-fig--mermaid") %}{% include "diagrams/seq_handoff.svg" %}{% endcall %}
