@@ -106,6 +106,18 @@ function initSwitcher() {
 }
 
 // Handoff card: close it, or continue as the next desk (the role chip flips on arrival).
+// [data-clock] shows the local time: hours:minutes, or with seconds when data-clock="seconds".
+function initClocks() {
+  $$('[data-clock]').forEach((el) => {
+    const secs = el.dataset.clock === 'seconds';
+    const tick = () => {
+      el.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', ...(secs && { second: '2-digit' }) });
+    };
+    tick();
+    setInterval(tick, secs ? 1000 : 15000);
+  });
+}
+
 // Any button with data-print opens the browser's print dialog (the docs page prints to A4).
 function initPrint() {
   $$('[data-print]').forEach((b) => b.addEventListener('click', () => window.print()));
@@ -889,6 +901,7 @@ initThemeToggle();
 initSwitcher();
 initHandoff();
 initPrint();
+initClocks();
 initConfirm();
 initOnce();
 initCommentCounter();

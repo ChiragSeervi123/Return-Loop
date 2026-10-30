@@ -1,23 +1,40 @@
 {% extends "base.html" %}
 {% block title %}Receive{% endblock %}
 {% block page %}warehouse{% endblock %}
-{% block body_class %}ops{% endblock %}
+{% block body_class %}ops warehouse-page{% endblock %}
 {% block content %}
+{{ m.warehouse_backdrop() }}
 {{ m.page_head("%02d" % incoming|length, "WAREHOUSE / INBOUND DOCK", "On the truck", "Parcels agents have collected. Check each one in as it lands.") }}
 
 {% if incoming %}
-<div class="jobs">
+<p class="dock-sign mono" aria-hidden="true"><span>INBOUND DOCK · BAY 04</span><span>SCAN · CHECK · SHELVE</span></p>
+{# Each parcel is a box on a pallet on the rack, with its shipping sticker. #}
+<div class="rack">
   {% for r in incoming %}
-  <div class="job job--row{% if request.args.focus == r.return_code %} job--focus{% endif %}" id="{{ r.return_code }}">
-    <span class="job__slot mono">{{ r.return_code }}<small>PICKED {{ r.updated_at.strftime('%d %b')|upper }}</small></span>
-    <span class="job__main">
-      <b>{{ r.product.name }}{% if r.order_item.quantity > 1 %} × {{ r.order_item.quantity }}{% endif %}</b>
-      <span class="job__line">{{ r.customer.name }} · {{ r.reason }}</span>
-    </span>
-    <form method="post" action="{{ url_for('warehouse.receive_one', code=r.return_code) }}" data-once>
-      <button class="btn btn--primary" type="submit">{{ m.icon('check', 18) }} Mark received at centre</button>
+  {% set qty = r.order_item.quantity %}
+  <article class="parcel-box{% if request.args.focus == r.return_code %} job--focus{% endif %}" id="{{ r.return_code }}" aria-labelledby="pb-{{ r.return_code }}">
+    <div class="parcel-box__crate">
+      <span class="parcel-box__tape" aria-hidden="true"></span>
+      {% if r.reason == 'Damaged' %}<span class="parcel-box__fragile mono" aria-hidden="true">FRAGILE</span>{% endif %}
+      <div class="parcel-label">
+        <div class="parcel-label__head mono"><span>RETURNLOOP · RETURN</span><b>{{ r.return_code }}</b></div>
+        <p class="mono parcel-label__k">ITEM</p>
+        <h2 class="parcel-label__item" id="pb-{{ r.return_code }}">{{ r.product.name }}{% if qty > 1 %} <span>× {{ qty }}</span>{% endif %}</h2>
+        <div class="parcel-label__grid">
+          <div><p class="mono parcel-label__k">FROM</p><p>{{ r.customer.name }}<small>{{ r.customer.address.split(',')[-1].strip() }}</small></p></div>
+          <div><p class="mono parcel-label__k">REASON</p><p>{{ r.reason }}</p></div>
+        </div>
+        <div class="parcel-label__foot">
+          {{ m.barcode(r.return_code) }}
+          <span class="mono">PICKED {{ r.updated_at.strftime('%d %b')|upper }}</span>
+        </div>
+      </div>
+    </div>
+    <form class="parcel-box__action" method="post" action="{{ url_for('warehouse.receive_one', code=r.return_code) }}" data-once>
+      <button class="btn btn--primary btn--block" type="submit">{{ m.icon('check', 18) }} Mark received at centre</button>
     </form>
-  </div>
+    <span class="parcel-box__pallet" aria-hidden="true"></span>
+  </article>
   {% endfor %}
 </div>
 {% else %}

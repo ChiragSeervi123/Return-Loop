@@ -1,5 +1,6 @@
 // Custom cursor: an orange dot with a lagging ring that grows over anything clickable.
-// Fine pointers only, and never with reduced motion.
+// Over a [data-touch] area (the agent's phone screen) it becomes a fingertip that
+// presses and leaves a ripple on tap. Fine pointers only, and never with reduced motion.
 import { reducedMotion } from './lib/webgl.js';
 
 const INTERACTIVE = 'a, button, label, select, summary, [data-cursor], canvas, input[type="checkbox"], input[type="radio"], input[type="file"]';
@@ -24,7 +25,21 @@ export function initCursor() {
     dot.classList.toggle('is-hidden', !!texty);
     ring.classList.toggle('is-hidden', !!texty);
     ring.classList.toggle('is-hover', !!(over && over.closest(INTERACTIVE)));
+    const touch = !!(over && over.closest('[data-touch]'));
+    ring.classList.toggle('is-touch', touch);
+    dot.classList.toggle('is-touch', touch);
   }, { passive: true });
+  window.addEventListener('pointerdown', (e) => {
+    if (!ring.classList.contains('is-touch')) return;
+    ring.classList.add('is-press');
+    const ripple = document.createElement('span');
+    ripple.className = 'touch-ripple';
+    ripple.style.left = `${e.clientX}px`;
+    ripple.style.top = `${e.clientY}px`;
+    document.body.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  }, { passive: true });
+  window.addEventListener('pointerup', () => ring.classList.remove('is-press'), { passive: true });
   document.addEventListener('pointerleave', () => { dot.classList.add('is-hidden'); ring.classList.add('is-hidden'); });
 
   (function loop() {

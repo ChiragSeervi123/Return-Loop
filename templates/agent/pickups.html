@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Pickups{% endblock %}
 {% block page %}agent{% endblock %}
-{% block body_class %}ops{% endblock %}
+{% block body_class %}ops agent-page{% endblock %}
 {% macro pickup_card(p) %}
 {% set r = p.return_request %}
 <a class="job" href="{{ url_for('agent.pickup', pickup_id=p.id) }}">
@@ -24,23 +24,40 @@
 {% else %}
   {% set sub = "No pickups booked." %}
 {% endif %}
-{{ m.page_head(today.strftime('%d'), "AGENT / " ~ user_name|upper, "Today's pickups", sub) }}
+{% set initials %}{% for w in user_name.split() %}{{ w[0] }}{% endfor %}{% endset %}
 
-{% if today_list %}
-  <div class="jobs">{% for p in today_list %}{{ pickup_card(p) }}{% endfor %}</div>
-{% elif not upcoming %}
-  {{ m.empty_state("Nothing today", "No pickups booked for today. Kettle on.") }}
-{% endif %}
+{# The agent works from a phone: the app is the phone screen, the route sits beside it. #}
+<div class="agent-desk">
+  {% call m.phone("Pickups", initials) %}
+    <div class="app-head">
+      <p class="mono app-head__date">{{ today.strftime('%a %d %b')|upper }}</p>
+      <h1 class="app-head__title">Today's pickups</h1>
+      <p class="app-head__sub">{{ sub }}</p>
+    </div>
 
-{% if upcoming %}
-  <h2 class="section-label mono">COMING UP</h2>
-  <div class="jobs jobs--later">
-    {% for p in upcoming %}
-      {% if loop.changed(p.slot_date) %}<div class="jobs__day mono">{{ p.slot_date.strftime('%a %d %b')|upper }}</div>{% endif %}
-      {{ pickup_card(p) }}
-    {% endfor %}
-  </div>
-{% endif %}
+    {% if today_list %}
+      <div class="jobs">{% for p in today_list %}{{ pickup_card(p) }}{% endfor %}</div>
+    {% elif not upcoming %}
+      {{ m.empty_state("Nothing today", "No pickups booked for today. Kettle on.") }}
+    {% endif %}
 
-{{ m.in_flight(moving, "HANDED ON · STILL MOVING") }}
+    {% if upcoming %}
+      <h2 class="section-label mono">COMING UP</h2>
+      <div class="jobs jobs--later">
+        {% for p in upcoming %}
+          {% if loop.changed(p.slot_date) %}<div class="jobs__day mono">{{ p.slot_date.strftime('%a %d %b')|upper }}</div>{% endif %}
+          {{ pickup_card(p) }}
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endcall %}
+
+  <section class="agent-desk__side" aria-label="Today's route">
+    <p class="mono page-head__label">AGENT / {{ user_name|upper }}</p>
+    <p class="agent-desk__title">On the<br><em>route.</em></p>
+    <p class="agent-desk__text">Tap a stop on the phone to open it. Ring, check the parcel, mark it picked up; the warehouse gets it next.</p>
+    <div class="agent-desk__map">{{ m.route_map(n_today + n_later) }}</div>
+    {{ m.in_flight(moving, "HANDED ON · STILL MOVING") }}
+  </section>
+</div>
 {% endblock %}

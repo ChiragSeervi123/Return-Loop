@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Pickup {{ p.return_request.return_code }}{% endblock %}
 {% block page %}agent{% endblock %}
-{% block body_class %}ops{% endblock %}
+{% block body_class %}ops agent-page{% endblock %}
 {% block content %}
 {% set r = p.return_request %}
+{% set initials %}{% for w in user_name.split() %}{{ w[0] }}{% endfor %}{% endset %}
+<div class="agent-desk">
+{% call m.phone("Pickup", initials) %}
 <a class="back link" href="{{ url_for('agent.pickups') }}">{{ m.icon('back', 16) }} All pickups</a>
 
 <article class="slip slip--wide">
@@ -44,4 +47,13 @@
   <p class="notice">{{ m.icon('check') }} <span>Already handled: {{ p.outcome|lower }}.</span></p>
   {% if desk and desk.role != 'agent' %}{{ m.relay_line(desk, r.return_code) }}{% endif %}
 {% endif %}
+{% endcall %}
+
+<section class="agent-desk__side" aria-label="This stop">
+  <p class="mono page-head__label">AGENT / {{ user_name|upper }} · STOP</p>
+  <p class="agent-desk__title">At the<br><em>door.</em></p>
+  <p class="agent-desk__text">Ring {{ r.customer.name }}, check the parcel is the {{ r.product.name|lower }}, then tap <b>Mark picked up</b> on the phone. Nobody home? Tap <b>Customer absent</b>; the second miss cancels the return.</p>
+  <div class="agent-desk__map">{{ m.route_map(1, 1) }}</div>
+</section>
+</div>
 {% endblock %}

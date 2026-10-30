@@ -1753,3 +1753,94 @@ table.mini td:first-child { font-weight: 600; padding-right: 10px; white-space: 
 [data-theme-now="dark"] .role-chip__face { box-shadow: inset 0 0 0 1.5px rgba(255, 91, 31, .55); }
 [data-theme-now="dark"] .empty__art { color: var(--muted); }
 html.theme-fading, html.theme-fading * { transition: background-color .35s ease, color .35s ease, border-color .35s ease !important; }
+
+/* ==========================================================================
+   Role workplaces: each desk gets its own place. Agent = a phone,
+   warehouse = racks and labelled boxes, QC = an inspection table,
+   admin = a control room. The forms inside work exactly as before.
+   ========================================================================== */
+
+/* ---------- agent: the app lives in a phone ---------- */
+.agent-desk { display: grid; gap: 2rem; padding-top: 1.5rem; }
+.agent-desk__title { font: 800 clamp(3rem, 6vw, 5.2rem)/.88 var(--f-display); letter-spacing: -.05em; margin: .4rem 0 1rem; }
+.agent-desk__title em { font-style: normal; color: var(--orange); }
+.agent-desk__text { max-width: 30rem; color: var(--muted); font-size: 1.05rem; margin: 0 0 1.5rem; }
+.agent-desk__map { max-width: 520px; border: 1.5px solid var(--ink); background: var(--paper-hi); box-shadow: 6px 6px 0 var(--ink); margin-bottom: 1rem; }
+.agent-desk__side .flights { grid-template-columns: 1fr; }
+
+.app-bar { display: flex; align-items: center; justify-content: space-between; padding: .4rem 0 .8rem; }
+.app-bar__brand { display: inline-flex; align-items: center; gap: .4rem; font: 700 1rem var(--f-display); }
+.app-bar__brand .icon { color: var(--orange); }
+.app-bar__avatar { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--orange); color: var(--night); font-size: .78rem; font-weight: 500; }
+.app-head { padding: .2rem 0 1rem; }
+.app-head__date { margin: 0; font-size: .7rem; letter-spacing: .14em; color: var(--orange-dk); }
+.app-head__title { font-size: clamp(2rem, 5vw, 2.6rem); font-weight: 800; letter-spacing: -.045em; line-height: .95; margin: .3rem 0 .4rem; }
+.app-head__sub { margin: 0; color: var(--muted); font-size: .95rem; }
+.phone__status, .phone__home { display: none; }
+
+@media (min-width: 1000px) {
+  .agent-desk { grid-template-columns: minmax(0, 1fr) 404px; grid-template-areas: "side phone"; gap: clamp(2rem, 5vw, 5rem); align-items: start; }
+  .agent-desk__side { grid-area: side; padding-top: 1.5rem; }
+  .phone {
+    grid-area: phone; position: sticky; top: 78px; width: 404px; height: min(840px, calc(100vh - 100px)); min-height: 560px;
+    padding: 12px; border-radius: 60px; background: #14110F;
+    box-shadow: 0 0 0 2px #4A4038, inset 0 0 0 2px #2E2721, 0 40px 70px -30px rgba(20, 17, 15, .6), 14px 14px 0 -4px var(--orange);
+  }
+  /* side buttons: action + volume on the left, power on the right */
+  .phone::before { content: ""; position: absolute; left: -5px; top: 150px; width: 4px; height: 96px; border-radius: 2px; background: #2E2721; box-shadow: 0 -52px 0 -30px #2E2721; }
+  .phone::after { content: ""; position: absolute; right: -5px; top: 190px; width: 4px; height: 80px; border-radius: 2px; background: #2E2721; }
+  .phone__screen { position: relative; height: 100%; border-radius: 48px; overflow: hidden; background: var(--paper); display: flex; flex-direction: column; }
+  .phone__status {
+    display: flex; align-items: center; justify-content: space-between; flex: none; height: 50px; padding: 0 30px 0 34px;
+    font-size: .86rem; font-weight: 500; letter-spacing: 0; color: var(--ink);
+  }
+  .phone__status svg { fill: currentColor; }
+  .phone__icons { display: inline-flex; gap: 6px; align-items: center; }
+  .phone__island { position: absolute; left: 50%; top: 11px; width: 118px; height: 33px; translate: -50% 0; border-radius: 20px; background: #000; }
+  .phone__app { flex: 1; overflow-y: auto; padding: 0 16px 34px; scrollbar-width: none; overscroll-behavior: contain; }
+  .phone__app::-webkit-scrollbar { display: none; }
+  .phone__home { display: block; position: absolute; bottom: 8px; left: 50%; width: 132px; height: 5px; translate: -50% 0; border-radius: 3px; background: var(--ink); opacity: .85; }
+
+  /* the app's own, narrower layout */
+  .phone .job { grid-template-columns: 1fr; gap: .3rem; min-height: 0; padding: .8rem .9rem; }
+  .phone .job__slot { display: flex; align-items: baseline; gap: .5rem; }
+  .phone .job__meta { justify-items: start; display: flex; flex-wrap: wrap; gap: .4rem; }
+  .phone .job__main b { font-size: 1.1rem; }
+  .phone .section-label { margin: 1.6rem 0 .7rem; }
+  .phone .slip--wide { margin-top: .4rem; }
+  .phone .slip__name--big { font-size: 2.1rem; }
+  .phone .back { margin-top: 0; }
+  .phone .pickup-actions__buttons { grid-template-columns: 1fr; }
+  .phone .empty { padding: 1.5rem 0; }
+  .phone .empty__art { width: 120px; }
+  .phone .relay-line { margin-top: .8rem; }
+}
+
+/* route map (decoration) */
+.route-map { display: block; width: 100%; height: auto; font-family: var(--f-mono); }
+.route-map__ground { fill: var(--paper-hi); }
+.route-map__river { fill: none; stroke: color-mix(in srgb, var(--steel) 28%, transparent); stroke-width: 14; }
+.route-map__streets path { stroke: var(--line); stroke-width: 6; fill: none; }
+.route-map__streets .route-map__avenue { stroke-width: 9; }
+.route-map__route { fill: none; stroke: var(--orange); stroke-width: 3.5; stroke-dasharray: 9 7; stroke-linejoin: round; }
+.route-map__van rect { fill: var(--ink); }
+.route-map__van text { fill: var(--paper-hi); font-size: 8px; letter-spacing: .08em; }
+.route-map__pin path { fill: var(--ink); }
+.route-map__pin text { fill: var(--paper-hi); font-size: 10px; font-weight: 500; }
+.route-map__pin.is-now path { fill: var(--orange); }
+.route-map__pin.is-now text { fill: var(--night); }
+.route-map__label { fill: var(--muted); font-size: 10px; letter-spacing: .14em; }
+
+/* fingertip cursor over the phone screen, with a ripple on tap */
+.cursor-ring.is-touch {
+  width: 46px; height: 46px; margin: -23px 0 0 -23px;
+  background: rgba(20, 17, 15, .16); border-color: rgba(255, 255, 255, .75); box-shadow: 0 3px 10px rgba(20, 17, 15, .3);
+}
+.cursor-ring.is-touch.is-hover { width: 46px; height: 46px; margin: -23px 0 0 -23px; background: rgba(255, 91, 31, .22); }
+.cursor-ring.is-touch.is-press { width: 36px; height: 36px; margin: -18px 0 0 -18px; background: rgba(20, 17, 15, .32); }
+.cursor-dot.is-touch { opacity: 0; }
+.touch-ripple {
+  position: fixed; z-index: 9499; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%;
+  border: 2px solid rgba(255, 91, 31, .7); pointer-events: none; animation: touch-ripple .55s var(--ease-out) forwards;
+}
+@keyframes touch-ripple { to { transform: scale(4.2); opacity: 0; } }

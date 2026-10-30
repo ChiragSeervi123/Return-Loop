@@ -188,3 +188,71 @@
   <text x="100" y="103" text-anchor="middle" dominant-baseline="middle" class="maker__mono">{{ initials }}</text>
 </svg>
 {%- endmacro %}
+
+
+{# ---------- role workplaces ---------- #}
+
+{# The pickup agent's app, drawn inside a phone on wide screens (plain page on narrow ones).
+   data-touch turns the custom cursor into a fingertip over the screen. #}
+{% macro phone(app_name, initials) -%}
+<div class="phone">
+  <div class="phone__screen" data-touch>
+    <div class="phone__status mono" aria-hidden="true">
+      <span data-clock>9:41</span>
+      <span class="phone__island"></span>
+      <span class="phone__icons">
+        <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+        <svg width="25" height="12" viewBox="0 0 25 12"><rect x=".5" y=".5" width="21" height="11" rx="3" fill="none" stroke="currentColor" opacity=".45"/><rect x="2" y="2" width="15" height="8" rx="1.6"/><rect x="23" y="4" width="1.6" height="4" rx=".8" opacity=".45"/></svg>
+      </span>
+    </div>
+    <div class="phone__app">
+      <header class="app-bar">
+        <span class="app-bar__brand">{{ icon('loop', 18) }} {{ app_name }}</span>
+        <span class="app-bar__avatar mono" aria-hidden="true">{{ initials }}</span>
+      </header>
+      {{ caller() }}
+    </div>
+    <span class="phone__home" aria-hidden="true"></span>
+  </div>
+</div>
+{%- endmacro %}
+
+{# A little street map with the day's stops joined by the van's route (decoration). #}
+{% macro route_map(stops, current=0) -%}
+{% set pins = [(118, 62), (196, 124), (300, 96), (352, 182), (226, 206), (110, 170)] %}
+{% set n = [[stops, 1]|max, pins|length]|min %}
+<svg class="route-map" viewBox="0 0 420 250" aria-hidden="true" focusable="false">
+  <rect width="420" height="250" class="route-map__ground"/>
+  <path d="M0 140 C90 120 140 150 210 140 S330 110 420 132" class="route-map__river"/>
+  <g class="route-map__streets">
+    <path d="M0 40H420M0 90H420M0 196H420M0 232H420"/><path d="M60 0V250M150 0V250M262 0V250M330 0V250M392 0V250"/>
+    <path d="M0 0L170 250M240 0L420 210" class="route-map__avenue"/>
+  </g>
+  <path d="M40 222 L40 196 L60 196 L60 90 {% for x, y in pins[:n] %}L{{ x }} {{ y }} {% endfor %}" class="route-map__route"/>
+  <g class="route-map__van" transform="translate(40 222)"><rect x="-13" y="-9" width="26" height="18" rx="3"/><text y="4" text-anchor="middle">VAN</text></g>
+  {% for x, y in pins[:n] %}
+  <g class="route-map__pin {{ 'is-now' if loop.index == current }}" transform="translate({{ x }} {{ y }})">
+    <path d="M0 0C-9 -11 -11 -15 -11 -20a11 11 0 0 1 22 0c0 5-2 9-11 20z"/><text y="-16" text-anchor="middle">{{ loop.index }}</text>
+  </g>
+  {% endfor %}
+  <text x="410" y="18" text-anchor="end" class="route-map__label">ROUTE · {{ stops }} STOP{{ '' if stops == 1 else 'S' }}</text>
+</svg>
+{%- endmacro %}
+
+
+{# Warehouse racks behind the page, faded towards the middle (decoration). #}
+{% macro warehouse_backdrop() -%}
+<svg class="wh-backdrop" aria-hidden="true" focusable="false">
+  <defs>
+    <pattern id="wh-bay" width="300" height="330" patternUnits="userSpaceOnUse">
+      <rect x="8" y="0" width="9" height="330" class="wh-post"/><rect x="283" y="0" width="9" height="330" class="wh-post"/>
+      {% for y in [104, 214, 324] %}<rect x="8" y="{{ y }}" width="284" height="8" class="wh-beam"/>{% endfor %}
+      {% for x, y, w, h in [(26, 52, 70, 52), (102, 66, 58, 38), (166, 40, 94, 64), (30, 166, 92, 48), (128, 178, 50, 36), (184, 150, 82, 64),
+                            (24, 268, 64, 56), (94, 282, 74, 42), (174, 258, 96, 66)] %}
+      <rect x="{{ x }}" y="{{ y }}" width="{{ w }}" height="{{ h }}" class="wh-box"/><path d="M{{ x + w / 2 }} {{ y }}v{{ h * 0.4 }}" class="wh-tape"/>
+      {% endfor %}
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#wh-bay)"/>
+</svg>
+{%- endmacro %}
