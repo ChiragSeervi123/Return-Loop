@@ -657,7 +657,7 @@ async function initQcBench(box) {
   const buttons = $$('[data-qc-turn]', bench);
   let table = null;
   try {
-    const { initQcTable } = await import('./scenes/qctable.js');
+    const { initQcTable } = await import('./scenes/bench.js');
     table = await initQcTable(host, { ...host.dataset }, {
       onSide: (side) => {
         sideEl.textContent = side.toUpperCase();
@@ -676,6 +676,81 @@ async function initQcBench(box) {
   });
   $$('[data-check]').forEach((c) => c.addEventListener('change', sync));
   sync();
+}
+
+// ---------------------------------------------------------------- refurbisher workshop
+
+// Repair tickets: ticking a fix fills the progress bar and, unless the notes were typed
+// by hand, writes the notes. The workbench shows one ticket's box; Mark repaired plays
+// the fix on the bench, then submits.
+async function initWorkshop() {
+  const tickets = $$('[data-ticket]');
+  tickets.forEach((t) => {
+    const fixes = $$('[data-fix]', t);
+    const bar = $('[data-fix-bar]', t);
+    const count = $('[data-fix-count]', t);
+    const notes = $('[data-fix-notes]', t);
+    notes.addEventListener('input', () => { notes.dataset.typed = notes.value ? '1' : ''; });
+    const update = () => {
+      const done = fixes.filter((f) => f.checked);
+      bar.style.width = `${(done.length / fixes.length) * 100}%`;
+      count.textContent = `${done.length} / ${fixes.length} DONE`;
+      if (!notes.dataset.typed) notes.value = done.map((f) => f.value).join(', ');
+    };
+    fixes.forEach((f) => f.addEventListener('change', update));
+  });
+
+  const benchEl = $('[data-workbench]');
+  if (!benchEl) return;
+  const parcelOf = (t) => ({
+    data: { code: t.dataset.code, item: t.dataset.item, customer: t.dataset.customer, city: t.dataset.city,
+            reason: t.dataset.reason, category: t.dataset.category, comment: t.dataset.comment },
+    found: { intact: t.dataset.intact === 'true', tags: t.dataset.tags === 'true', damage: t.dataset.damage === 'true' },
+  });
+  let current = $('.ticket.is-on-bench') || null;
+  let bench = null;
+  try {
+    const { initRepairBench } = await import('./scenes/bench.js');
+    const first = current && parcelOf(current);
+    bench = await initRepairBench($('[data-canvas-host]', benchEl), first ? first.data : null);
+    if (bench && first) bench.setChecks(first.found);
+  } catch (e) {
+    console.error('3D workbench unavailable.', e);
+  }
+  if (!bench) { benchEl.classList.add('no-webgl'); return; }
+
+  const views = $$('[data-wb-view]', benchEl);
+  const setView = (which) => views.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.wbView === which)));
+  views.forEach((b) => b.addEventListener('click', () => { bench.view(b.dataset.wbView); setView(b.dataset.wbView); }));
+
+  async function putOnBench(t) {
+    if (t === current) return;
+    current?.classList.remove('is-on-bench');
+    current = t;
+    t.classList.add('is-on-bench');
+    $('[data-wb-code]', benchEl).textContent = t.dataset.code;
+    $('[data-wb-item]', benchEl).textContent = t.dataset.item;
+    setView('before');
+    const { data, found } = parcelOf(t);
+    await bench.load(data, found);
+  }
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  tickets.forEach((t) => {
+    $('[data-bench-load]', t).addEventListener('click', () => {
+      benchEl.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
+      putOnBench(t);
+    });
+    t.addEventListener('submit', async (e) => {
+      if (reducedMotion) return;   // no show: submit straight away
+      e.preventDefault();
+      benchEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      await sleep(350);
+      // the bench only animates while on screen, so never wait on it for more than a few seconds
+      await Promise.race([(async () => { await putOnBench(t); await bench.repair(); })(), sleep(6500)]);
+      t.submit();
+    });
+  });
 }
 
 // ---------------------------------------------------------------- team page
@@ -949,6 +1024,7 @@ if (page === 'track') initTrackPage();
 if (page === 'inventory') initInventory();
 if (page === 'admin') initCharts();
 if (page === 'inspect') initInspect();
+if (page === 'refurb') initWorkshop();
 if (page === 'team') initTeamPage();
 if (page === 'deck') initDeck();
 if (page === 'maker') initMakerPage();

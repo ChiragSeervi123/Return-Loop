@@ -362,3 +362,30 @@ def test_each_desk_has_its_own_workplace(client, seeded):
     login(client, "admin", 1)
     page = client.get("/admin/dashboard").data.decode()
     assert "control-page" in page and "Live feed" in page and ret.return_code in page.split("Live feed")[1]
+
+
+def test_workshop_turns_qc_findings_into_a_fix_list(client, seeded):
+    """Broken packaging, missing tags and damage each become a fix; ticked fixes are the notes."""
+    ret = kettle_return(seeded, "receive")
+    found = dict(GOOD, packaging_intact=False, tags_attached=False, visible_damage=True)
+    submit_inspection(ret, 1, found, "B", "Hinge cracked.")
+    login(client, "refurbisher", 1)
+    page = client.get("/refurb/jobs").data.decode()
+    ticket = page.split(f'id="{ret.return_code}"')[1].split("</form>")[0]
+    for todo in ("Re-box and re-tape", "Re-attach the tags", "Repair the damage", "Clean and test", "Hinge cracked."):
+        assert todo in ticket, todo
+    assert 'data-workbench' in page and 'data-intact="false"' in ticket and 'data-damage="true"' in ticket
+
+    job = ret.refurbish_jobs[0]
+    client.post(f"/refurb/jobs/{job.id}/repaired", data={"fix": ["Re-boxed and re-taped", "Re-attached tags"]})
+    assert job.notes == "Re-boxed and re-taped, Re-attached tags" and ret.status == "Re-inspection"
+
+
+def test_service_book_stamps_qc_verdict(client, seeded):
+    ret = kettle_return(seeded, "repair")      # graded B, repaired: waiting for the recheck
+    login(client, "refurbisher", 1)
+    book = client.get("/refurb/jobs").data.decode().split("SERVICE BOOK")[1]
+    assert ret.return_code in book and "AWAITING RECHECK" in book
+    submit_inspection(ret, 1, GOOD, "B")       # the repair passed
+    book = client.get("/refurb/jobs").data.decode().split("SERVICE BOOK")[1]
+    assert "PASSED · RESTOCKED" in book

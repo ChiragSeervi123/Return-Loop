@@ -1,42 +1,87 @@
 {% extends "base.html" %}
 {% block title %}Repair jobs{% endblock %}
 {% block page %}refurb{% endblock %}
-{% block body_class %}ops{% endblock %}
+{% block body_class %}ops workshop-page{% endblock %}
 {% block content %}
-{{ m.page_head("%02d" % jobs|length, "REFURBISHER / BENCH", "On the bench", "Grade B items. Fix them, then send them back to QC for a second look.") }}
+{{ m.workshop_backdrop() }}
+{{ m.page_head("%02d" % tickets|length, "REFURBISHER / WORKSHOP", "On the bench", "Grade B items. Fix what QC found, then send them back for a second look.") }}
 
-{% if jobs %}
-<div class="jobs">
-  {% for job in jobs %}
-  {% set r = job.return_request %}
-  <form class="job job--bench{% if request.args.focus == r.return_code %} job--focus{% endif %}" id="{{ r.return_code }}" method="post" action="{{ url_for('refurbisher.repaired', job_id=job.id) }}" data-once>
-    <span class="job__slot mono">{{ r.return_code }}<small>IN {{ job.created_at.strftime('%d %b')|upper }}</small></span>
-    <span class="job__main">
-      <b>{{ r.product.name }}</b>
-      <span class="job__line">{{ m.icon('scan', 16) }} QC: {{ r.latest_report.remarks or 'No remarks.' }}</span>
+{% set focus = request.args.focus %}
+{% set first = (tickets|selectattr('ret.return_code', 'equalto', focus)|first) or (tickets|first) %}
+
+{# The workbench: the selected job's box as QC left it; Mark repaired fixes it here (static/js/scenes/bench.js). #}
+<section class="workbench" aria-label="Workbench" data-workbench>
+  <div class="workbench__stage" data-canvas-host></div>
+  <div class="workbench__hud mono" aria-hidden="true">
+    <span><i class="qc-bench__lamp"></i> WORKBENCH · <b data-wb-code>{{ first.ret.return_code if first else 'CLEAR' }}</b></span>
+    <span data-wb-item>{{ first.ret.product.name if first else 'Nothing waiting for repair' }}</span>
+  </div>
+  {% if tickets %}
+  <div class="workbench__views" role="group" aria-label="Show the box">
+    <button type="button" class="qc-bench__side mono" data-wb-view="before" aria-pressed="true">BEFORE · AS QC FOUND IT</button>
+    <button type="button" class="qc-bench__side mono" data-wb-view="after" aria-pressed="false">AFTER · REPAIRED</button>
+  </div>
+  <p class="qc-bench__hint mono" aria-hidden="true">DRAG TO TURN · MARK REPAIRED TO FIX IT</p>
+  {% else %}
+  <p class="workbench__clear mono">BENCH IS CLEAR · GRADE B ITEMS LAND HERE AFTER QC</p>
+  {% endif %}
+</section>
+
+{% if tickets %}
+<h2 class="section-label mono">REPAIR TICKETS · {{ tickets|length }} OPEN</h2>
+<div class="tickets">
+  {% for t in tickets %}
+  {% set r, job, rep = t.ret, t.job, t.report %}
+  <form class="ticket{% if t.days >= 4 %} is-late{% elif t.days >= 2 %} is-slow{% endif %}{% if focus == r.return_code %} job--focus{% endif %}{% if t is sameas first %} is-on-bench{% endif %}"
+    id="{{ r.return_code }}" method="post" action="{{ url_for('refurbisher.repaired', job_id=job.id) }}" data-once data-ticket
+    data-code="{{ r.return_code }}" data-item="{{ r.product.name }}{% if r.order_item.quantity > 1 %} × {{ r.order_item.quantity }}{% endif %}"
+    data-customer="{{ r.customer.name }}" data-city="{{ r.customer.address.split(',')[-1].strip() }}" data-reason="{{ r.reason }}"
+    data-category="{{ r.product.category }}" data-comment="{{ r.comment or '' }}"
+    data-intact="{{ 'true' if not rep or rep.packaging_intact else 'false' }}" data-tags="{{ 'true' if not rep or rep.tags_attached else 'false' }}"
+    data-damage="{{ 'true' if rep and rep.visible_damage else 'false' }}">
+    <span class="ticket__clip" aria-hidden="true"></span>
+    <header class="ticket__head mono"><span>REPAIR TICKET</span><b>{{ r.return_code }}</b></header>
+    <div class="ticket__body">
+      <p class="ticket__age mono">ON THE BENCH · {{ 'SINCE TODAY' if t.days == 0 else (t.days ~ ' DAY' ~ ('' if t.days == 1 else 'S')) }}</p>
+      <h3 class="ticket__item">{{ r.product.name }}{% if r.order_item.quantity > 1 %} × {{ r.order_item.quantity }}{% endif %}</h3>
+      <p class="ticket__from">{{ r.customer.name }} · {{ r.reason }}</p>
+      <blockquote class="ticket__qc">“{{ rep.remarks if rep and rep.remarks else 'No remarks.' }}”<cite class="mono">QC · {{ t.inspector }} · GRADE B</cite></blockquote>
+      <fieldset class="ticket__fixes">
+        <legend class="mono">FIX LIST · FROM QC'S CHECKLIST</legend>
+        {% for todo, done_text in t.fixes %}
+        <label class="ticket__fix"><input type="checkbox" name="fix" value="{{ done_text }}" data-fix> <span>{{ todo }}</span></label>
+        {% endfor %}
+        <div class="ticket__bar" aria-hidden="true"><span data-fix-bar></span></div>
+        <p class="ticket__count mono" data-fix-count aria-live="polite">0 / {{ t.fixes|length }} DONE</p>
+      </fieldset>
       <label class="sr-only" for="notes-{{ job.id }}">Repair notes for {{ r.return_code }}</label>
-      <input id="notes-{{ job.id }}" type="text" name="notes" maxlength="300" placeholder="What did you fix?">
-    </span>
-    <button class="btn btn--primary" type="submit">{{ m.icon('wrench', 18) }} Mark repaired</button>
+      <input id="notes-{{ job.id }}" type="text" name="notes" maxlength="300" placeholder="What did you fix? (ticked fixes fill this in)" data-fix-notes>
+    </div>
+    <footer class="ticket__actions">
+      <button type="button" class="btn btn--ghost btn--small" data-bench-load>{{ m.icon('box', 16) }} On the bench</button>
+      <button class="btn btn--primary" type="submit">{{ m.icon('wrench', 18) }} Mark repaired</button>
+    </footer>
   </form>
   {% endfor %}
 </div>
-{% else %}
-  {{ m.empty_state("Bench is empty", "No grade B items waiting. Sharpen something.") }}
 {% endif %}
 
-{{ m.in_flight(moving, "REPAIRED · STILL MOVING") }}
-
-{% if done %}
-<h2 class="section-label mono">RECENTLY FIXED</h2>
-<ul class="ledger ledger--plain">
-  {% for job in done %}
-  <li class="ledger__row"><span class="ledger__link">
-    <span class="mono ledger__code">{{ job.return_request.return_code }}</span>
-    <span class="ledger__name">{{ job.return_request.product.name }}<small class="muted">{{ job.notes or 'Repaired' }}</small></span>
-    {{ m.badge(job.return_request.status) }}
-  </span></li>
+{% if records %}
+<h2 class="section-label mono">SERVICE BOOK · RECENT REPAIRS</h2>
+<div class="service-book">
+  {% for s in records %}
+  {% set r, job = s.ret, s.job %}
+  <article class="service">
+    <header class="service__head mono"><span>SERVICE RECORD · {{ r.return_code }}</span><span>{{ job.completed_at.strftime('%d %b %Y')|upper }}</span></header>
+    <div class="service__body">
+      <h3 class="service__item">{{ r.product.name }}</h3>
+      <p class="service__line"><span class="mono">WORK DONE</span>{{ job.notes or 'Repaired.' }}</p>
+      <p class="service__line"><span class="mono">TECHNICIAN</span><span class="service__signature">{{ s.technician }}</span></p>
+      {% if s.stamp %}<span class="service__stamp service__stamp--{{ s.tone }}">{{ s.stamp }}</span>{% endif %}
+    </div>
+    {% if s.desk %}<div class="service__relay">{{ m.relay_line(s.desk, r.return_code, 'relay-line--flush') }}</div>{% endif %}
+  </article>
   {% endfor %}
-</ul>
+</div>
 {% endif %}
 {% endblock %}

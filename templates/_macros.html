@@ -256,3 +256,33 @@
   <rect width="100%" height="100%" fill="url(#wh-bay)"/>
 </svg>
 {%- endmacro %}
+
+
+{# Workshop pegboard behind the refurbisher's page, with tools hung on it (decoration). #}
+{% macro workshop_backdrop() -%}
+<svg class="wh-backdrop ws-backdrop" aria-hidden="true" focusable="false">
+  <defs>
+    <pattern id="ws-holes" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="12" cy="12" r="2.6" class="ws-hole"/></pattern>
+    <pattern id="ws-tools" width="420" height="360" patternUnits="userSpaceOnUse">
+      {# hammer #}
+      <rect x="54" y="36" width="10" height="132" rx="3" class="ws-wood"/><rect x="26" y="22" width="66" height="26" rx="3" class="ws-steel"/>
+      {# spanners #}
+      {% for x, len in [(130, 104), (162, 128), (198, 150)] %}
+      <rect x="{{ x - 5 }}" y="40" width="10" height="{{ len }}" rx="4" class="ws-steel"/>
+      <path d="M{{ x - 12 }} 40a12 12 0 1 1 24 0" class="ws-ring"/>
+      {% endfor %}
+      {# screwdrivers #}
+      {% for x, len in [(250, 96), (280, 110), (310, 88)] %}
+      <rect x="{{ x - 8 }}" y="28" width="16" height="50" rx="6" class="{{ 'ws-grip' if loop.index is odd else 'ws-steel' }}"/>
+      <rect x="{{ x - 2 }}" y="78" width="4" height="{{ len }}" class="ws-steel"/>
+      {% endfor %}
+      {# pliers #}
+      <path d="M364 34q12 70-8 148M384 34q-12 70 8 148" class="ws-plier"/><path d="M357 132l-4 50M391 132l4 50" class="ws-plier ws-plier--grip"/>
+      {# tape rolls on a peg #}
+      <circle cx="80" cy="262" r="22" class="ws-tape"/><circle cx="108" cy="276" r="22" class="ws-tape"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#ws-holes)"/>
+  <rect width="100%" height="100%" fill="url(#ws-tools)"/>
+</svg>
+{%- endmacro %}

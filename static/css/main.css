@@ -2009,3 +2009,104 @@ body.control-page {
 .ctl-feed__who { color: var(--muted); text-align: right; }
 @media (max-width: 760px) { .ctl-feed__list li { grid-template-columns: 1fr auto; } .ctl-feed__who { text-align: left; } }
 .control-page .stamp { mix-blend-mode: normal; }
+
+/* ---------- refurbisher: the workshop ---------- */
+.ws-backdrop { opacity: .2; }
+[data-theme-now="dark"] .ws-backdrop { opacity: .22; }
+.ws-hole { fill: currentColor; opacity: .55; }
+.ws-steel { fill: currentColor; }
+.ws-wood { fill: #8C6A43; }
+.ws-grip { fill: var(--orange); }
+.ws-ring { fill: none; stroke: currentColor; stroke-width: 8; }
+.ws-plier { fill: none; stroke: currentColor; stroke-width: 7; stroke-linecap: round; }
+.ws-plier--grip { stroke: var(--orange); stroke-width: 10; }
+.ws-tape { fill: none; stroke: #C9AE80; stroke-width: 16; }
+
+.workbench {
+  position: relative; height: clamp(360px, 52vh, 480px); margin: 0 0 2.2rem; overflow: hidden;
+  background: radial-gradient(ellipse at 58% 18%, rgba(255, 217, 168, .2), transparent 55%), #241A12;
+  color: var(--on-night); clip-path: var(--notch);
+}
+.workbench__stage { position: absolute; inset: 0; }
+.workbench__stage canvas { cursor: grab; }
+.workbench__stage canvas:active { cursor: grabbing; }
+.workbench__hud {
+  position: absolute; left: 1.1rem; right: 1.1rem; top: .9rem; display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem;
+  font-size: .7rem; letter-spacing: .16em; color: #E9DFCB; pointer-events: none; text-shadow: 0 1px 6px rgba(0, 0, 0, .6);
+}
+.workbench__hud b { color: var(--orange); font-weight: 500; }
+.workbench__views { position: absolute; left: 1rem; bottom: 1rem; display: flex; flex-wrap: wrap; gap: 6px; max-width: calc(100% - 2rem); }
+.workbench__clear {
+  position: absolute; left: 50%; bottom: 1.3rem; translate: -50% 0; margin: 0; padding: .45rem .9rem; white-space: nowrap;
+  font-size: .7rem; letter-spacing: .16em; color: #E9DFCB; background: rgba(20, 17, 15, .65); border: 1.5px dashed rgba(246, 241, 231, .4);
+}
+.workbench.no-webgl { display: none; }
+
+/* repair tickets, clipped on with a bulldog clip */
+.tickets { display: grid; gap: 2.4rem 1.4rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); padding-top: .6rem; }
+.ticket {
+  position: relative; display: grid; background: #FBF8F1; color: #14110F;
+  border: 1.5px solid #14110F; box-shadow: 6px 6px 0 rgba(20, 17, 15, .85); transform: rotate(-.6deg);
+  --edge: #8F8A80;
+}
+.ticket:nth-child(even) { transform: rotate(.5deg); }
+.ticket.is-slow { --edge: #D99A1E; }
+.ticket.is-late { --edge: #B3392B; }
+.ticket::before { content: ""; position: absolute; left: -1.5px; top: -1.5px; bottom: -1.5px; width: 8px; background: var(--edge); }
+.ticket.is-on-bench { box-shadow: 6px 6px 0 var(--orange); }
+.ticket__clip {
+  position: absolute; top: -18px; left: 50%; width: 74px; height: 30px; translate: -50% 0; z-index: 1;
+  background: linear-gradient(#5A5650, #2F2C28); border-radius: 4px 4px 2px 2px;
+  box-shadow: 0 3px 4px rgba(0, 0, 0, .35), inset 0 2px 0 rgba(255, 255, 255, .2);
+}
+.ticket__clip::before, .ticket__clip::after {
+  content: ""; position: absolute; top: -14px; width: 4px; height: 18px; border: 3px solid #A9A49B; border-bottom: 0; border-radius: 10px 10px 0 0;
+}
+.ticket__clip::before { left: 14px; }
+.ticket__clip::after { right: 14px; }
+.ticket__head { display: flex; justify-content: space-between; gap: .5rem; padding: 1.1rem 1.1rem .45rem 1.4rem; font-size: .68rem; letter-spacing: .16em; border-bottom: 1.5px dashed rgba(20, 17, 15, .3); }
+.ticket__head b { font-weight: 500; color: #C2410C; }
+.ticket__body { display: grid; gap: .55rem; padding: .8rem 1.1rem 1rem 1.4rem; }
+.ticket__age { margin: 0; font-size: .64rem; letter-spacing: .16em; color: var(--edge); font-weight: 500; }
+.ticket:not(.is-slow):not(.is-late) .ticket__age { color: #57554F; }
+.ticket__item { margin: 0; font: 800 1.45rem/1.08 var(--f-display); letter-spacing: -.03em; }
+.ticket__from { margin: 0; color: #57554F; font-size: .92rem; }
+.ticket__qc { margin: .1rem 0; padding: .55rem .8rem; background: #F2EADA; font-size: .92rem; border-left: 3px solid #D99A1E; }
+.ticket__qc cite { display: block; margin-top: .3rem; font-style: normal; font-size: .64rem; letter-spacing: .12em; color: #57554F; }
+.ticket__fixes { border: 0; padding: 0; margin: .2rem 0 0; display: grid; gap: .1rem; }
+.ticket__fixes legend { font-size: .64rem; letter-spacing: .16em; color: #57554F; margin-bottom: .3rem; }
+.ticket__fix { display: flex; align-items: center; gap: .6rem; min-height: 36px; cursor: pointer; font-weight: 600; }
+.ticket__fix input { width: 20px; height: 20px; accent-color: #2F7D4F; flex: none; }
+.ticket__fix:has(input:checked) span { text-decoration: line-through; text-decoration-color: #2F7D4F; text-decoration-thickness: 2px; color: #57554F; }
+.ticket__bar { height: 6px; background: #E9DFCB; margin-top: .4rem; }
+.ticket__bar span { display: block; height: 100%; width: 0; background: #2F7D4F; transition: width .35s var(--ease-out); }
+.ticket__count { margin: .2rem 0 0; font-size: .64rem; letter-spacing: .14em; color: #57554F; }
+.ticket input[type="text"] { background: #FFFFFF; color: #14110F; border-color: #14110F; }
+.ticket__actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding: .8rem 1.1rem 1.1rem 1.4rem; border-top: 1.5px dashed rgba(20, 17, 15, .3); }
+.ticket__actions .btn--ghost { color: #14110F; border-color: #14110F; --shadow: #14110F; }
+.ticket.job--focus { animation: none; box-shadow: 0 0 0 4px var(--orange), 6px 6px 0 var(--orange); }
+
+/* the service book: stamped records of finished repairs */
+.service-book { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+.service { position: relative; background: var(--paper-hi); border: 1.5px solid var(--ink); }
+.service__head {
+  display: flex; justify-content: space-between; gap: .5rem; padding: .5rem 1rem; font-size: .64rem; letter-spacing: .14em;
+  background: repeating-linear-gradient(90deg, var(--kraft) 0 12px, transparent 12px 14px), var(--paper); border-bottom: 1.5px solid var(--ink);
+}
+.service__body { position: relative; display: grid; gap: .45rem; padding: .9rem 1rem 1.1rem; }
+.service__item { margin: 0 0 .2rem; font: 700 1.2rem var(--f-display); letter-spacing: -.02em; max-width: 70%; }
+.service__line { margin: 0; display: grid; gap: .1rem; font-size: .92rem; }
+.service__line .mono { font-size: .62rem; letter-spacing: .14em; color: var(--muted); }
+.service__signature {
+  font: italic 600 1.35rem/1.1 var(--f-display); letter-spacing: -.02em; transform: rotate(-3deg); transform-origin: left; width: max-content;
+  padding-bottom: .15rem; background: linear-gradient(var(--ink), var(--ink)) 0 100% / 100% 1.5px no-repeat;
+}
+.service__stamp {
+  position: absolute; right: .9rem; top: .8rem; padding: .25rem .55rem; transform: rotate(-8deg);
+  font: 800 .78rem/1.1 var(--f-display); letter-spacing: .04em; text-align: center; max-width: 9rem;
+  border: 2.5px solid currentColor; filter: url(#rough); color: var(--muted);
+}
+.service__stamp--a { color: var(--a-ink); }
+.service__stamp--c { color: var(--c-ink); }
+.service__stamp--wait { color: var(--b-ink); border-style: dashed; }
+.service__relay { padding: 0 1rem 1rem; }
