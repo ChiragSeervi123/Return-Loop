@@ -1844,3 +1844,79 @@ html.theme-fading, html.theme-fading * { transition: background-color .35s ease,
   border: 2px solid rgba(255, 91, 31, .7); pointer-events: none; animation: touch-ripple .55s var(--ease-out) forwards;
 }
 @keyframes touch-ripple { to { transform: scale(4.2); opacity: 0; } }
+
+/* ---------- warehouse: racks behind, parcels on pallets with their stickers ---------- */
+.wh-backdrop {
+  position: fixed; inset: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none;
+  color: var(--ink); opacity: .1;
+  -webkit-mask-image: linear-gradient(90deg, #000 0 12%, transparent 32% 68%, #000 88%);
+  mask-image: linear-gradient(90deg, #000 0 12%, transparent 32% 68%, #000 88%);
+}
+[data-theme-now="dark"] .wh-backdrop { opacity: .16; }
+.wh-post { fill: var(--orange); }
+.wh-beam { fill: currentColor; }
+.wh-box { fill: var(--kraft-dk); stroke: currentColor; stroke-width: 1.5; }
+.wh-tape { stroke: currentColor; stroke-width: 6; opacity: .25; }
+
+.dock-sign {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 2rem;
+  margin: 0 0 1.8rem; padding: .55rem 1rem .55rem 3.2rem; font-size: .74rem; letter-spacing: .16em;
+  color: var(--night); position: relative;
+  background: var(--b) repeating-linear-gradient(-45deg, var(--night) 0 10px, transparent 10px 20px) 0 0 / 2.4rem 100% no-repeat;
+}
+
+.rack {
+  position: relative; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
+  column-gap: 0; row-gap: 2.2rem; padding: 0 14px; margin-bottom: 1rem;
+}
+/* the rack's two orange uprights, with their bolt holes */
+.rack::before, .rack::after {
+  content: ""; position: absolute; top: -10px; bottom: -14px; width: 14px;
+  background: radial-gradient(circle, var(--night) 2px, transparent 2.5px) 50% 8px / 14px 22px repeat-y, var(--orange);
+}
+.rack::before { left: 0; }
+.rack::after { right: 0; }
+
+.parcel-box { position: relative; display: grid; gap: .8rem; padding: 1.8rem 1.1rem 0; }
+.parcel-box__crate {
+  position: relative; padding: 2.1rem 1.1rem 1.2rem;
+  background: linear-gradient(180deg, #D9C39A 0 10px, #C9AE80 10px 12px, #CDB58A 12px), #CDB58A;
+  border: 1.5px solid #8C7347; box-shadow: inset -14px 0 0 rgba(90, 64, 30, .12), 0 10px 18px -12px rgba(20, 17, 15, .6);
+  color: #14110F;
+}
+.parcel-box__tape { position: absolute; left: calc(50% - 24px); top: 0; width: 48px; height: 46px; background: rgba(233, 214, 170, .9); border-inline: 1px solid rgba(140, 115, 71, .35); }
+.parcel-box__fragile {
+  position: absolute; right: .8rem; top: .55rem; padding: .1rem .45rem; font-size: .66rem; letter-spacing: .16em;
+  color: #B3392B; border: 2px solid #B3392B; transform: rotate(4deg); filter: url(#rough);
+}
+.parcel-label {
+  position: relative; background: #FBF8F1; border: 1px solid rgba(20, 17, 15, .25); padding: 0 .9rem .7rem;
+  transform: rotate(-1.2deg); box-shadow: 0 2px 0 rgba(20, 17, 15, .12);
+}
+.parcel-box:nth-child(even) .parcel-label { transform: rotate(.9deg); }
+.parcel-label__head {
+  display: flex; justify-content: space-between; gap: .5rem; margin: 0 -.9rem .6rem; padding: .3rem .9rem;
+  background: #FF5B1F; color: #14110F; font-size: .66rem; letter-spacing: .12em;
+}
+.parcel-label__head b { font-weight: 500; }
+.parcel-label__k { margin: 0; font-size: .6rem; letter-spacing: .16em; color: #57554F; }
+.parcel-label__item { font: 800 1.35rem/1.1 var(--f-display); letter-spacing: -.03em; margin: .1rem 0 .6rem; color: #14110F; }
+.parcel-label__item span { color: #FF5B1F; }
+.parcel-label__grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: .6rem; border-top: 1px dashed rgba(20, 17, 15, .3); padding-top: .5rem; }
+.parcel-label__grid p:not(.parcel-label__k) { margin: .1rem 0 0; font-weight: 600; font-size: .92rem; line-height: 1.25; }
+.parcel-label__grid small { display: block; font-weight: 400; color: #57554F; font-size: .78rem; }
+.parcel-label__foot { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin-top: .7rem; font-size: .62rem; letter-spacing: .12em; color: #57554F; }
+.parcel-label__foot .barcode { width: 120px; height: 26px; }
+.parcel-box__action { position: relative; z-index: 1; }
+/* pallet under the box, then the rack beam it stands on */
+.parcel-box__pallet {
+  display: block; height: 30px; margin: 0 .4rem;
+  background:
+    linear-gradient(#A88A5B, #A88A5B) 0 0 / 100% 7px no-repeat,
+    linear-gradient(90deg, #8C7347 0 34px, transparent 34px calc(50% - 17px), #8C7347 calc(50% - 17px) calc(50% + 17px), transparent calc(50% + 17px) calc(100% - 34px), #8C7347 calc(100% - 34px)) 0 7px / 100% 14px no-repeat,
+    linear-gradient(#A88A5B, #A88A5B) 0 21px / 100% 7px no-repeat;
+}
+.parcel-box::after { content: ""; display: block; height: 14px; margin: 0 -1.1rem; background: linear-gradient(var(--ink) 0 3px, var(--orange) 3px 11px, color-mix(in srgb, var(--orange) 60%, var(--night)) 11px); }
+/* the handoff lands on one box: light it up */
+.parcel-box.job--focus { border: 0; box-shadow: none; animation: none; }
+.parcel-box.job--focus .parcel-box__crate { box-shadow: 0 0 0 4px var(--orange), 0 0 30px 6px rgba(255, 91, 31, .45); animation: job-focus 1.2s var(--ease-out) .3s both; }

@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Inventory{% endblock %}
 {% block page %}inventory{% endblock %}
+{% block body_class %}warehouse-page{% endblock %}
 {% block content %}
+{{ m.warehouse_backdrop() }}
 {{ m.page_head("%02d" % (counts.values()|sum), "WAREHOUSE / WHERE IT ALL ENDED UP", "Inventory", "Units that came back, by fate. Hover a stack for the exact count.") }}
 
 {% set tone = {'Restocked': 'a', 'Refurbished': 'b', 'Scrapped': 'c'} %}
