@@ -7,6 +7,24 @@
 {{ m.page_head("RE" if recheck else "QC", "QC / " ~ ret.return_code, "Second look" if recheck else "Inspect & grade",
    "It came back from the bench. Did the repair hold?" if recheck else "Tick what you see. We'll suggest a grade; you have the final say.") }}
 
+{# The parcel on the inspection table: turn it to see every side (static/js/scenes/qctable.js). #}
+<section class="qc-bench" aria-label="Inspection table" data-qc-bench>
+  <div class="qc-bench__stage" data-canvas-host
+    data-code="{{ ret.return_code }}" data-item="{{ ret.product.name }}{% if ret.order_item.quantity > 1 %} × {{ ret.order_item.quantity }}{% endif %}"
+    data-customer="{{ ret.customer.name }}" data-city="{{ ret.customer.address.split(',')[-1].strip() }}"
+    data-reason="{{ ret.reason }}" data-category="{{ ret.product.category }}" data-comment="{{ ret.comment or '' }}"></div>
+  <div class="qc-bench__hud mono" aria-hidden="true">
+    <span><i class="qc-bench__lamp"></i> INSPECTION TABLE · {{ ret.return_code }}</span>
+    <span>FACING YOU · <b data-qc-side>FRONT</b></span>
+  </div>
+  <div class="qc-bench__sides" role="group" aria-label="Turn the parcel to a side">
+    {% for side in ['front', 'right', 'back', 'left', 'top', 'bottom'] %}
+    <button type="button" class="qc-bench__side mono" data-qc-turn="{{ side }}">{{ side|upper }}</button>
+    {% endfor %}
+  </div>
+  <p class="qc-bench__hint mono" aria-hidden="true">DRAG TO TURN · THE CHECKLIST MARKS THE BOX</p>
+</section>
+
 <div class="inspect">
   <aside class="slip slip--mini inspect__item" aria-label="Item details">
     <div class="slip__head"><span class="mono">{{ ret.return_code }}</span><span class="mono">{{ ret.reason|upper }}</span></div>

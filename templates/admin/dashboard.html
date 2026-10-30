@@ -1,13 +1,27 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block page %}admin{% endblock %}
+{% block body_class %}control-page{% endblock %}
+{% block nav_class %}nav--dark{% endblock %}
 {% block head %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
 {% endblock %}
 {% block content %}
-{{ m.page_head("Σ", "ADMIN / CONTROL TOWER", "The whole loop, at a glance.", "Live from the database. Refresh for the latest.") }}
+{# The admin's control room: dark in both themes, numbers on screens, a live event feed. #}
+<header class="ctl-head">
+  <div>
+    <p class="mono page-head__label">ADMIN / CONTROL ROOM</p>
+    <h1 class="ctl-head__title">The whole loop,<br><em>on the wall.</em></h1>
+  </div>
+  <dl class="ctl-status mono">
+    <div><dt>STATUS</dt><dd><i class="ctl-led"></i> ONLINE</dd></div>
+    <div><dt>IN THE LOOP</dt><dd>{{ stats.in_progress }}</dd></div>
+    <div><dt>LOCAL TIME</dt><dd data-clock="seconds">--:--:--</dd></div>
+    <div><dt>OPERATOR</dt><dd>{{ user_name|upper }}</dd></div>
+  </dl>
+</header>
 
-<section class="kpis" aria-label="Key numbers">
+<section class="kpis ctl-screens" aria-label="Key numbers">
   <div class="kpi kpi--hero">
     <span class="mono kpi__label">REFUNDED SO FAR</span>
     <span class="kpi__num" data-count="{{ stats.refunded_amount }}" data-prefix="₹">{{ stats.refunded_amount|inr }}</span>
@@ -50,6 +64,24 @@
     </ul>
   </section>
 </div>
+
+<section class="panel ctl-feed" aria-labelledby="feed-h">
+  <h2 id="feed-h" class="panel__title"><i class="ctl-led"></i> Live feed <span class="mono ctl-feed__sub">LATEST STATUS CHANGES</span></h2>
+  {% if feed %}
+  <ol class="ctl-feed__list mono">
+    {% for h in feed %}
+    <li>
+      <span class="ctl-feed__when">{{ h.created_at.strftime('%d %b %H:%M') }}</span>
+      <span class="ctl-feed__code">{{ h.return_request.return_code }}</span>
+      <span>{{ m.badge(h.to_status) }}</span>
+      <span class="ctl-feed__who">{{ h.actor_name }} · {{ role_labels.get(h.actor_role, h.actor_role) }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="muted">No events yet.</p>
+  {% endif %}
+</section>
 
 {{ m.in_flight(moving, "WHERE EVERY RETURN IS RIGHT NOW", "Nothing moving. Every return is finished.") }}
 

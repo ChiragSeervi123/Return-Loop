@@ -337,3 +337,28 @@ def test_docs_link_sits_between_ppt_and_team(client, seeded):
     page = client.get("/").data.decode()
     nav = page.split('aria-label="Main"')[1].split("</nav>")[0]
     assert nav.index(">PPT<") < nav.index(">Docs<") < nav.index(">Team<")
+
+
+def test_each_desk_has_its_own_workplace(client, seeded):
+    """Agent works in a phone, warehouse sees labelled parcels, QC has the inspection
+    table, admin has the control room with a live feed."""
+    ret = kettle_return(seeded, "pickup")            # collected, waiting at the dock
+    login(client, "agent", 1)
+    page = client.get("/agent/pickups").data.decode()
+    assert 'class="phone"' in page and "data-touch" in page and "route-map" in page
+
+    login(client, "warehouse", 1)
+    page = client.get("/warehouse/receive").data.decode()
+    sticker = page.split(f'id="{ret.return_code}"')[1].split("</article>")[0]
+    assert ret.product.name in sticker and ret.customer.name in sticker and ret.reason in sticker
+    assert "Mark received at centre" in sticker
+
+    client.post(f"/warehouse/receive/{ret.return_code}")
+    login(client, "qc", 1)
+    page = client.get(f"/qc/inspect/{ret.return_code}").data.decode()
+    assert "data-qc-bench" in page and page.count("data-qc-turn=") == 6
+    assert f'data-code="{ret.return_code}"' in page
+
+    login(client, "admin", 1)
+    page = client.get("/admin/dashboard").data.decode()
+    assert "control-page" in page and "Live feed" in page and ret.return_code in page.split("Live feed")[1]

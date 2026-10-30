@@ -527,9 +527,10 @@ function initCharts() {
   Chart.defaults.font.size = 12;
 
   // Chart colours come from the theme tokens, so they work in light and dark.
-  const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   const charts = [];
   function paint(chart) {
+    // read the tokens where the chart sits: the admin control room is dark in both themes
+    const token = (name) => getComputedStyle(chart.canvas).getPropertyValue(name).trim();
     const ink = token('--ink');
     Chart.defaults.color = token('--muted');
     if (chart.config.type === 'bar') {
@@ -626,6 +627,7 @@ function initInspect() {
   }
   $$('[data-check]', form).forEach((c) => c.addEventListener('change', update));
   update();
+  initQcBench(box);
 
   let sending = false;
   form.addEventListener('submit', async (e) => {
@@ -644,6 +646,36 @@ function initInspect() {
     });
     form.submit();
   });
+}
+
+// The parcel on the inspection table, which mirrors the checklist.
+async function initQcBench(box) {
+  const bench = $('[data-qc-bench]');
+  if (!bench) return;
+  const host = $('[data-canvas-host]', bench);
+  const sideEl = $('[data-qc-side]', bench);
+  const buttons = $$('[data-qc-turn]', bench);
+  let table = null;
+  try {
+    const { initQcTable } = await import('./scenes/qctable.js');
+    table = await initQcTable(host, { ...host.dataset }, {
+      onSide: (side) => {
+        sideEl.textContent = side.toUpperCase();
+        buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.qcTurn === side)));
+      },
+    });
+  } catch (e) {
+    console.error('3D inspection table unavailable.', e);
+  }
+  if (!table) { bench.classList.add('no-webgl'); return; }
+  bench.classList.add('has-webgl');
+  buttons.forEach((b) => b.addEventListener('click', () => table.show(b.dataset.qcTurn)));
+  const sync = () => table.setChecks({
+    intact: box('packaging_intact').checked, tags: box('tags_attached').checked,
+    damage: box('visible_damage').checked, matches: box('item_matches_order').checked,
+  });
+  $$('[data-check]').forEach((c) => c.addEventListener('change', sync));
+  sync();
 }
 
 // ---------------------------------------------------------------- team page
