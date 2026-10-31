@@ -19,6 +19,13 @@
     <div><dt>LOCAL TIME</dt><dd data-clock="seconds">--:--:--</dd></div>
     <div><dt>OPERATOR</dt><dd>{{ user_name|upper }}</dd></div>
   </dl>
+  {# Before a demo: fresh dates and returnable items again (see admin.reset). #}
+  <form class="ctl-reset" method="post" action="{{ url_for('admin.reset') }}">
+    <button class="btn btn--ghost btn--small" type="submit" data-confirm="Reset the demo data?"
+      data-confirm-text="Every return, refund and history row is deleted. Chirag's orders come back dated from today, so every item can be returned again.">
+      {{ m.icon('loop', 16) }} Reset demo data
+    </button>
+  </form>
 </header>
 
 <section class="kpis ctl-screens" aria-label="Key numbers">

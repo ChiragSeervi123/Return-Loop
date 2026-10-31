@@ -4,6 +4,7 @@ Returns are pushed through the real service functions (so every history row,
 refund and inventory entry is consistent), then their timestamps are moved
 into the past so the timelines look like real life.
 """
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 
 from app import create_app
@@ -12,7 +13,10 @@ from models import (Customer, InventoryLog, Order, OrderItem, Product,
 from services.returns import (close_return, create_return, mark_picked_up, mark_received,
                               mark_repaired, schedule_pickup, submit_inspection)
 
-NOW = datetime.now().replace(second=0, microsecond=0)
+NOW = datetime.now().replace(second=0, microsecond=0)   # fill() moves it to the moment it runs
+
+# Postgres advisory-lock key for rebuilding the demo data (any fixed number).
+REBUILD_LOCK = 4_204_242
 
 # One demo customer, so every return in the demo belongs to the same person.
 CUSTOMERS = [
@@ -155,13 +159,42 @@ def seed_returns(customers, items):
     backdate(r, day(12, 13), gap_hours=30)
 
 
+def fill():
+    """Drop every table and rebuild the demo data, dated from this moment. Needs an app context."""
+    global NOW
+    NOW = datetime.now().replace(second=0, microsecond=0)
+    db.session.remove()   # an open transaction would block DROP TABLE on Postgres
+    db.drop_all()
+    db.create_all()
+    customers, items = build_catalogue()
+    seed_returns(customers, items)
+
+
+@contextmanager
+def rebuild_lock():
+    """With a shared Postgres, several app instances can start at once: one rebuilds at a time."""
+    if db.engine.dialect.name != "postgresql":
+        yield
+        return
+    with db.engine.connect() as conn:
+        conn.execute(db.text("SELECT pg_advisory_lock(:key)"), {"key": REBUILD_LOCK})
+        try:
+            yield
+        finally:
+            conn.execute(db.text("SELECT pg_advisory_unlock(:key)"), {"key": REBUILD_LOCK})
+
+
+def fill_if_empty():
+    """A database with no tables (a new Vercel instance's /tmp, a newly connected Postgres): fill it."""
+    with rebuild_lock():
+        if not db.inspect(db.engine).has_table("customers"):
+            fill()
+
+
 def main():
     app = create_app()
     with app.app_context():
-        db.drop_all()
-        db.create_all()
-        customers, items = build_catalogue()
-        seed_returns(customers, items)
+        fill()
         print(f"Seeded {Customer.query.count()} customers, {Product.query.count()} products, "
               f"{Order.query.count()} orders, {ReturnRequest.query.count()} returns.")
         for ret in ReturnRequest.query.order_by(ReturnRequest.id):

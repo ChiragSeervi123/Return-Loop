@@ -12,11 +12,29 @@ ON_VERCEL = bool(os.environ.get("VERCEL"))
 DATA_DIR = "/tmp" if ON_VERCEL else BASE_DIR
 
 
+def database_url():
+    """Where the data lives. A Postgres database connected in Vercel (Neon) sets these
+    variables, so every instance of the app shares it. Without one: a SQLite file.
+
+    The direct (unpooled) address comes first: the demo-data rebuild relies on Postgres
+    advisory locks, which a transaction pooler doesn't keep."""
+    url = next((os.environ[k] for k in ("DATABASE_URL_UNPOOLED", "POSTGRES_URL_NON_POOLING",
+                                        "DATABASE_URL", "POSTGRES_URL") if os.environ.get(k)), None)
+    if url is None:   # connected with a custom prefix: any Postgres address will do, unpooled first
+        found = sorted((("UNPOOLED" not in k and "NON_POOLING" not in k), k) for k, v in os.environ.items()
+                       if v.startswith(("postgres://", "postgresql://")))
+        url = os.environ[found[0][1]] if found else None
+    if url is None:
+        return "sqlite:///" + os.path.join(DATA_DIR, "returnloop.db")
+    # SQLAlchemy only knows the postgresql:// spelling
+    return "postgresql://" + url[len("postgres://"):] if url.startswith("postgres://") else url
+
+
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "returnloop-dev-secret")
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL", "sqlite:///" + os.path.join(DATA_DIR, "returnloop.db")
-    )
+    SQLALCHEMY_DATABASE_URI = database_url()
+    # A hosted database closes idle connections; test each one before use, renew every few minutes.
+    SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True, "pool_recycle": 280}
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = (os.path.join(DATA_DIR, "uploads") if ON_VERCEL
                      else os.path.join(BASE_DIR, "static", "uploads"))
@@ -27,7 +45,8 @@ class Config:
 
 
 class TestConfig(Config):
-    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    # TEST_DATABASE_URL runs the suite against another database, e.g. a local Postgres.
+    SQLALCHEMY_DATABASE_URI = os.environ.get("TEST_DATABASE_URL", "sqlite:///:memory:")
     TESTING = True
     UPLOAD_FOLDER = os.path.join(tempfile.gettempdir(), "returnloop-test-uploads")
 

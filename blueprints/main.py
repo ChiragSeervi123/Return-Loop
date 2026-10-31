@@ -85,6 +85,12 @@ PROTOTYPES = [
 ]
 
 
+@bp.get("/health")
+def health():
+    """Is the app up, and which database is it on? (sqlite locally, postgresql with Neon)"""
+    return {"ok": True, "database": db.engine.dialect.name}
+
+
 @bp.get("/docs")
 def docs():
     """The project documentation: requirements, diagrams, wireframes, prototypes. Prints to A4."""

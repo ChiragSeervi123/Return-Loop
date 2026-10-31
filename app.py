@@ -101,11 +101,11 @@ def create_app(config_class=Config):
 app = create_app()
 
 if ON_VERCEL:
-    # Each serverless instance starts with an empty /tmp, so fill it with the demo data.
+    # An empty database gets the demo data: each instance's own /tmp SQLite, or, once
+    # a Postgres is connected in Vercel, the shared one (filled once, by one instance).
     with app.app_context():
-        if not db.inspect(db.engine).has_table("customers"):
-            from seed import main as seed_demo
-            seed_demo()
+        from seed import fill_if_empty
+        fill_if_empty()
 
 
 if __name__ == "__main__":

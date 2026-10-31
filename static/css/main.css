@@ -1993,6 +1993,7 @@ body.control-page {
 .ctl-head__title { font-size: clamp(2.6rem, 6vw, 5rem); font-weight: 800; letter-spacing: -.045em; line-height: .92; margin: .5rem 0 0; }
 .ctl-head__title em { font-style: normal; color: var(--orange); }
 .ctl-status { display: grid; grid-template-columns: repeat(2, auto); gap: .1rem 0; margin: 0; border: 1.5px solid var(--line); background: var(--paper-hi); }
+.ctl-reset { flex-basis: 100%; display: flex; justify-content: flex-end; margin-top: -.6rem; }
 @media (min-width: 900px) { .ctl-status { grid-template-columns: repeat(4, auto); } }
 .ctl-status div { padding: .6rem 1rem; border-right: 1.5px solid var(--line); }
 .ctl-status div:last-child { border-right: 0; }

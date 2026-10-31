@@ -410,3 +410,40 @@ def test_service_book_stamps_qc_verdict(client, seeded):
     submit_inspection(ret, 1, GOOD, "B")       # the repair passed
     book = client.get("/refurb/jobs").data.decode().split("SERVICE BOOK")[1]
     assert "PASSED · RESTOCKED" in book
+
+
+def test_admin_reset_brings_back_fresh_demo_data(client, seeded):
+    """With a shared database the demo ages; the reset puts every returnable item back."""
+    login(client, "customer", 1)
+    returnable = client.get("/customer/orders").data.decode().count("return/new?item=")
+    kettle_return(seeded, "receive")                      # a return in progress
+    login(client, "admin", 1)
+    page = client.get("/admin/dashboard").data.decode()
+    assert 'action="/admin/reset"' in page and "data-confirm=" in page.split('action="/admin/reset"')[1][:400]
+    res = client.post("/admin/reset")
+    assert res.status_code == 302 and res.location.endswith("/admin/dashboard")
+    statuses = {r.status for r in ReturnRequest.query.all()}
+    assert statuses <= {"Closed", "Refunded"}               # only the seeded, finished returns
+    login(client, "customer", 1)
+    assert client.get("/customer/orders").data.decode().count("return/new?item=") == returnable
+
+
+def test_only_the_admin_can_reset(client, seeded):
+    login(client, "customer", 1)
+    assert client.post("/admin/reset").status_code == 403
+
+
+def test_health_names_the_database(client):
+    assert client.get("/health").get_json() == {"ok": True, "database": "sqlite"}
+
+
+def test_database_url_finds_a_connected_postgres(monkeypatch):
+    from config import database_url
+    for key in ("DATABASE_URL_UNPOOLED", "POSTGRES_URL_NON_POOLING", "DATABASE_URL", "POSTGRES_URL"):
+        monkeypatch.delenv(key, raising=False)
+    assert database_url().startswith("sqlite:///")
+    monkeypatch.setenv("STORE_DATABASE_URL", "postgres://u:p@pooler.example/db")
+    monkeypatch.setenv("STORE_DATABASE_URL_UNPOOLED", "postgres://u:p@direct.example/db")
+    assert database_url() == "postgresql://u:p@direct.example/db"     # custom prefix, unpooled first
+    monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@main.example/db?sslmode=require")
+    assert database_url() == "postgresql://u:p@main.example/db?sslmode=require"
