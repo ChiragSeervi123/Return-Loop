@@ -1,5 +1,5 @@
 """Landing page and the "switch role / user" control."""
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for
 
 from config import MAKER, PUBLIC_URL, ROLE_HOME, ROLES, STAFF, TEAM
 from models import Customer, ReturnRequest, db
@@ -88,7 +88,10 @@ PROTOTYPES = [
 @bp.get("/health")
 def health():
     """Is the app up, and which database is it on? (sqlite locally, postgresql with Neon)"""
-    return {"ok": True, "database": db.engine.dialect.name}
+    info = {"ok": True, "database": db.engine.dialect.name}
+    if current_app.config.get("STARTUP_ERROR"):   # the shared database failed; running on a local copy
+        info["startup_error"] = current_app.config["STARTUP_ERROR"]
+    return info
 
 
 @bp.get("/docs")

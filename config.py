@@ -26,8 +26,9 @@ def database_url():
         url = os.environ[found[0][1]] if found else None
     if url is None:
         return "sqlite:///" + os.path.join(DATA_DIR, "returnloop.db")
-    # SQLAlchemy only knows the postgresql:// spelling
-    return "postgresql://" + url[len("postgres://"):] if url.startswith("postgres://") else url
+    # Name the driver: SQLAlchemy 2.1 defaults postgresql:// to psycopg 3, but psycopg2 is installed
+    scheme, sep, rest = url.partition("://")
+    return f"postgresql+psycopg2://{rest}" if scheme in ("postgres", "postgresql") else url
 
 
 class Config:

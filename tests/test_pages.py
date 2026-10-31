@@ -444,6 +444,6 @@ def test_database_url_finds_a_connected_postgres(monkeypatch):
     assert database_url().startswith("sqlite:///")
     monkeypatch.setenv("STORE_DATABASE_URL", "postgres://u:p@pooler.example/db")
     monkeypatch.setenv("STORE_DATABASE_URL_UNPOOLED", "postgres://u:p@direct.example/db")
-    assert database_url() == "postgresql://u:p@direct.example/db"     # custom prefix, unpooled first
+    assert database_url() == "postgresql+psycopg2://u:p@direct.example/db"     # custom prefix, unpooled first
     monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@main.example/db?sslmode=require")
-    assert database_url() == "postgresql://u:p@main.example/db?sslmode=require"
+    assert database_url() == "postgresql+psycopg2://u:p@main.example/db?sslmode=require"

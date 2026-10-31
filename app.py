@@ -1,5 +1,7 @@
 """ReturnLoop entry point. Run with:  python app.py"""
 import os
+import re
+import tempfile
 
 from flask import Flask, render_template, request, session
 
@@ -97,15 +99,33 @@ def create_app(config_class=Config):
     return app
 
 
-# Top-level instance so hosts like Vercel can find the app.
-app = create_app()
+def start_on_vercel():
+    """An empty database gets the demo data: each instance's own /tmp SQLite, or, once a
+    Postgres is connected in Vercel, the shared one (filled once, by one instance).
 
-if ON_VERCEL:
-    # An empty database gets the demo data: each instance's own /tmp SQLite, or, once
-    # a Postgres is connected in Vercel, the shared one (filled once, by one instance).
-    with app.app_context():
-        from seed import fill_if_empty
-        fill_if_empty()
+    If the shared database can't be reached, the site stays up on this instance's own
+    copy, and /health says why (connection addresses stripped of their passwords)."""
+    from seed import fill_if_empty
+    try:
+        site = create_app()
+        with site.app_context():
+            fill_if_empty()
+        return site
+    except Exception as err:
+        message = re.sub(r"://[^@\s]+@", "://…@", f"{type(err).__name__}: {err}")[:400]
+
+        class LocalCopy(Config):
+            SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(tempfile.gettempdir(), "returnloop.db")
+
+        site = create_app(LocalCopy)
+        site.config["STARTUP_ERROR"] = message
+        with site.app_context():
+            fill_if_empty()
+        return site
+
+
+# Top-level instance so hosts like Vercel can find the app.
+app = start_on_vercel() if ON_VERCEL else create_app()
 
 
 if __name__ == "__main__":
