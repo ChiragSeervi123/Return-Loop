@@ -321,7 +321,9 @@ def test_docs_page_has_every_required_part(client, seeded):
     for part in ("Functional requirements", "Non-functional requirements", "Use case diagram",
                  "Activity diagram", "Swimlane diagram", "Class diagram", "CRC cards",
                  "DFD level 0", "DFD level 1", "State diagram", "Sequence: QC grades",
-                 "Sequence: handing a return", "Wireframes", "Prototypes", "FR13", "NFR08"):
+                 "Sequence: handing a return", "Wireframes", "Prototypes", "FR15", "NFR08",
+                 "A workplace for every desk", "Warehouse · Inbound dock", "Refurbisher · Workshop",
+                 "Admin · Control room", "REVISION HISTORY"):
         assert part in page, part
     assert "mermaid.esm" not in page and "three.module" not in page.split("</head>")[1]  # no heavy libraries
     assert client.get("/static/docs/ReturnLoop-Documentation.pdf").status_code == 200
@@ -331,6 +333,25 @@ def test_docs_cover_has_a_qr_to_the_live_app(client, seeded):
     cover = client.get("/docs").data.decode().split('class="doc-cover"')[1].split("</section>")[0]
     assert f"<title>QR code: {PUBLIC_URL}</title>" in cover and f'href="{PUBLIC_URL}"' in cover
     assert 'class="barcode' not in cover
+
+
+def test_docs_prototypes_all_exist(client, seeded):
+    """Every screenshot the documentation lists is on disk, and none is left over."""
+    import pathlib
+    from blueprints.main import PROTOTYPES
+    proto = pathlib.Path(__file__).resolve().parent.parent / "static" / "docs" / "proto"
+    listed = {file for file, _ in PROTOTYPES}
+    assert listed == {f.name for f in proto.glob("*.jpg")}
+    page = client.get("/docs").data.decode()
+    assert all(f"docs/proto/{file}" in page for file in listed)
+
+
+def test_docs_version_matches_the_revision_history(client, seeded):
+    import re
+    page = client.get("/docs").data.decode()
+    history = page.split("REVISION HISTORY")[1].split("</table>")[0]
+    latest = re.findall(r'class="mono doc-id">([\d.]+)</td>', history)[-1]
+    assert f"<dd>{latest} · " in page and f"DESIGN · v{latest}</span>" in page
 
 
 def test_docs_link_sits_between_ppt_and_team(client, seeded):

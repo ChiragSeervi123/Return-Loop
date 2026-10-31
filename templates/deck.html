@@ -152,7 +152,7 @@
             <tr><td>Rules change later (window, fees)</td><td><span class="lvl lvl--a">Low</span></td><td>All rule constants live in <code>config.py</code></td></tr>
           </tbody>
         </table>
-        <p class="note mono">QUALITY: 97 AUTOMATED TESTS · STATE MACHINE, REFUNDS, ELIGIBILITY, FLAGS, API, PAGES, FULL FLOW</p>
+        <p class="note mono">QUALITY: 109 AUTOMATED TESTS · STATE MACHINE, REFUNDS, ELIGIBILITY, FLAGS, API, PAGES, FULL FLOW</p>
         {{ foot() }}
       </section>
 
@@ -332,13 +332,15 @@ flowchart LR
   QC -- "checklist, grade" --> P5
   P5 --> D4
   P5 -- "grade B" --> P6
+  D4 -- "QC findings" --> P6
   RF -- "repaired" --> P6
   P6 -- "re-inspection" --> P5
   P5 -- "A / C / recheck" --> P7
   P7 --> D5
   P5 -. "every status change" .-> D6
   D2 & D5 --> P8
-  P8 -- "stats, flags" --> AD
+  D6 -- "latest events" --> P8
+  P8 -- "stats, flags, live feed" --> AD
 </pre>
         </div>
         {{ foot() }}

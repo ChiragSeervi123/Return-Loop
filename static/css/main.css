@@ -1682,6 +1682,31 @@ table.mini td:first-child { font-weight: 600; padding-right: 10px; white-space: 
 .wf-parcel { fill: #C9C3B7; stroke: #FFFFFF; }
 .wf-grade { fill: #6B6A66; font: 800 24px var(--f-display); }
 .wf-donut { fill: none; stroke: #C9C3B7; stroke-width: 16; }
+/* the desk workplaces: phone, dock, inspection table, workbench, control room */
+.wf-phone { fill: #FFFFFF; stroke: #4A4843; stroke-width: 6; }
+.wf-river { fill: none; stroke: #E7E3DB; stroke-width: 7; }
+.wf-route { fill: none; stroke: #4A4843; stroke-width: 2; stroke-dasharray: 5 4; }
+.wf-touch { fill: rgba(74, 72, 67, .15); stroke: #8F8A80; stroke-width: 1.5; }
+.wf-hazard { stroke: #4A4843; stroke-width: 3; }
+.wf-crate { fill: #E7E3DB; stroke: #8F8A80; stroke-width: 1.3; }
+.wf-sticker { fill: #FFFFFF; stroke: #8F8A80; stroke-width: 1.3; }
+.wf-mat { fill: #6B6A66; }
+.wf-matline { fill: none; stroke: #8F8A80; stroke-width: 1; }
+.wf-parcel-top { fill: #E7E3DB; stroke: #FFFFFF; }
+.wf-parcel-side { fill: #A9A49B; stroke: #FFFFFF; }
+.wf-grade--sm { font-size: 18px; }
+.wf-crack, .wf-sign { fill: none; stroke: #4A4843; stroke-width: 1.5; }
+.wf-stamp { fill: none; stroke: #4A4843; stroke-width: 2; }
+.wf-room { fill: #3A3835; }
+.wf-room-box { fill: none; stroke: #8F8A80; stroke-width: 1.3; }
+.wf-screen { fill: #24221F; stroke: #6B6A66; stroke-width: 1.3; }
+.wf-corner { fill: none; stroke: #D6D1C6; stroke-width: 1.5; }
+.wf-hi { fill: #F6F1E7; }
+.wf-donut--room { stroke: #8F8A80; stroke-width: 10; }
+
+/* revision history, under the contents */
+.doc-revs { padding: 2rem 0; border-bottom: 2px solid var(--ink); }
+.doc-revs h2 { font-size: .78rem; letter-spacing: .16em; margin-bottom: .8rem; }
 
 .doc-end { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; margin-top: 3rem; padding-top: 1rem; border-top: 2px solid var(--ink); font-size: .7rem; letter-spacing: .12em; color: var(--muted); }
 @media (max-width: 700px) {
@@ -1705,6 +1730,7 @@ table.mini td:first-child { font-weight: 600; padding-right: 10px; white-space: 
   .doc-qr { align-self: flex-start; }
   .doc-qr__code { width: 46mm; height: 46mm; }   /* comfortably scannable from a printed page */
   .doc-toc { border-bottom: 0; padding-top: 0; }
+  .doc-revs { border-bottom: 0; padding-top: 1.2rem; }
   .doc-sec { break-before: page; padding-top: 0; }
   .doc-fig, .doc-table tr, .crc, .doc-swatch, .doc-keep { break-inside: avoid; }
   .doc-table { font-size: 9pt; }

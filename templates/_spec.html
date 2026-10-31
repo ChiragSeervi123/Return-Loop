@@ -13,7 +13,9 @@
   ("Refund", "final = max(0, base × grade% − pickup fee), damaged/wrong-item exception, created once.", "System", "Must"),
   ("Track", "Live status (polled every 5 s), history timeline and refund breakdown.", "Customer", "Should"),
   ("Dashboard", "Totals, reasons and grades charts, frequent-returner flags (> 3 in 30 days).", "Admin", "Should"),
-  ("Hand off", "After each step, a card names the next desk and opens its page in one click.", "All", "Should")
+  ("Hand off", "After each step, a card names the next desk and opens its page in one click.", "All", "Should"),
+  ("Repair ticket", "QC's findings become the fix list; ticked fixes are saved as the notes; past repairs show QC's verdict.", "Refurbisher", "Should"),
+  ("Live feed", "The admin sees the latest status changes, newest first, with who made each one.", "Admin", "Should")
 ] %}
 
 {% set NFR = [

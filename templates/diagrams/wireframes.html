@@ -78,43 +78,144 @@
 </svg>
 {%- endmacro %}
 
+{# A parcel drawn in three faces, for the table and bench wireframes. #}
+{% macro box3d(x, y) -%}
+<polygon points="{{ x }},{{ y }} {{ x + 52 }},{{ y }} {{ x + 62 }},{{ y - 8 }} {{ x + 10 }},{{ y - 8 }}" class="wf-parcel-top"/>
+<rect x="{{ x }}" y="{{ y }}" width="52" height="32" class="wf-parcel"/>
+<polygon points="{{ x + 52 }},{{ y }} {{ x + 62 }},{{ y - 8 }} {{ x + 62 }},{{ y + 24 }} {{ x + 52 }},{{ y + 32 }}" class="wf-parcel-side"/>
+{%- endmacro %}
+
 {% macro agent() -%}
-<svg viewBox="0 0 480 320" class="wf" role="img" aria-label="Wireframe: pickup agent's list, phone layout">
-  <rect x="1" y="1" width="478" height="318" rx="8" class="wf-frame"/>
-  <rect x="170" y="10" width="140" height="300" rx="16" class="wf-box"/>
-  <rect x="216" y="18" width="48" height="6" rx="3" class="wf-line"/>
-  <rect x="182" y="34" width="60" height="9" rx="3" class="wf-ink"/>
-  <rect x="182" y="52" width="100" height="14" rx="3" class="wf-ink"/>{{ lines(182, 72, 1, 80) }}
-  {% for i in range(4) %}<rect x="182" y="{{ 88 + i * 52 }}" width="116" height="44" class="wf-box"/><rect x="188" y="{{ 94 + i * 52 }}" width="28" height="8" rx="2" class="wf-ink"/>{{ lines(222, 95 + i * 52, 3, 68, 9) }}{% endfor %}
-  <text x="330" y="60" class="wf-text">big tap targets,</text><text x="330" y="74" class="wf-text">one card per stop,</text><text x="330" y="88" class="wf-text">morning first</text>
-  <text x="466" y="312" text-anchor="end" class="wf-label">AGENT · PICKUPS (PHONE)</text>
+<svg viewBox="0 0 480 320" class="wf" role="img" aria-label="Wireframe: pickup agent's page, the app inside a phone with the route map beside it">
+  {{ chrome("AGENT · PICKUPS IN A PHONE") }}
+  {# left: title, text, the day's route, returns handed on #}
+  {{ lines(20, 64, 1, 70) }}{{ title(20, 76, 120) }}<rect x="20" y="94" width="84" height="13" rx="3" class="wf-ink"/>
+  {{ lines(20, 116, 2, 170) }}
+  <rect x="20" y="138" width="230" height="104" class="wf-box"/>
+  <path d="M20 166H250M20 214H250M70 138V242M150 138V242M210 138V242" class="wf-rule"/>
+  <path d="M20 196C80 186 130 204 250 192" class="wf-river"/>
+  <path d="M40 232V214H70V168L112 156L170 182L196 218" class="wf-route"/>
+  {% for x, y in [(112, 156), (170, 182), (196, 218)] %}<circle cx="{{ x }}" cy="{{ y - 6 }}" r="6" class="wf-ink"/>{% endfor %}
+  <rect x="31" y="228" width="18" height="10" rx="2" class="wf-ink"/>
+  <rect x="20" y="250" width="230" height="40" class="wf-box"/>{{ lines(30, 260, 2, 150) }}
+  {# right: the phone, with its notch, app bar, stops and home bar #}
+  <rect x="300" y="58" width="150" height="236" rx="22" class="wf-phone"/>
+  <rect x="356" y="66" width="38" height="9" rx="4.5" class="wf-ink"/>
+  <rect x="314" y="68" width="16" height="5" rx="2.5" class="wf-line"/><rect x="420" y="68" width="18" height="5" rx="2.5" class="wf-line"/>
+  <rect x="314" y="86" width="44" height="8" rx="3" class="wf-ink"/><circle cx="432" cy="90" r="7" class="wf-fill"/>
+  {{ title(314, 104, 104) }}{{ lines(314, 124, 1, 90) }}
+  {% for i in range(3) %}<rect x="312" y="{{ 138 + i * 46 }}" width="126" height="38" class="wf-box"/><rect x="319" y="{{ 144 + i * 46 }}" width="40" height="6" rx="2" class="wf-ink"/>{{ lines(319, 155 + i * 46, 2, 100, 9) }}{% endfor %}
+  <circle cx="404" cy="168" r="10" class="wf-touch"/>
+  <rect x="350" y="284" width="50" height="3" rx="1.5" class="wf-ink"/>
+</svg>
+{%- endmacro %}
+
+{% macro warehouse() -%}
+<svg viewBox="0 0 480 320" class="wf" role="img" aria-label="Wireframe: warehouse inbound dock, parcels on a rack with their stickers">
+  {{ chrome("WAREHOUSE · INBOUND DOCK") }}
+  {{ lines(20, 62, 1, 90) }}{{ title(20, 74, 150) }}{{ lines(20, 94, 1, 230) }}
+  {# the dock sign, hazard-striped at one end #}
+  <rect x="20" y="106" width="440" height="12" class="wf-fill"/>
+  <path d="M22 118l8-12M30 118l8-12M38 118l8-12" class="wf-hazard"/>
+  {# a rack: two uprights, a box on a pallet in each bay, the beam below #}
+  <rect x="20" y="124" width="6" height="152" class="wf-ink"/><rect x="454" y="124" width="6" height="152" class="wf-ink"/>
+  {% for i in range(3) %}{% set x = 34 + i * 140 %}
+  <rect x="{{ x }}" y="130" width="124" height="86" class="wf-crate"/>
+  <rect x="{{ x + 52 }}" y="130" width="20" height="16" class="wf-line"/>
+  <rect x="{{ x + 10 }}" y="142" width="104" height="66" class="wf-sticker"/>
+  <rect x="{{ x + 10 }}" y="142" width="104" height="9" class="wf-ink"/>
+  <rect x="{{ x + 16 }}" y="158" width="76" height="8" rx="2" class="wf-ink"/>
+  {{ lines(x + 16, 172, 2, 84) }}
+  {% for b in range(16) %}<rect x="{{ x + 16 + b * 4 }}" y="192" width="{{ 2 if b % 3 == 0 else 1 }}" height="10" class="wf-ink"/>{% endfor %}
+  {{ btn(x, 222, 124, "MARK RECEIVED") }}
+  <rect x="{{ x + 4 }}" y="246" width="116" height="12" class="wf-fill"/>
+  {% endfor %}
+  <rect x="26" y="262" width="428" height="6" class="wf-ink"/>
+  {{ lines(20, 284, 1, 120) }}
 </svg>
 {%- endmacro %}
 
 {% macro inspect() -%}
-<svg viewBox="0 0 480 320" class="wf" role="img" aria-label="Wireframe: QC inspect and grade">
+<svg viewBox="0 0 480 320" class="wf" role="img" aria-label="Wireframe: QC inspect and grade, the parcel on an inspection table above the form">
   {{ chrome("QC · INSPECT & GRADE") }}
-  {{ title(20, 64, 150) }}
-  <rect x="20" y="88" width="150" height="120" class="wf-box"/>{{ img(30, 98, 130, 60) }}{{ lines(30, 170, 3, 110) }}
-  {{ lines(190, 66, 1, 50) }}
-  {% for i in range(4) %}<rect x="190" y="{{ 78 + i * 26 }}" width="270" height="20" class="wf-box"/><rect x="198" y="{{ 83 + i * 26 }}" width="22" height="10" rx="5" class="{{ 'wf-ink' if i < 3 else 'wf-line' }}"/>{{ lines(228, 85 + i * 26, 1, 120) }}{% endfor %}
-  {{ lines(190, 186, 1, 40) }}
-  {% for g in "ABC" %}<rect x="{{ 190 + loop.index0 * 92 }}" y="196" width="84" height="52" class="wf-box {{ 'wf-sel' if loop.first }}"/><text x="{{ 214 + loop.index0 * 92 }}" y="228" text-anchor="middle" class="wf-grade">{{ g }}</text>{{ lines(236 + loop.index0 * 92, 214, 2, 30) }}{% endfor %}
-  <rect x="190" y="256" width="270" height="22" class="wf-box"/>
-  {{ btn(190, 286, 90, "STAMP IT") }}
+  {{ title(20, 60, 140) }}
+  {# the inspection table: a mat under a lamp, the parcel, side buttons #}
+  <rect x="20" y="80" width="440" height="92" class="wf-dark"/>
+  <polygon points="110,172 370,172 336,128 144,128" class="wf-mat"/>
+  <path d="M184 128L170 172M222 128L216 172M260 128L262 172M298 128L308 172M127 150H353" class="wf-matline"/>
+  {{ box3d(214, 114) }}
+  <circle cx="250" cy="90" r="4" class="wf-fill"/>
+  <rect x="28" y="86" width="74" height="4" rx="2" class="wf-fill"/><rect x="398" y="86" width="54" height="4" rx="2" class="wf-fill"/>
+  {% for i in range(6) %}<rect x="{{ 28 + i * 24 }}" y="160" width="20" height="7" class="{{ 'wf-fill' if i == 0 else 'wf-room-box' }}"/>{% endfor %}
+  {# below: the item card, then checklist, grade stamps, remarks and the button #}
+  <rect x="20" y="180" width="130" height="116" class="wf-box"/>{{ img(28, 188, 114, 44) }}{{ lines(28, 240, 3, 100) }}<rect x="28" y="270" width="114" height="18" class="wf-fill"/>
+  {% for i in range(4) %}{% set cx = 160 + (i % 2) * 152 %}{% set cy = 180 + (i // 2) * 18 %}
+  <rect x="{{ cx }}" y="{{ cy }}" width="146" height="14" class="wf-box"/><rect x="{{ cx + 5 }}" y="{{ cy + 3 }}" width="14" height="8" rx="4" class="{{ 'wf-ink' if i < 3 else 'wf-line' }}"/>{{ lines(cx + 24, cy + 5, 1, 90) }}
+  {% endfor %}
+  {% for g in "ABC" %}<rect x="{{ 160 + loop.index0 * 102 }}" y="218" width="96" height="34" class="wf-box {{ 'wf-sel' if loop.first }}"/><text x="{{ 178 + loop.index0 * 102 }}" y="241" text-anchor="middle" class="wf-grade wf-grade--sm">{{ g }}</text>{{ lines(196 + loop.index0 * 102, 229, 2, 48) }}{% endfor %}
+  <rect x="160" y="258" width="300" height="16" class="wf-box"/>
+  {{ btn(160, 280, 90, "STAMP IT") }}
+</svg>
+{%- endmacro %}
+
+{% macro workshop() -%}
+<svg viewBox="0 0 480 320" class="wf" role="img" aria-label="Wireframe: refurbisher's workshop, the box on the workbench above the repair tickets and service book">
+  {{ chrome("REFURBISHER · WORKSHOP") }}
+  {{ title(20, 60, 120) }}
+  {# the workbench: pegboard wall, wooden bench, the box, before / after #}
+  <rect x="20" y="80" width="440" height="90" class="wf-dark"/>
+  {% for y in [88, 98, 108] %}{% for x in range(30, 455, 12) %}<circle cx="{{ x }}" cy="{{ y }}" r="1.4" class="wf-fill"/>{% endfor %}{% endfor %}
+  <rect x="20" y="116" width="440" height="54" class="wf-mat"/>
+  <path d="M20 132H460M20 148H460" class="wf-matline"/>
+  {{ box3d(214, 128) }}
+  <path d="M246 132l6 8-4 6 8 6" class="wf-crack"/>
+  <rect x="28" y="158" width="44" height="7" class="wf-fill"/><rect x="76" y="158" width="44" height="7" class="wf-room-box"/>
+  {# two repair tickets on bulldog clips: fix list, progress, button #}
+  {% for i in range(2) %}{% set x = 20 + i * 148 %}
+  <rect x="{{ x }}" y="184" width="138" height="112" class="wf-sticker"/>
+  <rect x="{{ x }}" y="184" width="4" height="112" class="{{ 'wf-ink' if i else 'wf-line' }}"/>
+  <rect x="{{ x + 54 }}" y="179" width="30" height="10" rx="2" class="wf-ink"/>
+  {{ lines(x + 10, 194, 1, 70) }}
+  <rect x="{{ x + 10 }}" y="204" width="92" height="9" rx="2" class="wf-ink"/>
+  <rect x="{{ x + 10 }}" y="218" width="118" height="14" class="wf-fill"/>
+  {% for k in range(3) %}<rect x="{{ x + 10 }}" y="{{ 238 + k * 11 }}" width="7" height="7" class="{{ 'wf-ink' if k < 1 + i else 'wf-box' }}"/>{{ lines(x + 22, 239 + k * 11, 1, 70) }}{% endfor %}
+  <rect x="{{ x + 10 }}" y="272" width="118" height="3" class="wf-fill"/><rect x="{{ x + 10 }}" y="272" width="{{ 40 + i * 40 }}" height="3" class="wf-ink"/>
+  {{ btn(x + 50, 278, 78, "MARK REPAIRED") }}
+  {% endfor %}
+  {# a service-book record, stamped with QC's verdict and signed #}
+  <rect x="316" y="184" width="144" height="112" class="wf-box"/>
+  <rect x="316" y="184" width="144" height="10" class="wf-fill"/>
+  <rect x="326" y="204" width="70" height="8" rx="2" class="wf-ink"/>
+  {{ lines(326, 220, 2, 110) }}
+  <path d="M328 262c8-8 14 4 22-4s14 6 22-2" class="wf-sign"/>
+  <g transform="rotate(-8 424 214)"><rect x="396" y="204" width="56" height="20" class="wf-stamp"/><text x="424" y="217" text-anchor="middle" class="wf-text">PASSED</text></g>
 </svg>
 {%- endmacro %}
 
 {% macro dashboard() -%}
-<svg viewBox="0 0 480 320" class="wf" role="img" aria-label="Wireframe: admin dashboard">
-  {{ chrome("ADMIN · DASHBOARD") }}
-  {{ title(20, 64, 210) }}
-  <rect x="20" y="88" width="160" height="56" class="wf-dark"/><rect x="30" y="116" width="90" height="16" rx="3" class="wf-node-on"/>
-  {% for i in range(3) %}<rect x="{{ 190 + i * 92 }}" y="88" width="84" height="56" class="wf-box"/>{{ lines(198 + i * 92, 96, 1, 50) }}<rect x="{{ 198 + i * 92 }}" y="116" width="26" height="18" rx="2" class="wf-ink"/>{% endfor %}
-  <rect x="20" y="154" width="270" height="110" class="wf-box"/>{{ lines(30, 162, 1, 90) }}
-  {% for h in [60, 30, 80, 15] %}<rect x="{{ 44 + loop.index0 * 60 }}" y="{{ 254 - h }}" width="34" height="{{ h }}" class="{{ 'wf-ink' if loop.first else 'wf-fill' }}"/>{% endfor %}
-  <rect x="300" y="154" width="160" height="110" class="wf-box"/>{{ lines(310, 162, 1, 60) }}
-  <circle cx="380" cy="214" r="34" class="wf-donut"/><circle cx="380" cy="214" r="18" class="wf-frame"/>
-  <rect x="20" y="272" width="440" height="30" class="wf-box"/>{{ lines(30, 280, 2, 260) }}
+<svg viewBox="0 0 480 320" class="wf" role="img" aria-label="Wireframe: admin control room, numbers on wall screens, charts and a live feed">
+  {{ chrome("ADMIN · CONTROL ROOM") }}
+  <rect x="2" y="53" width="476" height="246" class="wf-room"/>
+  {# title and the status strip #}
+  <rect x="20" y="64" width="150" height="12" rx="3" class="wf-hi"/><rect x="20" y="80" width="104" height="12" rx="3" class="wf-fill"/>
+  <rect x="290" y="68" width="170" height="24" class="wf-room-box"/>
+  {% for i in range(4) %}<rect x="{{ 296 + i * 42 }}" y="73" width="26" height="4" rx="2" class="wf-fill"/><rect x="{{ 296 + i * 42 }}" y="81" width="{{ 10 if i == 1 else 30 }}" height="6" rx="2" class="wf-hi"/>{% endfor %}
+  {# four wall screens with corner brackets #}
+  {% for i in range(4) %}{% set x = 20 + i * 112 %}
+  <rect x="{{ x }}" y="102" width="104" height="48" class="wf-screen"/>
+  <path d="M{{ x + 5 }} 113v-6h6M{{ x + 99 }} 139v6h-6" class="wf-corner"/>
+  <rect x="{{ x + 10 }}" y="110" width="50" height="4" rx="2" class="wf-fill"/>
+  <rect x="{{ x + 10 }}" y="124" width="{{ 64 if i == 0 else 22 }}" height="16" rx="2" class="wf-hi"/>
+  {% endfor %}
+  {# charts #}
+  <rect x="20" y="158" width="272" height="72" class="wf-room-box"/>
+  {% for h in [44, 30, 44, 16] %}<rect x="{{ 44 + loop.index0 * 62 }}" y="{{ 222 - h }}" width="30" height="{{ h }}" class="{{ 'wf-hi' if loop.first else 'wf-fill' }}"/>{% endfor %}
+  <rect x="300" y="158" width="160" height="72" class="wf-room-box"/>
+  <circle cx="380" cy="194" r="24" class="wf-donut wf-donut--room"/>
+  {# the live feed #}
+  <rect x="20" y="238" width="440" height="56" class="wf-room-box"/>
+  <circle cx="30" cy="247" r="3" class="wf-hi"/><rect x="38" y="244" width="60" height="6" rx="2" class="wf-hi"/>
+  {% for k in range(3) %}<rect x="30" y="{{ 258 + k * 12 }}" width="40" height="4" rx="2" class="wf-fill"/><rect x="80" y="{{ 258 + k * 12 }}" width="50" height="4" rx="2" class="wf-fill"/><rect x="140" y="{{ 256 + k * 12 }}" width="44" height="8" class="wf-room-box"/><rect x="370" y="{{ 258 + k * 12 }}" width="80" height="4" rx="2" class="wf-fill"/>{% endfor %}
 </svg>
 {%- endmacro %}
+

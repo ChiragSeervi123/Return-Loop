@@ -7,6 +7,12 @@
 {% block content %}
 {# The project documentation: requirements, analysis & design diagrams, wireframes and
    prototypes. Plain page, no 3D or animation; prints to A4 (see @media print). #}
+{# Every published version. The last one is shown on the cover and in the footer. #}
+{% set revisions = [
+  ("1.0", "25 Oct 2026", "First version: requirements, analysis & design diagrams, wireframes and prototypes."),
+  ("1.1", "31 Oct 2026", "A workplace for every desk (5.2). New requirements FR14 Repair ticket and FR15 Live feed. DFD level 1 shows the fix list and the live feed. Wireframes for the warehouse and the workshop; agent, QC and admin wireframes redrawn; every prototype screenshot retaken."),
+] %}
+{% set version, version_date = revisions[-1][0], revisions[-1][1] %}
 {% macro section(no, id, title) -%}
 <header class="doc-h" id="{{ id }}"><span class="mono doc-h__no">{{ no }}</span><h2>{{ title }}</h2></header>
 {%- endmacro %}
@@ -39,7 +45,7 @@
       <div><dt>System</dt><dd>Returns and reverse-logistics centre for an e-commerce business</dd></div>
       <div><dt>Team</dt><dd>{{ team|join(", ") }}</dd></div>
       <div><dt>Institute</dt><dd>{{ institute }}</dd></div>
-      <div><dt>Version</dt><dd>1.0 · {{ today }}</dd></div>
+      <div><dt>Version</dt><dd>{{ version }} · {{ version_date }}</dd></div>
       <div><dt>Live app</dt><dd class="mono"><a href="{{ public_url }}">{{ public_url.split('//')[-1] }}</a></dd></div>
     </dl>
     {# Scanning the printed cover opens the live app. Rebuilt by tools/make_qr.py. #}
@@ -75,6 +81,16 @@
     </ol>
   </nav>
 
+  <section class="doc-revs" aria-labelledby="revs-h">
+    <h2 id="revs-h" class="mono">REVISION HISTORY</h2>
+    <table class="grid-table doc-table">
+      <thead><tr><th>Version</th><th>Date</th><th>Changes</th></tr></thead>
+      <tbody>
+        {% for v, d, what in revisions %}<tr><td class="mono doc-id">{{ v }}</td><td>{{ d }}</td><td>{{ what }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </section>
+
   {# ---------------------------------------------------------------- 1 #}
   <section class="doc-sec">
     {{ section("01", "intro", "Introduction") }}
@@ -85,7 +101,8 @@
       <div><p class="mono doc-label">IN SCOPE</p><ul>
         <li>Six roles and a 13-status return workflow</li><li>Eligibility rules, pickup booking with two attempts</li>
         <li>QC checklist, A / B / C grading, fraud check</li><li>Refurbishing and re-inspection</li>
-        <li>Refund calculation and inventory log</li><li>Admin dashboard and frequent-returner flags</li></ul></div>
+        <li>Refund calculation and inventory log</li><li>Admin dashboard and frequent-returner flags</li>
+        <li>A workplace for each desk, and a handoff card between desks</li></ul></div>
       <div><p class="mono doc-label">OUT OF SCOPE</p><ul>
         <li>Real payments or a payment gateway</li><li>Passwords and real accounts (a role switcher stands in)</li>
         <li>Courier API integration</li></ul></div>
@@ -98,8 +115,8 @@
                         'agent': 'Collects parcels, or marks the customer absent',
                         'warehouse': 'Checks parcels in at the returns centre',
                         'qc': 'Inspects, grades A / B / C, rejects mismatched items',
-                        'refurbisher': 'Repairs grade B items for a second check',
-                        'admin': 'Watches totals, reasons, grades and flagged customers'} %}
+                        'refurbisher': "Works through QC's fix list on grade B items, then sends them for a second check",
+                        'admin': 'Watches totals, charts, the live feed and flagged customers'} %}
         {% for r in roles %}<tr><td><b>{{ role_labels[r] }}</b></td><td>{{ people[r][0][1] if people[r] else '' }}</td><td>{{ tasks[r] }}</td></tr>{% endfor %}
       </tbody>
     </table>
@@ -109,6 +126,8 @@
       <div><dt>Grade A / B / C</dt><dd>QC's verdict: A restocked (100%), B repaired then rechecked (70%), C scrapped (0%).</dd></div>
       <div><dt>Handoff</dt><dd>After each step the app names the next desk and opens its page in one click.</dd></div>
       <div><dt>Return window</dt><dd>7 days from delivery; outside it, the item can't be returned.</dd></div>
+      <div><dt>Repair ticket</dt><dd>A grade B job in the workshop; QC's findings become its fix list.</dd></div>
+      <div><dt>Live feed</dt><dd>The admin's list of the latest status changes, newest first.</dd></div>
     </dl>
   </section>
 
@@ -197,7 +216,7 @@
 
     <div class="doc-keep">
     <h3 id="dfd">4.6 Data flow diagrams</h3>
-    <p><b>Level 0</b> treats ReturnLoop as a single process (0) and shows only the data flowing between it and the six external entities. The customer sends a request, photo and pickup slot and gets back eligibility, status and the refund breakdown; each staff role exchanges its work list and its results. <b>Level 1</b> opens that process into eight numbered processes, from 1.0 Check eligibility to 8.0 Report &amp; flag, and six data stores D1–D6. Data enters from an entity, is changed by a process and written to a store: 2.0 Schedule pickup writes D3 Pickups, which the agent then reads as the pickup list. The dotted line shows that every status change is also written to D6 Status history.</p>
+    <p><b>Level 0</b> treats ReturnLoop as a single process (0) and shows only the data flowing between it and the six external entities. The customer sends a request, photo and pickup slot and gets back eligibility, status and the refund breakdown; each staff role exchanges its work list and its results. <b>Level 1</b> opens that process into eight numbered processes, from 1.0 Check eligibility to 8.0 Report &amp; flag, and six data stores D1–D6. Data enters from an entity, is changed by a process and written to a store: 2.0 Schedule pickup writes D3 Pickups, which the agent then reads as the pickup list. The dotted line shows that every status change is also written to D6 Status history, which 8.0 reads back for the admin's live feed; 6.0 Refurbish reads D4 QC reports to turn QC's findings into the repair ticket's fix list.</p>
     {% call fig("4.6a", "DFD level 0 (context diagram)", "", "doc-fig--mermaid") %}{% include "diagrams/dfd0.svg" %}{% endcall %}
     </div>
     {% call fig("4.6b", "DFD level 1: processes and data stores", "", "doc-fig--mermaid") %}{% include "diagrams/dfd1.svg" %}{% endcall %}
@@ -228,31 +247,52 @@
     </div>
     <p class="doc-type"><span class="doc-type__d">Bricolage Grotesque</span> headings · <span class="doc-type__b">Instrument Sans</span> body · <span class="mono">DM Mono</span> codes &amp; labels</p>
 
-    <h3>5.2 Wireframes</h3>
+    <h3>5.2 A workplace for every desk</h3>
+    <p>Each role's pages look like the place where that job is done, so moving a return from desk to desk feels like walking it through the building. The forms and buttons are the same everywhere; the workplace is a frame around them. 3D is used only where it helps the work, on the QC table and the workbench, and it pauses when it is off-screen.</p>
+    <table class="grid-table doc-table">
+      <thead><tr><th>Desk</th><th>Workplace</th><th>What makes it that place</th></tr></thead>
+      <tbody>
+        {% for desk, place, what in [
+          ("Customer", "Shipping slips", "Orders are shipping labels; the tracking page moves the parcel along a 3D path."),
+          ("Pickup agent", "A phone", "The app runs inside a phone with the day's route map beside it; over the screen the cursor becomes a fingertip."),
+          ("Warehouse", "The inbound dock", "Storage racks behind the page; each parcel is a box on a pallet with its shipping sticker."),
+          ("QC inspector", "The inspection table", "The parcel under a lamp, turnable to every side; the checklist marks the box as it is ticked."),
+          ("Refurbisher", "The workshop", "Pegboard and tools; repair tickets carry QC's fix list, and the box is fixed on the bench."),
+          ("Admin", "The control room", "Dark in both themes: a status strip, numbers on wall screens and a live feed of status changes.")] %}
+        <tr><td><b>{{ desk }}</b></td><td>{{ place }}</td><td>{{ what }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3>5.3 Wireframes</h3>
     <p>Low-fidelity sketches of the main screens, drawn before the visual design: layout, content and the one main action on each screen.</p>
+    {% set wireframes = [
+      (wf.orders, "Customer · My orders", "Each delivered item is a shipping slip with its return window and one button."),
+      (wf.new_return, "Customer · Request return", "The item on the left; reason tiles, comment and an optional photo on the right."),
+      (wf.schedule, "Customer · Book pickup", "Five day tiles, three slots, the pickup address to confirm."),
+      (wf.track, "Customer · Track return", "Six-step progress, what happens next, refund breakdown, history."),
+      (wf.agent, "Agent · Pickups in a phone", "The app runs inside a phone: stops as big cards, morning first; the route map beside it."),
+      (wf.warehouse, "Warehouse · Inbound dock", "Parcels as boxes on pallets on a rack, each with its sticker and one button."),
+      (wf.inspect, "QC · Inspect & grade", "The parcel on the inspection table on top; item card, checklist, grade stamps and remarks below."),
+      (wf.workshop, "Refurbisher · Workshop", "The box on the workbench; repair tickets with QC's fix list; the service book."),
+      (wf.dashboard, "Admin · Control room", "A dark room: status strip, numbers on wall screens, charts and a live feed.")] %}
     <div class="wf-grid">
-      {% for draw, title, note in [(wf.orders, "Customer · My orders", "Each delivered item is a shipping slip with its return window and one button."),
-                                   (wf.new_return, "Customer · Request return", "The item on the left; reason tiles, comment and an optional photo on the right."),
-                                   (wf.schedule, "Customer · Book pickup", "Five day tiles, three slots, the pickup address to confirm."),
-                                   (wf.track, "Customer · Track return", "Six-step progress, what happens next, refund breakdown, history."),
-                                   (wf.agent, "Agent · Pickups (phone)", "Phone-first list of stops, morning first, large tap targets."),
-                                   (wf.inspect, "QC · Inspect & grade", "Checklist toggles suggest a grade; the inspector stamps A, B or C."),
-                                   (wf.dashboard, "Admin · Dashboard", "Key numbers on top, reasons and grades charts, flagged customers.")] %}
+      {% for draw, title, note in wireframes %}
       {% call fig("5." ~ loop.index, title, note) %}{{ draw() }}{% endcall %}
       {% endfor %}
     </div>
 
-    <h3>5.3 Prototypes</h3>
-    <p>High-fidelity screens of the working prototype, the app as built. Each follows its wireframe above.</p>
+    <h3>5.4 Prototypes</h3>
+    <p>Screens of the working prototype, the app as built. Each follows the wireframe with the same name above; the landing page has none.</p>
     <div class="proto-grid">
       {% for file, title in prototypes %}
-      {% call fig("5." ~ (7 + loop.index), title, "", "doc-fig--shot") %}<img src="{{ url_for('static', filename='docs/proto/' ~ file) }}" alt="Screenshot: {{ title }}" loading="lazy" width="1440" height="900">{% endcall %}
+      {% call fig("5." ~ (wireframes|length + loop.index), title, "", "doc-fig--shot") %}<img src="{{ url_for('static', filename='docs/proto/' ~ file) }}" alt="Screenshot: {{ title }}" loading="lazy" width="1440" height="900">{% endcall %}
       {% endfor %}
     </div>
   </section>
 
   <footer class="doc-end mono">
-    <span>RETURNLOOP · SOFTWARE REQUIREMENTS &amp; DESIGN · v1.0</span>
+    <span>RETURNLOOP · SOFTWARE REQUIREMENTS &amp; DESIGN · v{{ version }}</span>
     <span>{{ team|join(" · ") }}</span>
   </footer>
 </article>

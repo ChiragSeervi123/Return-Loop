@@ -122,7 +122,7 @@ TEAM = [
 ]
 
 # Where the app is deployed; the documentation cover links to it.
-PUBLIC_URL = os.environ.get("PUBLIC_URL", "https://return-loop-c25e.vercel.app")
+PUBLIC_URL = os.environ.get("PUBLIC_URL", "https://return-loop.vercel.app")
 
 # The maker's page (/maker), opened from the stamp on the landing page. Edit details here.
 MAKER = {

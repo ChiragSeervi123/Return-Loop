@@ -140,16 +140,20 @@ docs/                ER diagram and UML mapping
 
 ## Documentation
 
-`/docs` (the **Docs** link in the top bar, between PPT and Team) is the project's software requirements & design document, in the site's paper-and-ink style with no animation: introduction and scope, functional and non-functional requirements, the use case, activity, swimlane, class, CRC, DFD (level 0 and 1), state and sequence diagrams, then UI design with wireframes and prototypes. **Download PDF** gives a ready A4 copy ([static/docs/ReturnLoop-Documentation.pdf](static/docs/ReturnLoop-Documentation.pdf)); **Print** prints the page itself on A4.
+`/docs` (the **Docs** link in the top bar, between PPT and Team) is the project's software requirements & design document, in the site's paper-and-ink style with no animation: introduction and scope, functional and non-functional requirements, the use case, activity, swimlane, class, CRC, DFD (level 0 and 1), state and sequence diagrams, then UI design: a workplace for every desk, wireframes and prototypes. It is versioned, with a revision history under the contents. **Download PDF** gives a ready A4 copy ([static/docs/ReturnLoop-Documentation.pdf](static/docs/ReturnLoop-Documentation.pdf)); **Print** prints the page itself on A4.
 
 The diagrams are plain SVG in the page, so it loads no diagram library. The requirements and the use case, activity and state diagrams are shared with the presentation (`templates/_spec.html`, `templates/diagrams/`), so the two never disagree. The class, DFD and sequence diagrams are the presentation's Mermaid drawings saved as static SVG. The prototype screenshots live in `static/docs/proto/`.
 
-After changing the docs or the deck, rebuild both PDFs from a running app:
+After changing the app, the docs or the deck, refresh everything the documentation shows with one command. It runs its own copy of the app on a throwaway database (your `returnloop.db` is never touched), re-saves the Mermaid diagrams, retakes every prototype screenshot and rebuilds both PDFs:
 
 ```
 pip install playwright
-python tools/make_pdfs.py --base http://127.0.0.1:5000
+python tools/refresh_docs.py
 ```
+
+To rebuild only the PDFs from an app that's already running, use `python tools/make_pdfs.py --base http://127.0.0.1:5000`. The QR code on the cover opens `config.PUBLIC_URL`; if the live address changes, run `python tools/make_qr.py` (needs `pip install segno`) and then `refresh_docs.py`.
+
+When you publish a new version, add a row to `revisions` at the top of `templates/docs.html`; the cover and footer pick up the latest one.
 
 ## Team page
 

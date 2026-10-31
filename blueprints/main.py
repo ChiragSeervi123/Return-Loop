@@ -2,7 +2,7 @@
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
 from config import MAKER, PUBLIC_URL, ROLE_HOME, ROLES, STAFF, TEAM
-from models import Customer, ReturnRequest, db, now
+from models import Customer, ReturnRequest, db
 from services.handoff import role_noun
 from services.stats import landing_stats
 
@@ -70,15 +70,18 @@ def maker():
 
 
 # Screens shown as prototypes in the documentation: (file in static/docs/proto, caption).
+# tools/refresh_docs.py retakes them.
 PROTOTYPES = [
     ("landing.jpg", "Landing page"),
     ("orders.jpg", "Customer · My orders"),
     ("new-return.jpg", "Customer · Request return"),
     ("schedule.jpg", "Customer · Book pickup"),
     ("track.jpg", "Customer · Track return, with the handoff card"),
-    ("agent.jpg", "Agent · Pickup slip"),
-    ("inspect.jpg", "QC · Inspect & grade"),
-    ("dashboard.jpg", "Admin · Dashboard"),
+    ("agent.jpg", "Agent · Pickups in a phone"),
+    ("warehouse.jpg", "Warehouse · Inbound dock"),
+    ("inspect.jpg", "QC · Inspect & grade, on the inspection table"),
+    ("workshop.jpg", "Refurbisher · Workshop"),
+    ("dashboard.jpg", "Admin · Control room"),
 ]
 
 
@@ -87,7 +90,7 @@ def docs():
     """The project documentation: requirements, diagrams, wireframes, prototypes. Prints to A4."""
     return render_template("docs.html", team=[person["name"] for person in TEAM],
                            institute=f"{MAKER['institute']}, {MAKER['campus']}",
-                           today=now().strftime("%B %Y"), prototypes=PROTOTYPES, public_url=PUBLIC_URL)
+                           prototypes=PROTOTYPES, public_url=PUBLIC_URL)
 
 
 @bp.get("/ppt")
