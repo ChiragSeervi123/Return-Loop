@@ -2,6 +2,7 @@
 from datetime import datetime
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import joinedload, selectinload
 
 db = SQLAlchemy()
 
@@ -186,3 +187,14 @@ class StatusHistory(db.Model):
     created_at = db.Column(db.DateTime, default=now)
 
     return_request = db.relationship("ReturnRequest", back_populates="history")
+
+
+def return_details(*extra):
+    """Loader options for showing returns: product, customer and refund joined in; pickups
+    and repair jobs (which say who acts next) fetched in one query each; `extra` names more
+    relationships to fetch, e.g. "qc_reports", "history". Without them a list asks the
+    database once per row, and a hosted database adds a round trip every time."""
+    return (joinedload(ReturnRequest.order_item).joinedload(OrderItem.product),
+            joinedload(ReturnRequest.customer), joinedload(ReturnRequest.refund),
+            selectinload(ReturnRequest.pickups), selectinload(ReturnRequest.refurbish_jobs),
+            *(selectinload(getattr(ReturnRequest, name)) for name in extra))

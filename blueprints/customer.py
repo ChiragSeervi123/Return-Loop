@@ -3,11 +3,12 @@ from datetime import date
 
 from flask import (Blueprint, abort, flash, redirect, render_template, request,
                    url_for)
+from sqlalchemy.orm import selectinload
 
 from blueprints import current_customer, guard, hand_off
 from config import (COMMENT_MAX_CHARS, MAX_PICKUP_ATTEMPTS, PICKUP_SLOTS,
                     RETURN_REASONS, RETURN_WINDOW_DAYS, SLOT_HOURS, STAFF)
-from models import Order, OrderItem, ReturnRequest, db
+from models import Order, OrderItem, ReturnRequest, db, return_details
 from services.eligibility import check_eligibility, days_left
 from services.handoff import in_flight, next_desk
 from services.returns import (WorkflowError, close_return, create_return,
@@ -22,7 +23,8 @@ bp.before_request(guard("customer"))
 
 def _own_return(code):
     """Fetch a return by code; 404 if it does not exist or is not this customer's."""
-    ret = ReturnRequest.query.filter_by(return_code=code).first()
+    ret = (ReturnRequest.query.filter_by(return_code=code)
+           .options(*return_details("qc_reports", "history")).first())
     if ret is None or ret.customer_id != current_customer().id:
         abort(404)
     return ret
@@ -32,6 +34,8 @@ def _own_return(code):
 def orders():
     customer = current_customer()
     order_list = (Order.query.filter_by(customer_id=customer.id)
+                  .options(selectinload(Order.items).joinedload(OrderItem.product),
+                           selectinload(Order.items).selectinload(OrderItem.returns))
                   .order_by(Order.delivered_at.desc()).all())
     cards = []
     for order in order_list:
@@ -90,7 +94,7 @@ def schedule(code):
 
 @bp.get("/returns")
 def returns():
-    my = (ReturnRequest.query.filter_by(customer_id=current_customer().id)
+    my = (ReturnRequest.query.filter_by(customer_id=current_customer().id).options(*return_details())
           .order_by(ReturnRequest.created_at.desc()).all())
     return render_template("customer/returns.html", returns=my,
                            moving=in_flight("customer", current_customer().id))

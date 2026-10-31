@@ -2,6 +2,7 @@
 import os
 
 from flask import Blueprint, current_app, flash, redirect, render_template, session, url_for
+from sqlalchemy.orm import joinedload
 
 from blueprints import current_user_id, guard
 from services.stats import dashboard_stats
@@ -18,7 +19,8 @@ def dashboard():
     return render_template("admin/dashboard.html", stats=dashboard_stats(),
                            flagged=flagged_customers(),
                            moving=in_flight("admin", current_user_id(), 12),
-                           feed=StatusHistory.query.order_by(StatusHistory.id.desc()).limit(8).all())
+                           feed=StatusHistory.query.options(joinedload(StatusHistory.return_request))
+                           .order_by(StatusHistory.id.desc()).limit(8).all())
 
 
 @bp.post("/reset")

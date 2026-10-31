@@ -1,9 +1,10 @@
 """Pickup agent pages (phone-first)."""
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from sqlalchemy.orm import joinedload
 
 from blueprints import current_user_id, current_user_name, guard, hand_off
 from config import PICKUP_SLOTS, SLOT_HOURS
-from models import Pickup, db, now
+from models import Pickup, db, now, return_details
 from services.handoff import in_flight, next_desk
 from services.returns import WorkflowError, mark_absent, mark_picked_up
 from services.state_machine import InvalidTransition
@@ -18,7 +19,8 @@ def _slot_order(pickup):
 
 @bp.get("/pickups")
 def pickups():
-    pending = Pickup.query.filter_by(agent_id=current_user_id(), outcome="Pending").all()
+    pending = (Pickup.query.filter_by(agent_id=current_user_id(), outcome="Pending")
+               .options(joinedload(Pickup.return_request).options(*return_details())).all())
     pending.sort(key=_slot_order)
     today = now().date()
     return render_template("agent/pickups.html",

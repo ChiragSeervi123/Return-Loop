@@ -6,7 +6,7 @@ follow one return from the customer's door to the admin dashboard without
 touching the role menu.
 """
 from config import ROLE_LABELS, ROLES, STAFF
-from models import Pickup, ReturnRequest, StatusHistory
+from models import Pickup, ReturnRequest, StatusHistory, return_details
 from services.state_machine import (CANCELLED, CLOSED, PICKED_UP,
                                     PICKUP_SCHEDULED, RECEIVED, REFUNDED,
                                     REFURBISHING, REINSPECTION, REJECTED,
@@ -137,7 +137,7 @@ def in_flight(role, user_id, limit=None):
         query = query.filter(ReturnRequest.pickups.any(Pickup.agent_id == user_id))
 
     rows = []
-    for ret in query.order_by(ReturnRequest.updated_at.desc()):
+    for ret in query.options(*return_details()).order_by(ReturnRequest.updated_at.desc()):
         desk = next_desk(ret)
         if desk is None or (desk["role"] == role and desk["user_id"] == user_id):
             continue

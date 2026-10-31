@@ -1,10 +1,11 @@
 """Refurbisher page: the workshop. Open repair jobs as tickets, and a service book of
 recent repairs with QC's verdict on each."""
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from sqlalchemy.orm import joinedload
 
 from blueprints import current_user_name, guard, hand_off
 from config import STAFF
-from models import RefurbishJob, db, now
+from models import RefurbishJob, db, now, return_details
 from services.handoff import next_desk
 from services.returns import WorkflowError, mark_repaired
 from services.state_machine import REINSPECTION, TERMINAL, InvalidTransition
@@ -42,7 +43,8 @@ def jobs():
     today = now()
     inspectors = dict(STAFF["qc"])
     tickets = []
-    for job in RefurbishJob.query.filter_by(status="Open").order_by(RefurbishJob.created_at):
+    with_return = joinedload(RefurbishJob.return_request).options(*return_details("qc_reports"))
+    for job in RefurbishJob.query.filter_by(status="Open").options(with_return).order_by(RefurbishJob.created_at):
         report = job.return_request.first_report
         tickets.append({"job": job, "ret": job.return_request, "report": report,
                         "fixes": fix_list(report), "days": (today - job.created_at).days,
@@ -50,7 +52,7 @@ def jobs():
 
     technicians = dict(STAFF["refurbisher"])
     records = []
-    for job in (RefurbishJob.query.filter_by(status="Repaired")
+    for job in (RefurbishJob.query.filter_by(status="Repaired").options(with_return)
                 .order_by(RefurbishJob.completed_at.desc()).limit(5)):
         ret = job.return_request
         desk = next_desk(ret) if ret.status not in TERMINAL else None

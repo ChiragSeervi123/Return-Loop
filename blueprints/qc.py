@@ -4,7 +4,7 @@ from flask import (Blueprint, abort, flash, redirect, render_template, request,
 
 from blueprints import current_user_id, guard, hand_off
 from config import GRADE_REFUND_PERCENT, GRADE_ROUTE
-from models import ReturnRequest
+from models import ReturnRequest, return_details
 from services.handoff import in_flight
 from services.returns import (WorkflowError, is_suspected_fraud,
                               submit_inspection, suggest_grade)
@@ -27,14 +27,14 @@ def queue():
     query = ReturnRequest.query.filter(ReturnRequest.status.in_([RECEIVED, REINSPECTION]))
     if search:
         query = query.filter(ReturnRequest.return_code.contains(search))
-    items = query.order_by(ReturnRequest.updated_at).all()
+    items = query.options(*return_details()).order_by(ReturnRequest.updated_at).all()
     return render_template("qc/queue.html", items=items, search=search,
                            moving=in_flight("qc", current_user_id(), 6))
 
 
 @bp.route("/inspect/<code>", methods=["GET", "POST"])
 def inspect(code):
-    ret = ReturnRequest.query.filter_by(return_code=code).first()
+    ret = ReturnRequest.query.filter_by(return_code=code).options(*return_details("qc_reports")).first()
     if ret is None:
         abort(404)
 
